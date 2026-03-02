@@ -10,10 +10,10 @@ const profileContainer = document.querySelector('.profile-container');
 const fingerprintContainer = document.querySelector('.fingerprint-container');
 
 /**
- * Initialisiert die Login/Logout Funktionalität
+ * Initialise Login/Logout
  */
 function initializeProfile() {
-    // Fingerabdruck Click Handler (toggle Login/Logout)
+    // Fingerprint Click Handler (toggle Login/Logout)
     fingerprintImage.addEventListener('click', toggleLoginState);
 
     // Tooltip Updates
@@ -22,7 +22,7 @@ function initializeProfile() {
 }
 
 /**
- * Toggelt zwischen Login und Logout
+ * Toggle between Login and Logout
  */
 function toggleLoginState() {
     isLoggedIn = !isLoggedIn;
@@ -30,20 +30,20 @@ function toggleLoginState() {
 }
 
 /**
- * Updated das Profil-Tooltip
+ * Update Profile-Tooltip
  */
 function updateProfileTooltip() {
     profileTooltip.textContent = isLoggedIn ? 'Profil' : 'Profil (nicht eingeloggt)';
 }
 
 /**
- * Updated das Fingerabdruck-Tooltip
+ * Update Fingerprint-Tooltip
  */
 function updateFingerprintTooltip() {
     fingerprintTooltip.textContent = isLoggedIn ? 'Logout' : 'Login';
 }
 
-// Initialisiere Profile wenn DOM geladen ist
+// Initialise Profile if DOM loaded
 document.addEventListener('DOMContentLoaded', initializeProfile);
 
 
