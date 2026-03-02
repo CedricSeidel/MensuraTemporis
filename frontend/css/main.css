@@ -107,9 +107,9 @@ span[id] {
     box-sizing: border-box;
     overflow: hidden;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+    transition: transform 0.5s ease, box-shadow 0.2s ease, opacity 0.3s ease;
 }
 
 .container1:hover,
@@ -118,9 +118,14 @@ span[id] {
 .container4:hover,
 .container5:hover,
 .container6:hover {
-    backdrop-filter: blur(8px) saturate(1.01) brightness(1.01);
-    -webkit-backdrop-filter: blur(8px) saturate(1.01) brightness(1.01);
+    box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.12);
+    transition: box-shadow .08s ease, transform .08s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
+
 
 /* Grid Columns */
 .container1 { grid-column: 1; grid-row: 1;}

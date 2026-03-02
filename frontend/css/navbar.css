@@ -24,8 +24,6 @@
 
 .navbar-logo {
     flex: 0 0 auto;
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     border-radius: var(--radius-sm);
     height: 40px;
     display: flex;
@@ -45,6 +43,8 @@
 }
 
 .navbar-logo a:hover {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     transform: scale(1.05);
     transition: transform var(--transition-slow)
 }
@@ -71,21 +71,26 @@
     font-family: var(--font-family-mono), monospace;
     text-decoration: none;
     text-align: center;
-    transition: color var(--transition-fast);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     border-radius: var(--radius-sm);
     display: inline-block;
     white-space: nowrap;
 }
 
 .nav-bar-links:hover {
-    transform: scale(1.05);
-    transition: transform var(--transition-slow)
+    color: #3269cd;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    filter: brightness(1.01);
+}
+
+.nav-bar-links:active {
+    box-shadow:
+            inset 0 6px 12px rgba(0, 0, 0, 0.22),
+            inset 0 2px 4px rgba(0, 0, 0, 0.16);
 }
 
 /* ============================
- * PROFIL/LOGIN (RECHTS)
+ * PROFILE/LOGIN (Right)
  * ============================ */
 
 .navbar-profile {
@@ -97,8 +102,8 @@
 }
 
 .profile-image {
-    width: 36px;
-    height: 36px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     object-fit: cover;
     transition: transform var(--transition-slow);
