@@ -2,7 +2,8 @@
  * Card Expansion System
  * ============================================
  * Grid-based click-to-expand system
- * Card wächst von ihrer Position zu Vollbildschirm
+ * Cards expand to fill the grid area, hiding others
+ * Click outside or ESC to close
  */
 
 export class CardExpansion {
@@ -23,7 +24,7 @@ export class CardExpansion {
     }
 
     init() {
-        // Container selbst ist clickbar für Expansion
+        // Container is clickable
         this.card.addEventListener('click', (e) => {
             if (this.card._isExpanded) return;
             this.handleCardClick(e);
@@ -58,18 +59,18 @@ export class CardExpansion {
         });
         this.card._hiddenCards = otherCards;
 
-        // Aktuelle Card-Position im Viewport
+        // Card-Position im Viewport
         const cardRect = this.card.getBoundingClientRect();
         const gridRect = grid.getBoundingClientRect();
 
-        // Target: Vollständiger Grid-Bereich
+        // Target: Complete Grid + Padding
         const gridStyles = window.getComputedStyle(grid);
         const paddingTop = parseFloat(gridStyles.paddingTop) || 0;
         const paddingLeft = parseFloat(gridStyles.paddingLeft) || 0;
         const paddingRight = parseFloat(gridStyles.paddingRight) || 0;
         const paddingBottom = parseFloat(gridStyles.paddingBottom) || 0;
 
-        // Speichere original Styles
+        // Safe original Styles
         this.card._originalStyles = {
             position: this.card.style.position,
             top: this.card.style.top,
@@ -81,7 +82,7 @@ export class CardExpansion {
             opacity: this.card.style.opacity,
         };
 
-        // Setze Card auf Fixed Positioning mit aktueller Position
+        // Reset Card to Fixed Position
         this.card.style.position = 'fixed';
         this.card.style.top = cardRect.top + 'px';
         this.card.style.left = cardRect.left + 'px';
@@ -93,7 +94,7 @@ export class CardExpansion {
         // Force Reflow
         this.card.offsetHeight;
 
-        // Berechne Target Position
+        // Target Position
         const targetRect = {
             top: gridRect.top + paddingTop,
             left: gridRect.left + paddingLeft,
@@ -101,14 +102,14 @@ export class CardExpansion {
             height: gridRect.height - paddingTop - paddingBottom,
         };
 
-        // Starte Animation mit Transition
+        // Start Animation with Transition
         this.card.style.transition = `all ${CardExpansion.TIMING.expand}ms ${CardExpansion.TIMING.ease}`;
         this.card.style.top = targetRect.top + 'px';
         this.card.style.left = targetRect.left + 'px';
         this.card.style.width = targetRect.width + 'px';
         this.card.style.height = targetRect.height + 'px';
 
-        // Setup Interaktionen nach Animation
+        // Setup Interaction after Animation
         setTimeout(() => {
             this.setupExpandedInteractions();
             CardExpansion.state.isAnimating = false;
@@ -133,11 +134,11 @@ export class CardExpansion {
 
             expansion.cleanupExpandedInteractions();
 
-            // Berechne Original Position
+            // Original Position
             const grid = document.querySelector('.grid');
             const cardIndex = Array.from(grid.children).indexOf(card);
 
-            // Grid Position zurückrechnen
+            // Grid Position
             const cols = 3;
             const gridCol = (cardIndex % cols) + 1;
             const gridRow = Math.floor(cardIndex / cols) + 1;
@@ -159,7 +160,7 @@ export class CardExpansion {
             const targetLeft = gridRect.left + paddingLeft + (gridCol - 1) * (colWidth + gap);
             const targetTop = gridRect.top + paddingTop + (gridRow - 1) * (rowHeight + gap);
 
-            // Animate zurück
+            // Animate back to original position
             card.style.transition = `all ${CardExpansion.TIMING.expand}ms ${CardExpansion.TIMING.easeOut}`;
             card.style.top = targetTop + 'px';
             card.style.left = targetLeft + 'px';
@@ -192,30 +193,30 @@ export class CardExpansion {
     }
 
     setupExpandedInteractions() {
-        // Cards sind bereits ausgeblendet in expandCard()
+        // Hide Cards while expandCard()
         // Prevent clicks inside the expanded card from bubbling
         const handleExpandedCardClick = (event) => {
             event.stopPropagation();
         };
 
-        const handleOutsideClick = (event) => {
-            CardExpansion.closeExpandedCard();
+        const handleOutsideClick = () => {
+            CardExpansion.closeExpandedCard().then();
         };
 
         // Stop propagation for clicks inside
         this.card.addEventListener('click', handleExpandedCardClick);
         this.card._expandedClickHandler = handleExpandedCardClick;
 
-        // Close on clicks outside - mit Timeout um unmittelbaren Click zu vermeiden
+        // Close on clicks outside - with Timeout to prevent immediate Trigger
         setTimeout(() => {
             document.addEventListener('click', handleOutsideClick);
             this.card._outsideClickHandler = handleOutsideClick;
         }, 100);
 
-        // ESC Key zum Schließen
+        // ESC Key to close
         const handleEscape = (event) => {
             if (event.key === 'Escape') {
-                CardExpansion.closeExpandedCard();
+                CardExpansion.closeExpandedCard().then();
             }
         };
 
@@ -248,28 +249,13 @@ export class CardExpansion {
         }
     }
 
-    calculateGridDimensions() {
-        const grid = document.querySelector('.grid');
-        if (!grid) return;
 
-        const gridStyles = window.getComputedStyle(grid);
-        const cols = gridStyles.gridTemplateColumns.split(' ').length;
-        const rows = gridStyles.gridTemplateRows.split(' ').length;
-
-        CardExpansion.state.gridDimensions = {
-            element: grid,
-            cols,
-            rows,
-            gap: parseFloat(gridStyles.gap) || 0,
-        };
-    }
 }
 
-// Initialisiere CardExpansion für alle Container
+// Initialise CardExpansion for all cards on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[class^="container"]').forEach(container => {
-        const expansion = new CardExpansion(container);
-        container._cardExpansionInstance = expansion;
+        container._cardExpansionInstance = new CardExpansion(container);
     });
 });
 
