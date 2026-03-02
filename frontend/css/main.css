@@ -108,6 +108,16 @@ span[id] {
     overflow: hidden;
     border: none;
     border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+}
+
+.container1:hover,
+.container2:hover,
+.container3:hover,
+.container4:hover,
+.container5:hover,
+.container6:hover {
     backdrop-filter: blur(8px) saturate(1.01) brightness(1.01);
     -webkit-backdrop-filter: blur(8px) saturate(1.01) brightness(1.01);
 }
@@ -119,5 +129,20 @@ span[id] {
 .container4 { grid-column: 1; grid-row: 2;}
 .container5 { grid-column: 2; grid-row: 2;}
 .container6 { grid-column: 3; grid-row: 2;}
+
+/* ============================
+ * EXPANDED CARD STATE
+ * ============================ */
+
+.card--expanded {
+    overflow-y: auto;
+    z-index: 1000 !important;
+    border-radius: 0;
+}
+
+.card--hidden {
+    opacity: 0;
+    pointer-events: none;
+}
 
 
