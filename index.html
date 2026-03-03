@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <title>Mensura Temporis</title>
@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="frontend/css/main.css">
     <link rel="stylesheet" href="frontend/css/token.css">
     <link rel="stylesheet" href="frontend/css/navbar.css">
+    <link rel="stylesheet" href="frontend/css/modals.css">
 
 </head>
+<body>
 <header>
     <nav class="nav-bar">
         <!-- Logo (Links) -->
@@ -19,13 +21,13 @@
 
         <!-- Navigation Links (Mitte) -->
         <div class="nav-bar-links-container">
-            <a class="nav-bar-links" href="#">
+            <a class="nav-bar-links" href="#container1" data-hotkey="d" data-target-card="container1">
                 <span class="nav-button__hotkey" style="opacity: 0.6">[D]</span>
                 Date</a>
-            <a class="nav-bar-links" href="#">
+            <a class="nav-bar-links" href="#container4" data-hotkey="c" data-target-card="container4">
                 <span class="nav-button__hotkey" style="opacity: 0.6">[C] </span>
                     Create</a>
-            <a class="nav-bar-links" href="#">
+            <a class="nav-bar-links" href="#container5" data-hotkey="h" data-target-card="container5">
                 <span class="nav-button__hotkey" style="opacity: 0.6">[H]</span>
                     Help</a>
         </div>
@@ -33,69 +35,130 @@
         <!-- Profil/Login (Rechts) -->
         <div class="navbar-profile">
             <div class="profile-container">
-                <img src="frontend/assets/img/profile-simple.svg" alt="Profilbild" class="profile-image" id="profileImage">
+                <img src="frontend/assets/img/profile-simple.svg" alt="Profilbild" class="profile-image" id="profileImage" role="button" tabindex="0" data-hotkey="p" aria-label="Profil öffnen">
                 <div class="profile-tooltip" id="profileTooltip">Profile</div>
             </div>
             <div class="fingerprint-container">
-                <img src="frontend/assets/img/fingerabdruck.png" alt="Fingerabdruck" class="fingerprint-image" id="fingerprintImage">
+                <img src="frontend/assets/img/fingerabdruck.png" alt="Fingerabdruck" class="fingerprint-image" id="fingerprintImage" role="button" tabindex="0" data-hotkey="l" aria-label="Login oder Register öffnen">
                 <div class="fingerprint-tooltip" id="fingerprintTooltip">Login</div>
             </div>
         </div>
     </nav>
 </header>
-
-<body>
     <div class="grid">
-            <div class="container1">
+            <div class="container1" id="container1">
+                <button type="button" class="container-close" data-container-close="container1" aria-label="Container schließen">×</button>
                 <h2>Calendar</h2>
                 <hr>
                 <p></p>
             </div>
 
-            <div class="container2">
+            <div class="container2" id="container2">
+                <button type="button" class="container-close" data-container-close="container2" aria-label="Container schließen">×</button>
                 <h2>Upcoming Events</h2>
                 <hr>
                 <p></p>
             </div>
 
-            <div class="container3">
+            <div class="container3" id="container3">
+                <button type="button" class="container-close" data-container-close="container3" aria-label="Container schließen">×</button>
                 <h2>Weather</h2>
                 <hr>
                 <p></p>
             </div>
 
-            <div class="container4">
+            <div class="container4" id="container4">
+                <button type="button" class="container-close" data-container-close="container4" aria-label="Container schließen">×</button>
                 <h2>Quick Notes</h2>
                 <hr>
                 <p></p>
             </div>
 
-            <div class="container5">
+            <div class="container5" id="container5">
+                <button type="button" class="container-close" data-container-close="container5" aria-label="Container schließen">×</button>
                 <h2>Help</h2>
                 <hr>
                 <p></p>
             </div>
 
-            <div class="container6">
+            <div class="container6" id="container6">
+                <button type="button" class="container-close" data-container-close="container6" aria-label="Container schließen">×</button>
                 <h2>Settings</h2>
                 <hr>
                 <p></p>
             </div>
     </div>
 
+    <div class="modal-overlay" id="loginModal" hidden>
+        <div class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+            <button type="button" class="modal-close" data-modal-close="loginModal" aria-label="Popup schließen">×</button>
+            <h3 id="loginModalTitle">Login</h3>
+
+            <div class="modal-state" id="loginState"></div>
+
+            <form class="auth-form" id="loginForm" autocomplete="on">
+                <label for="loginUsername">Username</label>
+                <input id="loginUsername" name="username" type="text" minlength="3" required>
+                <label for="loginPassword">Passwort</label>
+                <input id="loginPassword" name="password" type="password" minlength="8" required>
+                <button type="submit">Login</button>
+            </form>
+
+            <button type="button" class="auth-switch" id="openRegisterModalButton">Noch keinen Account? Register</button>
+
+            <div class="auth-logged-in" id="loggedInPanel" hidden>
+                <p class="logged-in-text">Du bist eingeloggt als <strong id="loggedInUsername">-</strong>.</p>
+                <button type="button" id="logoutButton">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="registerModal" hidden>
+        <div class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
+            <button type="button" class="modal-close" data-modal-close="registerModal" aria-label="Popup schließen">×</button>
+            <h3 id="registerModalTitle">Register</h3>
+
+            <div class="modal-state" id="registerState"></div>
+
+            <form class="auth-form" id="registerForm" autocomplete="on">
+                <label for="registerUsername">Username</label>
+                <input id="registerUsername" name="username" type="text" minlength="3" required>
+                <label for="registerPassword">Passwort</label>
+                <input id="registerPassword" name="password" type="password" minlength="8" required>
+                <label for="registerPasswordConfirm">Passwort bestätigen</label>
+                <input id="registerPasswordConfirm" name="passwordConfirm" type="password" minlength="8" required>
+                <button type="submit">Register</button>
+            </form>
+
+            <button type="button" class="auth-switch" id="openLoginModalButton">Bereits Account? Login</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="userModal" hidden>
+        <div class="modal user-modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
+            <button type="button" class="modal-close" data-modal-close="userModal" aria-label="Popup schließen">×</button>
+            <h3 id="userModalTitle">User Profil</h3>
+            <div class="modal-state" id="userState"></div>
+
+            <div class="user-meta">
+                <p><span>Username:</span> <strong id="userNameValue">-</strong></p>
+                <p><span>Erstellt:</span> <strong id="userCreatedValue">-</strong></p>
+                <p><span>Geändert:</span> <strong id="userUpdatedValue">-</strong></p>
+            </div>
+
+            <form class="user-data-form" id="userDataForm">
+                <label for="userDataInput">User-Daten (JSON)</label>
+                <textarea id="userDataInput" spellcheck="false" rows="8"></textarea>
+                <button type="submit">Speichern</button>
+            </form>
+        </div>
+    </div>
 
 
 
+    <script type="module" src="frontend/js/cardExpansion.js"></script>
     <script src="frontend/js/profile.js"></script>
     <script src="frontend/js/hotkeys.js"></script>
-    <script type="module">
-        import { CardExpansion } from './frontend/js/cardExpansion.js';
-
-        // Initialisiere CardExpansion für alle Container
-        document.querySelectorAll('[class^="container"]').forEach(container => {
-            new CardExpansion(container);
-        });
-    </script>
 
 </body>
 </html>

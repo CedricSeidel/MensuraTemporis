@@ -76,6 +76,7 @@ hr {
 .container4,
 .container5,
 .container6 {
+    position: relative;
     display: block;
     padding: 40px;
     font-size: 1em;
@@ -127,4 +128,35 @@ hr {
     pointer-events: none;
 }
 
+/* ============================
+ * CARD CLOSE BUTTON
+ * ============================ */
 
+.container-close {
+    display: none;
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: 2;
+    border: 1px solid var(--color-border-light);
+    background: transparent;
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xl);
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.card--expanded .container-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container-close:hover {
+    background: #1a1a1a;
+    color: #d0d0d0;
+}

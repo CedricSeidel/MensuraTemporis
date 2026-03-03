@@ -107,6 +107,7 @@
     border-radius: 50%;
     object-fit: cover;
     transition: transform var(--transition-slow);
+    cursor: pointer;
 }
 
 .profile-image:hover {
@@ -188,5 +189,4 @@
 .fingerprint-container:hover .fingerprint-tooltip {
     opacity: 1;
 }
-
 

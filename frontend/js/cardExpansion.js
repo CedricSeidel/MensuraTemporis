@@ -1,14 +1,12 @@
 /**
  * Card Expansion System
- * ============================================
- * Grid-based click-to-expand system
- * Cards expand to fill the grid area, hiding others
- * Click outside or ESC to close
+ * Click on card: expand
+ * Click outside / close button / ESC: close
+ * Click another card while expanded: switch
  */
-
 export class CardExpansion {
     static state = {
-        expandedCard: null,
+        expandedInstance: null,
         isAnimating: false,
     };
 
@@ -20,57 +18,61 @@ export class CardExpansion {
 
     constructor(cardElement) {
         this.card = cardElement;
+        this.card._cardExpansionInstance = this;
         this.init();
     }
 
     init() {
-        // Container is clickable
-        this.card.addEventListener('click', (e) => {
-            if (this.card._isExpanded) return;
-            this.handleCardClick(e);
+        this.card.addEventListener('click', (event) => {
+            this.handleCardClick(event);
         });
     }
 
-    handleCardClick(e) {
+    handleCardClick(event) {
         if (CardExpansion.state.isAnimating) return;
-        e.stopPropagation();
 
-        if (CardExpansion.state.expandedCard) {
-            CardExpansion.closeExpandedCard().then(() => {
-                this.expandCard();
-            });
-        } else {
-            this.expandCard();
+        const closeButton = event.target.closest('[data-container-close]');
+        if (closeButton) {
+            if (CardExpansion.state.expandedInstance === this) {
+                CardExpansion.closeExpandedCard().then();
+            }
+            return;
         }
+
+        if (CardExpansion.state.expandedInstance === this) {
+            return;
+        }
+
+        if (CardExpansion.state.expandedInstance) {
+            CardExpansion.closeExpandedCard().then(() => this.expandCard());
+            return;
+        }
+
+        this.expandCard();
     }
 
     expandCard() {
         if (CardExpansion.state.isAnimating) return;
+        const grid = document.querySelector('.grid');
+        if (!grid) return;
 
         CardExpansion.state.isAnimating = true;
-        CardExpansion.state.expandedCard = this.card;
+        CardExpansion.state.expandedInstance = this;
         this.card._isExpanded = true;
 
-        // Hide other cards immediately when expansion starts
-        const grid = document.querySelector('.grid');
-        const otherCards = Array.from(grid.children).filter(card => card !== this.card);
-        otherCards.forEach(card => {
-            card.classList.add('card--hidden');
-        });
+        const otherCards = Array.from(grid.children).filter((card) => card !== this.card);
+        otherCards.forEach((card) => card.classList.add('card--hidden'));
         this.card._hiddenCards = otherCards;
 
-        // Card-Position im Viewport
         const cardRect = this.card.getBoundingClientRect();
         const gridRect = grid.getBoundingClientRect();
-
-        // Target: Complete Grid + Padding
         const gridStyles = window.getComputedStyle(grid);
         const paddingTop = parseFloat(gridStyles.paddingTop) || 0;
         const paddingLeft = parseFloat(gridStyles.paddingLeft) || 0;
         const paddingRight = parseFloat(gridStyles.paddingRight) || 0;
         const paddingBottom = parseFloat(gridStyles.paddingBottom) || 0;
 
-        // Safe original Styles
+        this.card._originalRect = cardRect;
         this.card._originalStyles = {
             position: this.card.style.position,
             top: this.card.style.top,
@@ -82,19 +84,17 @@ export class CardExpansion {
             opacity: this.card.style.opacity,
         };
 
-        // Reset Card to Fixed Position
         this.card.style.position = 'fixed';
-        this.card.style.top = cardRect.top + 'px';
-        this.card.style.left = cardRect.left + 'px';
-        this.card.style.width = cardRect.width + 'px';
-        this.card.style.height = cardRect.height + 'px';
+        this.card.style.top = `${cardRect.top}px`;
+        this.card.style.left = `${cardRect.left}px`;
+        this.card.style.width = `${cardRect.width}px`;
+        this.card.style.height = `${cardRect.height}px`;
         this.card.style.zIndex = '1000';
         this.card.style.opacity = '1';
+        this.card.classList.add('card--expanded');
 
-        // Force Reflow
         this.card.offsetHeight;
 
-        // Target Position
         const targetRect = {
             top: gridRect.top + paddingTop,
             left: gridRect.left + paddingLeft,
@@ -102,118 +102,29 @@ export class CardExpansion {
             height: gridRect.height - paddingTop - paddingBottom,
         };
 
-        // Start Animation with Transition
         this.card.style.transition = `all ${CardExpansion.TIMING.expand}ms ${CardExpansion.TIMING.ease}`;
-        this.card.style.top = targetRect.top + 'px';
-        this.card.style.left = targetRect.left + 'px';
-        this.card.style.width = targetRect.width + 'px';
-        this.card.style.height = targetRect.height + 'px';
+        this.card.style.top = `${targetRect.top}px`;
+        this.card.style.left = `${targetRect.left}px`;
+        this.card.style.width = `${targetRect.width}px`;
+        this.card.style.height = `${targetRect.height}px`;
 
-        // Setup Interaction after Animation
         setTimeout(() => {
             this.setupExpandedInteractions();
             CardExpansion.state.isAnimating = false;
         }, CardExpansion.TIMING.expand);
     }
 
-    static closeExpandedCard() {
-        return new Promise((resolve) => {
-            if (CardExpansion.state.isAnimating || !CardExpansion.state.expandedCard) {
-                resolve();
-                return;
-            }
-
-            CardExpansion.state.isAnimating = true;
-            const card = CardExpansion.state.expandedCard;
-            const expansion = card._cardExpansionInstance;
-
-            if (!expansion) {
-                resolve();
-                return;
-            }
-
-            expansion.cleanupExpandedInteractions();
-
-            // Original Position
-            const grid = document.querySelector('.grid');
-            const cardIndex = Array.from(grid.children).indexOf(card);
-
-            // Grid Position
-            const cols = 3;
-            const gridCol = (cardIndex % cols) + 1;
-            const gridRow = Math.floor(cardIndex / cols) + 1;
-
-            const gridStyles = window.getComputedStyle(grid);
-            const gap = parseFloat(gridStyles.gap) || 0;
-            const gridRect = grid.getBoundingClientRect();
-            const paddingLeft = parseFloat(gridStyles.paddingLeft) || 0;
-            const paddingTop = parseFloat(gridStyles.paddingTop) || 0;
-            const paddingRight = parseFloat(gridStyles.paddingRight) || 0;
-            const paddingBottom = parseFloat(gridStyles.paddingBottom) || 0;
-
-            const contentWidth = gridRect.width - paddingLeft - paddingRight;
-            const contentHeight = gridRect.height - paddingTop - paddingBottom;
-
-            const colWidth = (contentWidth - (cols - 1) * gap) / cols;
-            const rowHeight = (contentHeight - gap) / 2;
-
-            const targetLeft = gridRect.left + paddingLeft + (gridCol - 1) * (colWidth + gap);
-            const targetTop = gridRect.top + paddingTop + (gridRow - 1) * (rowHeight + gap);
-
-            // Animate back to original position
-            card.style.transition = `all ${CardExpansion.TIMING.expand}ms ${CardExpansion.TIMING.easeOut}`;
-            card.style.top = targetTop + 'px';
-            card.style.left = targetLeft + 'px';
-            card.style.width = colWidth + 'px';
-            card.style.height = rowHeight + 'px';
-
-            setTimeout(() => {
-                expansion.restoreCardToGrid();
-                CardExpansion.state.expandedCard = null;
-                CardExpansion.state.isAnimating = false;
-                card._isExpanded = false;
-                resolve();
-            }, CardExpansion.TIMING.expand);
-        });
-    }
-
-    restoreCardToGrid() {
-        // Restore original styles
-        if (this.card._originalStyles) {
-            this.card.style.position = this.card._originalStyles.position;
-            this.card.style.top = this.card._originalStyles.top;
-            this.card.style.left = this.card._originalStyles.left;
-            this.card.style.width = this.card._originalStyles.width;
-            this.card.style.height = this.card._originalStyles.height;
-            this.card.style.zIndex = this.card._originalStyles.zIndex;
-            this.card.style.transition = this.card._originalStyles.transition;
-            this.card.style.opacity = this.card._originalStyles.opacity;
-            delete this.card._originalStyles;
-        }
-    }
-
     setupExpandedInteractions() {
-        // Hide Cards while expandCard()
-        // Prevent clicks inside the expanded card from bubbling
-        const handleExpandedCardClick = (event) => {
-            event.stopPropagation();
-        };
-
-        const handleOutsideClick = () => {
+        const handleOutsideClick = (event) => {
+            if (this.card.contains(event.target)) return;
             CardExpansion.closeExpandedCard().then();
         };
 
-        // Stop propagation for clicks inside
-        this.card.addEventListener('click', handleExpandedCardClick);
-        this.card._expandedClickHandler = handleExpandedCardClick;
-
-        // Close on clicks outside - with Timeout to prevent immediate Trigger
         setTimeout(() => {
             document.addEventListener('click', handleOutsideClick);
             this.card._outsideClickHandler = handleOutsideClick;
         }, 100);
 
-        // ESC Key to close
         const handleEscape = (event) => {
             if (event.key === 'Escape') {
                 CardExpansion.closeExpandedCard().then();
@@ -225,17 +136,9 @@ export class CardExpansion {
     }
 
     cleanupExpandedInteractions() {
-        // Show other cards again
         if (this.card._hiddenCards) {
-            this.card._hiddenCards.forEach(card => {
-                card.classList.remove('card--hidden');
-            });
+            this.card._hiddenCards.forEach((card) => card.classList.remove('card--hidden'));
             delete this.card._hiddenCards;
-        }
-
-        if (this.card._expandedClickHandler) {
-            this.card.removeEventListener('click', this.card._expandedClickHandler);
-            delete this.card._expandedClickHandler;
         }
 
         if (this.card._outsideClickHandler) {
@@ -249,13 +152,56 @@ export class CardExpansion {
         }
     }
 
+    restoreCardToGrid() {
+        if (this.card._originalStyles) {
+            this.card.style.position = this.card._originalStyles.position;
+            this.card.style.top = this.card._originalStyles.top;
+            this.card.style.left = this.card._originalStyles.left;
+            this.card.style.width = this.card._originalStyles.width;
+            this.card.style.height = this.card._originalStyles.height;
+            this.card.style.zIndex = this.card._originalStyles.zIndex;
+            this.card.style.transition = this.card._originalStyles.transition;
+            this.card.style.opacity = this.card._originalStyles.opacity;
+            delete this.card._originalStyles;
+        }
 
+        this.card.classList.remove('card--expanded');
+        delete this.card._originalRect;
+    }
+
+    static closeExpandedCard() {
+        return new Promise((resolve) => {
+            const expansion = CardExpansion.state.expandedInstance;
+            if (!expansion || CardExpansion.state.isAnimating) {
+                resolve();
+                return;
+            }
+
+            CardExpansion.state.isAnimating = true;
+            expansion.cleanupExpandedInteractions();
+
+            const card = expansion.card;
+            const originalRect = card._originalRect || card.getBoundingClientRect();
+
+            card.style.transition = `all ${CardExpansion.TIMING.expand}ms ${CardExpansion.TIMING.easeOut}`;
+            card.style.top = `${originalRect.top}px`;
+            card.style.left = `${originalRect.left}px`;
+            card.style.width = `${originalRect.width}px`;
+            card.style.height = `${originalRect.height}px`;
+
+            setTimeout(() => {
+                expansion.restoreCardToGrid();
+                card._isExpanded = false;
+                CardExpansion.state.expandedInstance = null;
+                CardExpansion.state.isAnimating = false;
+                resolve();
+            }, CardExpansion.TIMING.expand);
+        });
+    }
 }
 
-// Initialise CardExpansion for all cards on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[class^="container"]').forEach(container => {
-        container._cardExpansionInstance = new CardExpansion(container);
+    document.querySelectorAll('[class^="container"]').forEach((container) => {
+        new CardExpansion(container);
     });
 });
-
