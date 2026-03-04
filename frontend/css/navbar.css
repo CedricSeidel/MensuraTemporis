@@ -127,13 +127,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 999px;
+    padding: 4px;
+    box-sizing: border-box;
+    transition: box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.profile-container.is-active,
+.fingerprint-container.is-active,
+.profile-container:active,
+.fingerprint-container:active {
+    box-shadow:
+            inset 0 6px 12px rgba(0, 0, 0, 0.22),
+            inset 0 2px 4px rgba(0, 0, 0, 0.16);
+}
+
+.profile-container.is-active:hover,
+.fingerprint-container.is-active:hover {
+    box-shadow:
+            inset 0 6px 12px rgba(0, 0, 0, 0.22),
+            inset 0 2px 4px rgba(0, 0, 0, 0.16);
 }
 
 .profile-image,
 .fingerprint-image {
     border-radius: 50%;
     object-fit: cover;
-    transition: transform var(--transition-slow);
+    transition: transform var(--transition-slow), filter var(--transition-fast);
     cursor: pointer;
 }
 
@@ -150,6 +170,11 @@
 .profile-image:hover,
 .fingerprint-image:hover {
     transform: scale(1.05);
+}
+
+.profile-container:hover .profile-image,
+.fingerprint-container:hover .fingerprint-image {
+    filter: saturate(1.1);
 }
 
 .profile-tooltip,

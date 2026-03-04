@@ -42,6 +42,97 @@ export class CardExpansion {
         });
     }
 
+    static getInstanceByCardId(cardId) {
+        if (!cardId) return null;
+        const card = document.getElementById(cardId);
+        if (!card) return null;
+        return card._cardExpansionInstance || null;
+    }
+
+    static openCardById(cardId) {
+        const nextInstance = CardExpansion.getInstanceByCardId(cardId);
+        if (!nextInstance) return;
+
+        if (CardExpansion.state.expandedInstance === nextInstance) {
+            void CardExpansion.closeExpandedCard();
+            return;
+        }
+
+        if (CardExpansion.state.expandedInstance) {
+            CardExpansion.switchExpandedCard(nextInstance);
+            return;
+        }
+
+        nextInstance.expandCard();
+    }
+
+    static openCardByIdWithoutExpandAnimation(cardId) {
+        const nextInstance = CardExpansion.getInstanceByCardId(cardId);
+        if (!nextInstance) return;
+
+        if (CardExpansion.state.expandedInstance === nextInstance) {
+            CardExpansion.syncActiveNav(cardId);
+            return;
+        }
+
+        if (CardExpansion.state.expandedInstance) {
+            CardExpansion.switchExpandedCard(nextInstance);
+            return;
+        }
+
+        const grid = document.querySelector('.grid');
+        if (!grid) return;
+
+        const nextCard = nextInstance.card;
+        const nextCardRect = nextCard.getBoundingClientRect();
+        const gridRect = grid.getBoundingClientRect();
+        const gridStyles = window.getComputedStyle(grid);
+        const paddingTop = parseFloat(gridStyles.paddingTop) || 0;
+        const paddingLeft = parseFloat(gridStyles.paddingLeft) || 0;
+        const paddingRight = parseFloat(gridStyles.paddingRight) || 0;
+        const paddingBottom = parseFloat(gridStyles.paddingBottom) || 0;
+
+        nextCard._originalRect = nextCardRect;
+        nextCard._originalStyles = {
+            position: nextCard.style.position,
+            top: nextCard.style.top,
+            left: nextCard.style.left,
+            width: nextCard.style.width,
+            height: nextCard.style.height,
+            zIndex: nextCard.style.zIndex,
+            transition: nextCard.style.transition,
+            opacity: nextCard.style.opacity,
+        };
+
+        const otherCards = Array.from(grid.children).filter((card) => card !== nextCard);
+        otherCards.forEach((card) => card.classList.add('card--hidden'));
+        nextCard._hiddenCards = otherCards;
+
+        const targetRect = {
+            top: gridRect.top + paddingTop,
+            left: gridRect.left + paddingLeft,
+            width: gridRect.width - paddingLeft - paddingRight,
+            height: gridRect.height - paddingTop - paddingBottom,
+        };
+
+        nextCard.classList.remove('card--closing');
+        nextCard.classList.remove('card--hidden');
+        nextCard.style.position = 'fixed';
+        nextCard.style.top = `${targetRect.top}px`;
+        nextCard.style.left = `${targetRect.left}px`;
+        nextCard.style.width = `${targetRect.width}px`;
+        nextCard.style.height = `${targetRect.height}px`;
+        nextCard.style.zIndex = '1000';
+        nextCard.style.opacity = '1';
+        nextCard.style.transition = 'none';
+        nextCard.classList.add('card--expanded');
+        nextCard._isExpanded = true;
+
+        CardExpansion.state.expandedInstance = nextInstance;
+        CardExpansion.syncActiveNav(nextCard.id);
+        nextInstance.setupExpandedInteractions();
+    }
+
     static switchExpandedCard(nextInstance) {
         const current = CardExpansion.state.expandedInstance;
         if (!current || current === nextInstance || CardExpansion.state.isAnimating) return;
@@ -102,7 +193,11 @@ export class CardExpansion {
         if (CardExpansion.state.isAnimating) return;
 
         const target = event.target instanceof Element ? event.target : null;
-        const closeButton = target ? target.closest('[data-container-close]') : null;
+        const eventPath = typeof event.composedPath === 'function' ? event.composedPath() : [];
+        const closeFromPath = eventPath.find(
+            (node) => node instanceof Element && node.matches('[data-container-close]')
+        );
+        const closeButton = (target && target.closest('[data-container-close]')) || closeFromPath || null;
         if (closeButton) {
             if (CardExpansion.state.expandedInstance === this) {
                 void CardExpansion.closeExpandedCard();
@@ -296,3 +391,5 @@ document.addEventListener('DOMContentLoaded', () => {
         new CardExpansion(container);
     });
 });
+
+window.CardExpansion = CardExpansion;

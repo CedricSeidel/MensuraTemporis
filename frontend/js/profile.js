@@ -41,6 +41,9 @@
     const REGISTER_ALREADY_LOGGED_IN_TEXT = 'Du bist bereits eingeloggt. Logout im Login-Popup.';
     const MODAL_EXPAND_MS = 600;
     const MODAL_EXPAND_EASE = 'cubic-bezier(0.2, 0.0, 0.2, 1)';
+    const MODAL_CLOSE_MS = 600;
+    const MODAL_CLOSE_EASE = 'cubic-bezier(0.0, 0.0, 0.2, 1)';
+    const NAV_ACTIVE_CLASS = 'is-active';
 
     const API_BASES = (() => {
         const bases = [];
@@ -235,10 +238,90 @@
         return [elements.loginModal, elements.registerModal, elements.userModal].some((modal) => modal && !modal.hidden);
     }
 
+    function getOpenModal() {
+        return [elements.loginModal, elements.registerModal, elements.userModal]
+            .find((modal) => modal && !modal.hidden) || null;
+    }
+
     function setGridModalState(isOpen) {
         const grid = document.querySelector('.grid');
         if (!grid) return;
         grid.classList.toggle('modal-grid-open', isOpen);
+    }
+
+    function getEventElement(event) {
+        if (event.target instanceof Element) return event.target;
+        if (typeof event.composedPath !== 'function') return null;
+        const path = event.composedPath();
+        return path.find((node) => node instanceof Element) || null;
+    }
+
+    function isModalOpen(modal) {
+        return Boolean(modal && !modal.hidden);
+    }
+
+    function syncProfileNavActive() {
+        const openModalId = [elements.loginModal, elements.registerModal, elements.userModal]
+            .find((modal) => modal && !modal.hidden)?.id || '';
+
+        const loginActive = openModalId === 'loginModal' || openModalId === 'registerModal';
+        const userActive = openModalId === 'userModal';
+
+        elements.fingerprintContainer?.classList.toggle(NAV_ACTIVE_CLASS, loginActive);
+        elements.profileContainer?.classList.toggle(NAV_ACTIVE_CLASS, userActive);
+    }
+
+    function switchExpandedCardToModalContext() {
+        const expansionApi = window.CardExpansion;
+        const activeExpansion = expansionApi?.state?.expandedInstance;
+        if (!activeExpansion) return false;
+
+        const card = activeExpansion.card;
+        if (!card) return false;
+
+        activeExpansion.cleanupExpandedInteractions?.({ keepHiddenCards: true });
+        card.classList.add('card--hidden');
+        activeExpansion.restoreCardToGrid?.();
+        card._isExpanded = false;
+
+        expansionApi.state.expandedInstance = null;
+        expansionApi.state.isAnimating = false;
+        expansionApi.syncActiveNav?.('');
+        return true;
+    }
+
+    function restoreAllGridCards() {
+        const grid = document.querySelector('.grid');
+        if (!grid) return;
+
+        Array.from(grid.children).forEach((card) => {
+            if (!(card instanceof HTMLElement)) return;
+
+            card.classList.remove('card--hidden');
+            card.classList.remove('card--closing');
+            card.classList.remove('card--expanded');
+
+            card.style.position = '';
+            card.style.top = '';
+            card.style.left = '';
+            card.style.width = '';
+            card.style.height = '';
+            card.style.zIndex = '';
+            card.style.transition = '';
+            card.style.opacity = '';
+
+            card._isExpanded = false;
+            delete card._hiddenCards;
+            delete card._originalRect;
+            delete card._originalStyles;
+        });
+
+        const expansionApi = window.CardExpansion;
+        if (expansionApi?.state) {
+            expansionApi.state.expandedInstance = null;
+            expansionApi.state.isAnimating = false;
+            expansionApi.syncActiveNav?.('');
+        }
     }
 
     function resolveOriginRect(origin) {
@@ -261,15 +344,27 @@
     }
 
     function clearModalAnimation(modalOverlay) {
-        if (!modalOverlay?._openAnimationTimeoutId) return;
-        window.clearTimeout(modalOverlay._openAnimationTimeoutId);
-        delete modalOverlay._openAnimationTimeoutId;
+        if (!modalOverlay) return;
+
+        if (modalOverlay._openAnimationTimeoutId) {
+            window.clearTimeout(modalOverlay._openAnimationTimeoutId);
+            delete modalOverlay._openAnimationTimeoutId;
+        }
+
+        if (modalOverlay._closeAnimationTimeoutId) {
+            window.clearTimeout(modalOverlay._closeAnimationTimeoutId);
+            delete modalOverlay._closeAnimationTimeoutId;
+        }
     }
 
     function clearModalGridLayout(modalOverlay) {
         if (!modalOverlay) return;
         clearModalAnimation(modalOverlay);
         modalOverlay.classList.remove('is-grid-modal');
+        modalOverlay.classList.remove('is-closing');
+        modalOverlay._isClosing = false;
+        delete modalOverlay._closePromise;
+        delete modalOverlay._modalOriginRect;
         const modalCard = modalOverlay.querySelector('.modal');
         if (!modalCard) return;
 
@@ -326,6 +421,7 @@
         if (!targetRect) return;
 
         const originRect = resolveOriginRect(origin);
+        modalOverlay._modalOriginRect = originRect || null;
         const fallbackWidth = Math.max(44, targetRect.width * 0.24);
         const fallbackHeight = Math.max(44, targetRect.height * 0.24);
         const startRect = originRect || {
@@ -368,6 +464,112 @@
         }, MODAL_EXPAND_MS);
     }
 
+    function resolveCloseTargetRect(startRect, origin) {
+        const originRect = resolveOriginRect(origin) || null;
+        const storedRect = originRect || (startRect && typeof startRect === 'object' ? startRect : null);
+        const minSize = 42;
+
+        if (originRect) {
+            const width = Math.max(minSize, originRect.width || minSize);
+            const height = Math.max(minSize, originRect.height || minSize);
+            return {
+                top: originRect.top + (originRect.height - height) / 2,
+                left: originRect.left + (originRect.width - width) / 2,
+                width,
+                height,
+            };
+        }
+
+        const width = Math.max(minSize, (storedRect?.width || minSize) * 0.24);
+        const height = Math.max(minSize, (storedRect?.height || minSize) * 0.24);
+        return {
+            top: (storedRect?.top || 0) + ((storedRect?.height || height) - height) / 2,
+            left: (storedRect?.left || 0) + ((storedRect?.width || width) - width) / 2,
+            width,
+            height,
+        };
+    }
+
+    function animateModalClose(modalOverlay, origin, options = {}) {
+        if (!modalOverlay || modalOverlay.hidden) return Promise.resolve(false);
+        if (modalOverlay._isClosing) return modalOverlay._closePromise || Promise.resolve(true);
+        const { preserveExpandedState = false } = options;
+        const hasOtherOpenModal = [elements.loginModal, elements.registerModal, elements.userModal]
+            .some((modal) => modal && modal !== modalOverlay && !modal.hidden);
+        const revealGridDuringClose = !preserveExpandedState && !hasOtherOpenModal;
+
+        const modalCard = modalOverlay.querySelector('.modal');
+        if (!modalCard) {
+            modalOverlay.hidden = true;
+            return Promise.resolve(false);
+        }
+
+        clearModalAnimation(modalOverlay);
+        modalOverlay._isClosing = true;
+        modalOverlay.classList.add('is-closing');
+
+        if (revealGridDuringClose) {
+            // Reveal all cards at close-start so fade-in runs together with modal closing.
+            setGridModalState(false);
+            restoreAllGridCards();
+        }
+
+        const currentRect = applyModalGridLayout(modalOverlay) || (() => {
+            const rect = modalCard.getBoundingClientRect();
+            return {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+            };
+        })();
+
+        const closeTargetRect = resolveCloseTargetRect(currentRect, origin || modalOverlay._modalOriginRect);
+
+        modalCard.style.transition = 'none';
+        modalCard.style.top = `${currentRect.top}px`;
+        modalCard.style.left = `${currentRect.left}px`;
+        modalCard.style.width = `${currentRect.width}px`;
+        modalCard.style.height = `${currentRect.height}px`;
+        modalCard.style.opacity = '1';
+
+        modalCard.offsetHeight;
+
+        modalCard.style.transition = [
+            `top ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
+            `left ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
+            `width ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
+            `height ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
+            `opacity ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
+        ].join(', ');
+
+        modalCard.style.top = `${closeTargetRect.top}px`;
+        modalCard.style.left = `${closeTargetRect.left}px`;
+        modalCard.style.width = `${closeTargetRect.width}px`;
+        modalCard.style.height = `${closeTargetRect.height}px`;
+        modalCard.style.opacity = '0';
+
+        modalOverlay._closePromise = new Promise((resolve) => {
+            modalOverlay._closeAnimationTimeoutId = window.setTimeout(() => {
+                modalOverlay.hidden = true;
+                clearModalGridLayout(modalOverlay);
+                delete modalOverlay._modalOriginRect;
+
+                if (!anyModalOpen()) {
+                    setGridModalState(false);
+                    document.body.classList.remove('modal-open');
+                    if (!preserveExpandedState && !revealGridDuringClose) {
+                        restoreAllGridCards();
+                    }
+                }
+                syncProfileNavActive();
+                resolve(true);
+            }, MODAL_CLOSE_MS);
+        });
+
+        return modalOverlay._closePromise;
+    }
+
     function refreshOpenModalLayouts() {
         [elements.loginModal, elements.registerModal, elements.userModal].forEach((modal) => {
             if (!modal || modal.hidden) return;
@@ -375,28 +577,62 @@
         });
     }
 
-    function openModal(modal, origin) {
-        if (!modal) return;
+    function openModal(modal, origin, options = {}) {
+        if (!modal) return Promise.resolve(false);
+
+        const { animate = true } = options;
+        clearModalAnimation(modal);
+        modal.classList.remove('is-closing');
+        modal._isClosing = false;
         modal.hidden = false;
         setGridModalState(true);
-        animateModalOpen(modal, origin);
+        syncProfileNavActive();
+        if (animate) {
+            animateModalOpen(modal, origin);
+        } else {
+            applyModalGridLayout(modal);
+            const modalCard = modal.querySelector('.modal');
+            if (modalCard) {
+                modalCard.style.transition = '';
+                modalCard.style.opacity = '1';
+            }
+        }
         document.body.classList.add('modal-open');
+        return Promise.resolve(true);
     }
 
-    function closeModal(modal) {
-        if (!modal) return;
+    function closeModal(modal, options = {}) {
+        if (!modal) return Promise.resolve(false);
+        if (modal.hidden && !modal._isClosing) return Promise.resolve(false);
+
+        const { animate = true, origin = null, preserveExpandedState = false } = options;
+        if (modal._isClosing && !animate) {
+            clearModalGridLayout(modal);
+            modal.hidden = true;
+        }
+        if (modal._isClosing) return modal._closePromise || Promise.resolve(true);
+
+        if (animate && !modal.hidden) {
+            return animateModalClose(modal, origin, { preserveExpandedState });
+        }
+
         modal.hidden = true;
         clearModalGridLayout(modal);
-        if (!anyModalOpen()) {
+        if (!anyModalOpen() && !preserveExpandedState) {
             setGridModalState(false);
             document.body.classList.remove('modal-open');
+            restoreAllGridCards();
         }
+        syncProfileNavActive();
+        return Promise.resolve(true);
     }
 
-    function closeAllModals() {
-        closeModal(elements.loginModal);
-        closeModal(elements.registerModal);
-        closeModal(elements.userModal);
+    function closeAllModals(options = {}) {
+        return Promise.all([
+            closeModal(elements.loginModal, options),
+            closeModal(elements.registerModal, options),
+            closeModal(elements.userModal, options),
+        ]);
     }
 
     function isLoggedIn() {
@@ -455,6 +691,7 @@
     function syncUi() {
         updateAuthPanels();
         updateUserPanel();
+        syncProfileNavActive();
     }
 
     async function requestBackend(path, options = {}) {
@@ -624,52 +861,93 @@
         }
     }
 
-    function openLoginModal(origin = elements.fingerprintImage) {
+    async function openLoginModal(origin = elements.fingerprintImage) {
         const originRect = resolveOriginRect(origin);
-        closeModal(elements.registerModal);
+        const switchingFromModal = isModalOpen(elements.registerModal) || isModalOpen(elements.userModal);
+        const switchingFromExpandedCard = switchExpandedCardToModalContext();
+        const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
+
+        await closeModal(elements.registerModal, { animate: false, preserveExpandedState: switchingFromModal });
+        await closeModal(elements.userModal, { animate: false, preserveExpandedState: switchingFromModal });
         setStateMessage(elements.loginState, '');
         syncUi();
-        openModal(elements.loginModal, originRect);
+        await openModal(elements.loginModal, originRect, { animate: shouldAnimateOpen });
 
         if (!isLoggedIn()) {
             document.getElementById('loginUsername')?.focus();
         }
     }
 
-    function openRegisterModal(origin = elements.openRegisterModalButton) {
+    async function openRegisterModal(origin = elements.openRegisterModalButton) {
         const originRect = resolveOriginRect(origin);
         if (isLoggedIn()) {
-            openLoginModal(originRect);
+            await openLoginModal(originRect);
             setStateMessage(elements.loginState, 'Du bist bereits eingeloggt.', 'success');
             return;
         }
 
-        closeModal(elements.loginModal);
+        const switchingFromModal = isModalOpen(elements.loginModal) || isModalOpen(elements.userModal);
+        const switchingFromExpandedCard = switchExpandedCardToModalContext();
+        const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
+
+        await closeModal(elements.loginModal, { animate: false, preserveExpandedState: switchingFromModal });
+        await closeModal(elements.userModal, { animate: false, preserveExpandedState: switchingFromModal });
         setStateMessage(elements.registerState, '');
         syncUi();
-        openModal(elements.registerModal, originRect);
+        await openModal(elements.registerModal, originRect, { animate: shouldAnimateOpen });
         document.getElementById('registerUsername')?.focus();
     }
 
-    function openUserModal(origin = elements.profileImage) {
+    async function openUserModal(origin = elements.profileImage) {
         const originRect = resolveOriginRect(origin);
         if (!state.user) {
-            openLoginModal(originRect);
+            await openLoginModal(originRect);
             setStateMessage(elements.loginState, 'Bitte zuerst einloggen', 'error');
             return;
         }
 
+        const switchingFromModal = isModalOpen(elements.loginModal) || isModalOpen(elements.registerModal);
+        const switchingFromExpandedCard = switchExpandedCardToModalContext();
+        const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
+
+        await closeModal(elements.loginModal, { animate: false, preserveExpandedState: switchingFromModal });
+        await closeModal(elements.registerModal, { animate: false, preserveExpandedState: switchingFromModal });
         setStateMessage(elements.userState, '');
         updateUserPanel();
-        openModal(elements.userModal, originRect);
+        await openModal(elements.userModal, originRect, { animate: shouldAnimateOpen });
+    }
+
+    async function toggleAuthModal(origin = elements.fingerprintImage) {
+        if (isModalOpen(elements.loginModal) || isModalOpen(elements.registerModal)) {
+            await closeModal(elements.loginModal);
+            await closeModal(elements.registerModal);
+            return;
+        }
+
+        await openLoginModal(origin);
+    }
+
+    async function toggleUserModal(origin = elements.profileImage) {
+        if (isModalOpen(elements.userModal)) {
+            await closeModal(elements.userModal);
+            return;
+        }
+
+        if (!state.user && (isModalOpen(elements.loginModal) || isModalOpen(elements.registerModal))) {
+            await closeModal(elements.loginModal);
+            await closeModal(elements.registerModal);
+            return;
+        }
+
+        await openUserModal(origin);
     }
 
     function attachEvents() {
         elements.fingerprintImage?.addEventListener('click', (event) => {
-            openLoginModal(event.currentTarget);
+            void toggleAuthModal(event.currentTarget);
         });
         elements.profileImage?.addEventListener('click', (event) => {
-            openUserModal(event.currentTarget);
+            void toggleUserModal(event.currentTarget);
         });
 
         elements.profileContainer?.addEventListener('mouseenter', updateTooltips);
@@ -680,34 +958,63 @@
         elements.logoutButton?.addEventListener('click', handleLogout);
         elements.userDataForm?.addEventListener('submit', handleSaveUserData);
         elements.openRegisterModalButton?.addEventListener('click', (event) => {
-            openRegisterModal(event.currentTarget);
+            void openRegisterModal(event.currentTarget);
         });
         elements.openLoginModalButton?.addEventListener('click', (event) => {
-            openLoginModal(event.currentTarget);
-        });
-
-        document.querySelectorAll('[data-modal-close]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const modalId = button.getAttribute('data-modal-close');
-                if (!modalId) return;
-                closeModal(document.getElementById(modalId));
-            });
+            void openLoginModal(event.currentTarget);
         });
 
         document.addEventListener('click', (event) => {
-            if (event.target.classList.contains('modal-overlay')) {
-                closeModal(event.target);
+            const target = getEventElement(event);
+            if (!target) return;
+
+            const closeTrigger = target.closest('[data-modal-close]');
+            if (closeTrigger) {
+                const modalId = closeTrigger.getAttribute('data-modal-close');
+                if (!modalId) return;
+                void closeModal(document.getElementById(modalId));
+                return;
+            }
+
+            const openModalOverlay = getOpenModal();
+            if (!openModalOverlay) return;
+
+            const isInsideModal = Boolean(target.closest('.modal'));
+            const isProfileTrigger = Boolean(target.closest('.profile-container, .fingerprint-container'));
+            const isCardLink = Boolean(target.closest('a[data-target-card]'));
+
+            if (!isInsideModal && !isProfileTrigger && !isCardLink) {
+                void closeModal(openModalOverlay);
             }
         });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
-                closeAllModals();
+                void closeAllModals();
             }
         });
 
         window.addEventListener('resize', refreshOpenModalLayouts);
     }
+
+    window.ProfileModalController = {
+        hasOpenModal: anyModalOpen,
+        closeAll: (options = {}) => closeAllModals(options),
+        closeForCardSwitch: () => closeAllModals({ animate: false }),
+        switchToCard(cardId) {
+            if (!cardId || !anyModalOpen()) return false;
+            void closeAllModals({ animate: false, preserveExpandedState: true }).then(() => {
+                setGridModalState(false);
+                document.body.classList.remove('modal-open');
+                if (window.CardExpansion?.openCardByIdWithoutExpandAnimation) {
+                    window.CardExpansion.openCardByIdWithoutExpandAnimation(cardId);
+                } else if (window.CardExpansion?.openCardById) {
+                    window.CardExpansion.openCardById(cardId);
+                }
+            });
+            return true;
+        },
+    };
 
     attachEvents();
     refreshSession();
