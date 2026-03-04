@@ -22,7 +22,7 @@
 
 .widget-header h2 {
     margin: 0;
-    font-size: clamp(1.28rem, 1.62vw, 1.72rem);
+    font-size: clamp(1.18rem, 1.42vw, 1.52rem);
     line-height: 1.16;
     text-transform: none;
     letter-spacing: 0.01em;
@@ -82,7 +82,7 @@
 
 .summary-hero {
     margin: 0;
-    font-size: clamp(2.86rem, 4.95vw, 5.34rem);
+    font-size: clamp(2.2rem, 3.8vw, 4.3rem);
     line-height: 0.96;
     letter-spacing: -0.022em;
     font-weight: var(--font-weight-bold);
@@ -91,7 +91,7 @@
 
 .summary-weather {
     margin: 0;
-    font-size: clamp(3.2rem, 5.35vw, 5.92rem);
+    font-size: clamp(2.6rem, 4.2vw, 4.7rem);
     line-height: 0.92;
     letter-spacing: -0.028em;
     font-weight: var(--font-weight-bold);
@@ -100,7 +100,7 @@
 
 .summary-sub {
     margin: 0;
-    font-size: clamp(1.04rem, 1.2vw, 1.26rem);
+    font-size: clamp(0.96rem, 1.08vw, 1.12rem);
     line-height: 1.46;
     letter-spacing: 0.007em;
     color: color-mix(in srgb, var(--color-text-muted) 80%, white 20%);
@@ -151,7 +151,7 @@
 .calendar-day-number {
     margin: 0;
     margin-top: auto;
-    font-size: clamp(11rem, 24vw, 22rem);
+    font-size: clamp(8rem, 16vw, 16rem);
     line-height: 0.74;
     letter-spacing: -0.106em;
     font-weight: var(--font-weight-bold);
@@ -171,7 +171,7 @@
     transform: translate(-50%, -46%);
     width: 100%;
     text-align: center;
-    font-size: clamp(1.55rem, 2.9vw, 2.9rem);
+    font-size: clamp(1.18rem, 2.2vw, 2.2rem);
     color: color-mix(in srgb, #fff 78%, var(--color-accent) 22%);
     text-transform: uppercase;
     letter-spacing: 0.048em;
