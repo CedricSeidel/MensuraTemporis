@@ -32,6 +32,14 @@
 
     if (!elements.profileImage || !elements.fingerprintImage) return;
 
+    const STORAGE_KEYS = {
+        users: 'mensura-auth-users-v1',
+        session: 'mensura-auth-session-v1',
+    };
+
+    const FALLBACK_HTTP_STATUSES = new Set([404, 405, 500, 502, 503, 504]);
+    const REGISTER_ALREADY_LOGGED_IN_TEXT = 'Du bist bereits eingeloggt. Logout im Login-Popup.';
+
     const API_BASES = (() => {
         const bases = [];
         const origin = window.location.origin;
@@ -47,10 +55,171 @@
         return bases;
     })();
 
+    function createHttpError(message, status = 400) {
+        const error = new Error(message);
+        error.status = status;
+        return error;
+    }
+
+    function readStorage(key, fallback) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+        } catch {
+            return fallback;
+        }
+    }
+
+    function writeStorage(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch {
+            // ignore write errors
+        }
+    }
+
+    function removeStorage(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            // ignore remove errors
+        }
+    }
+
+    function normalizeUsername(value) {
+        return (value || '').trim();
+    }
+
+    function toPublicUser(user) {
+        if (!user) return null;
+        return {
+            username: user.username,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            data: user.data && typeof user.data === 'object' ? user.data : {},
+        };
+    }
+
+    function getLocalUsers() {
+        const users = readStorage(STORAGE_KEYS.users, []);
+        return Array.isArray(users) ? users : [];
+    }
+
+    function saveLocalUsers(users) {
+        writeStorage(STORAGE_KEYS.users, users);
+    }
+
+    function getLocalSession() {
+        const session = readStorage(STORAGE_KEYS.session, null);
+        if (!session || typeof session.username !== 'string') return null;
+        return session;
+    }
+
+    function setLocalSession(username) {
+        writeStorage(STORAGE_KEYS.session, { username });
+    }
+
+    function clearLocalSession() {
+        removeStorage(STORAGE_KEYS.session);
+    }
+
+    function findLocalUser(users, username) {
+        const wanted = normalizeUsername(username).toLowerCase();
+        return users.find((entry) => entry?.username?.toLowerCase() === wanted) || null;
+    }
+
+    function getSessionUser(users) {
+        const session = getLocalSession();
+        if (!session) return null;
+        return users.find((entry) => entry?.username === session.username) || null;
+    }
+
+    function localAuthRequest(path, method, body) {
+        const upperMethod = method.toUpperCase();
+        const users = getLocalUsers();
+        const now = new Date().toISOString();
+
+        if (path === '/api/me' && upperMethod === 'GET') {
+            const currentUser = getSessionUser(users);
+            return { user: toPublicUser(currentUser) };
+        }
+
+        if (path === '/api/login' && upperMethod === 'POST') {
+            const username = normalizeUsername(body?.username);
+            const password = body?.password || '';
+            const user = findLocalUser(users, username);
+
+            if (!user || user.password !== password) {
+                throw createHttpError('Ungültige Zugangsdaten', 401);
+            }
+
+            setLocalSession(user.username);
+            return { user: toPublicUser(user) };
+        }
+
+        if (path === '/api/register' && upperMethod === 'POST') {
+            const username = normalizeUsername(body?.username);
+            const password = body?.password || '';
+
+            if (username.length < 3) {
+                throw createHttpError('Username muss mindestens 3 Zeichen haben', 400);
+            }
+
+            if (password.length < 8) {
+                throw createHttpError('Passwort muss mindestens 8 Zeichen haben', 400);
+            }
+
+            if (findLocalUser(users, username)) {
+                throw createHttpError('Username bereits vergeben', 409);
+            }
+
+            const newUser = {
+                username,
+                password,
+                data: body?.data && typeof body.data === 'object' ? body.data : {},
+                createdAt: now,
+                updatedAt: now,
+            };
+
+            users.push(newUser);
+            saveLocalUsers(users);
+            setLocalSession(newUser.username);
+            return { user: toPublicUser(newUser) };
+        }
+
+        if (path === '/api/logout' && upperMethod === 'POST') {
+            clearLocalSession();
+            return { ok: true };
+        }
+
+        if (path === '/api/me/data' && upperMethod === 'PUT') {
+            const currentUser = getSessionUser(users);
+            if (!currentUser) {
+                throw createHttpError('Bitte zuerst einloggen', 401);
+            }
+
+            currentUser.data = body?.data && typeof body.data === 'object' ? body.data : {};
+            currentUser.updatedAt = now;
+
+            saveLocalUsers(users);
+            return { user: toPublicUser(currentUser) };
+        }
+
+        throw createHttpError('Aktion nicht verfügbar', 404);
+    }
+
     function setStateMessage(target, text, type = '') {
         if (!target) return;
         target.textContent = text || '';
         target.className = `modal-state${type ? ` is-${type}` : ''}`;
+    }
+
+    function getErrorMessage(error, fallback = 'Unbekannter Fehler') {
+        if (error instanceof Error && error.message) {
+            return error.message;
+        }
+        return fallback;
     }
 
     function formatTimestamp(value) {
@@ -61,7 +230,7 @@
     }
 
     function anyModalOpen() {
-        return !elements.loginModal.hidden || !elements.registerModal.hidden || !elements.userModal.hidden;
+        return [elements.loginModal, elements.registerModal, elements.userModal].some((modal) => modal && !modal.hidden);
     }
 
     function openModal(modal) {
@@ -90,11 +259,19 @@
 
     function updateTooltips() {
         const loggedIn = isLoggedIn();
-        elements.profileTooltip.textContent = loggedIn ? 'Profil' : 'Profil (nicht eingeloggt)';
-        elements.fingerprintTooltip.textContent = loggedIn ? 'Account' : 'Login';
+        if (elements.profileTooltip) {
+            elements.profileTooltip.textContent = loggedIn ? 'Profil' : 'Profil (nicht eingeloggt)';
+        }
+        if (elements.fingerprintTooltip) {
+            elements.fingerprintTooltip.textContent = loggedIn ? 'Account' : 'Login';
+        }
     }
 
     function updateUserPanel() {
+        if (!elements.userNameValue || !elements.userCreatedValue || !elements.userUpdatedValue || !elements.userDataInput) {
+            return;
+        }
+
         if (!state.user) {
             elements.userNameValue.textContent = '-';
             elements.userCreatedValue.textContent = '-';
@@ -111,22 +288,30 @@
 
     function updateAuthPanels() {
         const loggedIn = isLoggedIn();
-        elements.loginForm.hidden = loggedIn;
-        elements.openRegisterModalButton.hidden = loggedIn;
-        elements.loggedInPanel.hidden = !loggedIn;
-        elements.loggedInUsername.textContent = state.user?.username || '-';
 
-        elements.registerForm.hidden = loggedIn;
-        elements.openLoginModalButton.hidden = loggedIn;
+        if (elements.loginForm) elements.loginForm.hidden = loggedIn;
+        if (elements.openRegisterModalButton) elements.openRegisterModalButton.hidden = loggedIn;
+        if (elements.loggedInPanel) elements.loggedInPanel.hidden = !loggedIn;
+        if (elements.loggedInUsername) elements.loggedInUsername.textContent = state.user?.username || '-';
+
+        if (elements.registerForm) elements.registerForm.hidden = loggedIn;
+        if (elements.openLoginModalButton) elements.openLoginModalButton.hidden = loggedIn;
 
         if (loggedIn) {
-            setStateMessage(elements.registerState, 'Du bist bereits eingeloggt. Logout im Login-Popup.', 'success');
+            setStateMessage(elements.registerState, REGISTER_ALREADY_LOGGED_IN_TEXT, 'success');
+        } else if (elements.registerState?.textContent === REGISTER_ALREADY_LOGGED_IN_TEXT) {
+            setStateMessage(elements.registerState, '');
         }
 
         updateTooltips();
     }
 
-    async function apiRequest(path, options = {}) {
+    function syncUi() {
+        updateAuthPanels();
+        updateUserPanel();
+    }
+
+    async function requestBackend(path, options = {}) {
         const request = {
             method: options.method || 'GET',
             credentials: 'include',
@@ -138,11 +323,7 @@
             request.body = JSON.stringify(options.body);
         }
 
-        let lastError = null;
-
-        for (let index = 0; index < API_BASES.length; index += 1) {
-            const base = API_BASES[index];
-            const isLastBase = index === API_BASES.length - 1;
+        for (const base of API_BASES) {
             const url = `${base}${path}`;
 
             try {
@@ -156,23 +337,33 @@
                 }
 
                 if (!response.ok) {
-                    if (!isLastBase) {
-                        continue;
-                    }
+                    const error = createHttpError(
+                        payload?.error || `Request fehlgeschlagen (${response.status})`,
+                        response.status
+                    );
 
-                    const message = payload?.error || `Request fehlgeschlagen (${response.status})`;
-                    lastError = new Error(message);
-                    break;
+                    if (!FALLBACK_HTTP_STATUSES.has(response.status)) {
+                        throw error;
+                    }
+                    continue;
                 }
 
                 return payload;
             } catch (error) {
-                lastError = error;
-                (!isLastBase);
+                const status = typeof error?.status === 'number' ? error.status : null;
+                if (status && !FALLBACK_HTTP_STATUSES.has(status)) {
+                    throw error;
+                }
             }
         }
 
-        throw lastError || new Error('Backend nicht erreichbar');
+        return null;
+    }
+
+    async function apiRequest(path, options = {}) {
+        const backendPayload = await requestBackend(path, options);
+        if (backendPayload !== null) return backendPayload;
+        return localAuthRequest(path, options.method || 'GET', options.body);
     }
 
     async function refreshSession() {
@@ -182,8 +373,7 @@
         } catch {
             state.user = null;
         } finally {
-            updateAuthPanels();
-            updateUserPanel();
+            syncUi();
         }
     }
 
@@ -191,8 +381,9 @@
         event.preventDefault();
         setStateMessage(elements.loginState, '');
 
-        const username = event.target.username.value.trim();
-        const password = event.target.password.value;
+        const form = event.currentTarget;
+        const username = normalizeUsername(form.username.value);
+        const password = form.password.value;
 
         try {
             const payload = await apiRequest('/api/login', {
@@ -200,13 +391,12 @@
                 body: { username, password },
             });
             state.user = payload.user;
-            updateAuthPanels();
-            updateUserPanel();
+            syncUi();
             setStateMessage(elements.loginState, 'Login erfolgreich', 'success');
             closeModal(elements.loginModal);
-            event.target.reset();
+            form.reset();
         } catch (error) {
-            setStateMessage(elements.loginState, error.message, 'error');
+            setStateMessage(elements.loginState, getErrorMessage(error), 'error');
         }
     }
 
@@ -214,9 +404,10 @@
         event.preventDefault();
         setStateMessage(elements.registerState, '');
 
-        const username = event.target.username.value.trim();
-        const password = event.target.password.value;
-        const passwordConfirm = event.target.passwordConfirm.value;
+        const form = event.currentTarget;
+        const username = normalizeUsername(form.username.value);
+        const password = form.password.value;
+        const passwordConfirm = form.passwordConfirm.value;
 
         if (password !== passwordConfirm) {
             setStateMessage(elements.registerState, 'Passwörter stimmen nicht überein', 'error');
@@ -229,13 +420,12 @@
                 body: { username, password, data: {} },
             });
             state.user = payload.user;
-            updateAuthPanels();
-            updateUserPanel();
+            syncUi();
             setStateMessage(elements.registerState, 'Registrierung erfolgreich', 'success');
             closeModal(elements.registerModal);
-            event.target.reset();
+            form.reset();
         } catch (error) {
-            setStateMessage(elements.registerState, error.message, 'error');
+            setStateMessage(elements.registerState, getErrorMessage(error), 'error');
         }
     }
 
@@ -245,13 +435,12 @@
         try {
             await apiRequest('/api/logout', { method: 'POST' });
             state.user = null;
-            updateAuthPanels();
-            updateUserPanel();
+            syncUi();
             setStateMessage(elements.loginState, 'Logout erfolgreich', 'success');
             closeModal(elements.loginModal);
             closeModal(elements.userModal);
         } catch (error) {
-            setStateMessage(elements.loginState, error.message, 'error');
+            setStateMessage(elements.loginState, getErrorMessage(error), 'error');
         }
     }
 
@@ -277,18 +466,17 @@
                 body: { data: parsedData },
             });
             state.user = payload.user;
-            updateUserPanel();
-            updateAuthPanels();
+            syncUi();
             setStateMessage(elements.userState, 'User-Daten gespeichert', 'success');
         } catch (error) {
-            setStateMessage(elements.userState, error.message, 'error');
+            setStateMessage(elements.userState, getErrorMessage(error), 'error');
         }
     }
 
     function openLoginModal() {
         closeModal(elements.registerModal);
         setStateMessage(elements.loginState, '');
-        updateAuthPanels();
+        syncUi();
         openModal(elements.loginModal);
 
         if (!isLoggedIn()) {
@@ -305,7 +493,7 @@
 
         closeModal(elements.loginModal);
         setStateMessage(elements.registerState, '');
-        updateAuthPanels();
+        syncUi();
         openModal(elements.registerModal);
         document.getElementById('registerUsername')?.focus();
     }
@@ -323,22 +511,23 @@
     }
 
     function attachEvents() {
-        elements.fingerprintImage.addEventListener('click', openLoginModal);
-        elements.profileImage.addEventListener('click', openUserModal);
+        elements.fingerprintImage?.addEventListener('click', openLoginModal);
+        elements.profileImage?.addEventListener('click', openUserModal);
 
-        elements.profileContainer.addEventListener('mouseenter', updateTooltips);
-        elements.fingerprintContainer.addEventListener('mouseenter', updateTooltips);
+        elements.profileContainer?.addEventListener('mouseenter', updateTooltips);
+        elements.fingerprintContainer?.addEventListener('mouseenter', updateTooltips);
 
-        elements.loginForm.addEventListener('submit', handleLogin);
-        elements.registerForm.addEventListener('submit', handleRegister);
-        elements.logoutButton.addEventListener('click', handleLogout);
-        elements.userDataForm.addEventListener('submit', handleSaveUserData);
-        elements.openRegisterModalButton.addEventListener('click', openRegisterModal);
-        elements.openLoginModalButton.addEventListener('click', openLoginModal);
+        elements.loginForm?.addEventListener('submit', handleLogin);
+        elements.registerForm?.addEventListener('submit', handleRegister);
+        elements.logoutButton?.addEventListener('click', handleLogout);
+        elements.userDataForm?.addEventListener('submit', handleSaveUserData);
+        elements.openRegisterModalButton?.addEventListener('click', openRegisterModal);
+        elements.openLoginModalButton?.addEventListener('click', openLoginModal);
 
         document.querySelectorAll('[data-modal-close]').forEach((button) => {
             button.addEventListener('click', () => {
                 const modalId = button.getAttribute('data-modal-close');
+                if (!modalId) return;
                 closeModal(document.getElementById(modalId));
             });
         });
@@ -357,5 +546,5 @@
     }
 
     attachEvents();
-    refreshSession().then();
+    refreshSession();
 })();

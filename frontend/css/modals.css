@@ -27,17 +27,20 @@
     background: rgba(224, 224, 224, 0.95);
     color: var(--color-text);
     box-shadow: var(--shadow-md);
-    padding: var(--spacing-3xl);
+    padding: var(--spacing-2xl);
 }
 
 .modal h3 {
-    margin: 0 0 var(--spacing-2xl) 0;
+    margin: 0 0 var(--spacing-xl) 0;
+    font-size: var(--font-size-lg);
+    letter-spacing: var(--letter-spacing-wide);
+    line-height: var(--line-height-tight);
 }
 
 .modal-close {
     position: absolute;
-    top: var(--spacing-md);
-    right: var(--spacing-md);
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
     border: 1px solid var(--color-border-light);
     background: transparent;
     color: var(--color-text);
@@ -77,9 +80,10 @@
 
 .modal-state {
     min-height: 1.6em;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
     color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-normal);
 }
 
 .modal-state.is-error {
@@ -93,12 +97,14 @@
 .auth-form,
 .user-data-form {
     display: grid;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
 }
 
 .auth-form label,
 .user-data-form label {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
 }
 
 .auth-form input,
@@ -112,6 +118,7 @@
     padding: var(--spacing-md);
     font-family: var(--font-family-mono), monospace;
     font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
 }
 
 .auth-form button,
@@ -124,12 +131,16 @@
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm) var(--spacing-xl);
     cursor: pointer;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
 }
 
 .auth-logged-in {
     display: grid;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-md);
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
 }
 
 .logged-in-text {
@@ -137,18 +148,19 @@
 }
 
 .auth-switch {
-    margin-top: var(--spacing-md);
+    margin-top: var(--spacing-lg);
     border: none;
     background: transparent;
     color: var(--color-text-muted);
     text-decoration: underline;
     cursor: pointer;
     padding: 0;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
 }
 
 .user-meta {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
 }
 
 .user-meta p {

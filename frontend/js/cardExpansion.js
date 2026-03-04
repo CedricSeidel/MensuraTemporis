@@ -34,7 +34,7 @@ export class CardExpansion {
         const closeButton = event.target.closest('[data-container-close]');
         if (closeButton) {
             if (CardExpansion.state.expandedInstance === this) {
-                CardExpansion.closeExpandedCard().then();
+                void CardExpansion.closeExpandedCard();
             }
             return;
         }
@@ -117,7 +117,7 @@ export class CardExpansion {
     setupExpandedInteractions() {
         const handleOutsideClick = (event) => {
             if (this.card.contains(event.target)) return;
-            CardExpansion.closeExpandedCard().then();
+            void CardExpansion.closeExpandedCard();
         };
 
         setTimeout(() => {
@@ -127,7 +127,7 @@ export class CardExpansion {
 
         const handleEscape = (event) => {
             if (event.key === 'Escape') {
-                CardExpansion.closeExpandedCard().then();
+                void CardExpansion.closeExpandedCard();
             }
         };
 
@@ -201,7 +201,7 @@ export class CardExpansion {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[class^="container"]').forEach((container) => {
+    document.querySelectorAll('.grid > [id^="container"]').forEach((container) => {
         new CardExpansion(container);
     });
 });

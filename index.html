@@ -22,21 +22,24 @@
         <!-- Navigation Links (Mitte) -->
         <div class="nav-bar-links-container">
             <a class="nav-bar-links" href="#container1" data-hotkey="d" data-target-card="container1">
-                <span class="nav-button__hotkey" style="opacity: 0.6">[D]</span>
-                Date</a>
+                <span class="nav-button__hotkey">[D]</span>
+                Date
+            </a>
             <a class="nav-bar-links" href="#container4" data-hotkey="c" data-target-card="container4">
-                <span class="nav-button__hotkey" style="opacity: 0.6">[C] </span>
-                    Create</a>
+                <span class="nav-button__hotkey">[C]</span>
+                Create
+            </a>
             <a class="nav-bar-links" href="#container5" data-hotkey="h" data-target-card="container5">
-                <span class="nav-button__hotkey" style="opacity: 0.6">[H]</span>
-                    Help</a>
+                <span class="nav-button__hotkey">[H]</span>
+                Help
+            </a>
         </div>
 
         <!-- Profil/Login (Rechts) -->
         <div class="navbar-profile">
             <div class="profile-container">
                 <img src="frontend/assets/img/profile-simple.svg" alt="Profilbild" class="profile-image" id="profileImage" role="button" tabindex="0" data-hotkey="p" aria-label="Profil öffnen">
-                <div class="profile-tooltip" id="profileTooltip">Profile</div>
+                <div class="profile-tooltip" id="profileTooltip">Profil</div>
             </div>
             <div class="fingerprint-container">
                 <img src="frontend/assets/img/fingerabdruck.png" alt="Fingerabdruck" class="fingerprint-image" id="fingerprintImage" role="button" tabindex="0" data-hotkey="l" aria-label="Login oder Register öffnen">
@@ -46,47 +49,149 @@
     </nav>
 </header>
     <div class="grid">
-            <div class="container1" id="container1">
-                <button type="button" class="container-close" data-container-close="container1" aria-label="Container schließen">×</button>
+        <div class="container1" id="container1">
+            <button type="button" class="container-close" data-container-close="container1" aria-label="Container schließen">×</button>
+            <p class="widget-kicker">[D] DATE PROTOCOL</p>
+            <div class="widget-header">
                 <h2>Calendar</h2>
-                <hr>
-                <p></p>
+                <span class="widget-chip">LOCAL</span>
             </div>
+            <hr>
+            <div class="widget-content">
+                <div class="widget-collapsed calendar-collapsed">
+                    <p class="summary-caption">Heute</p>
+                    <p class="calendar-day-number" id="calendarCurrentDay">--</p>
+                    <p class="calendar-day-meta" id="calendarCurrentMeta">---</p>
+                </div>
+                <div class="widget-expanded" aria-hidden="true"></div>
+            </div>
+        </div>
 
-            <div class="container2" id="container2">
-                <button type="button" class="container-close" data-container-close="container2" aria-label="Container schließen">×</button>
+        <div class="container2" id="container2">
+            <button type="button" class="container-close" data-container-close="container2" aria-label="Container schließen">×</button>
+            <p class="widget-kicker">[E] EVENT QUEUE</p>
+            <div class="widget-header">
                 <h2>Upcoming Events</h2>
-                <hr>
-                <p></p>
+                <span class="widget-chip">SYNC</span>
             </div>
+            <hr>
+            <div class="widget-content">
+                <div class="widget-collapsed">
+                    <p class="summary-caption">Nächster Termin</p>
+                    <p class="summary-hero" id="eventsNextTitle">Team Sync</p>
+                    <p class="summary-sub" id="eventsNextTime">Heute · 15:00</p>
+                    <div class="metric-line">
+                        <span id="eventsVisibleCounter">8 Events sichtbar</span>
+                        <strong id="eventsCriticalCount">3 Critical</strong>
+                    </div>
+                </div>
+                <div class="widget-expanded" aria-hidden="true"></div>
+            </div>
+        </div>
 
-            <div class="container3" id="container3">
-                <button type="button" class="container-close" data-container-close="container3" aria-label="Container schließen">×</button>
+        <div class="container3" id="container3">
+            <button type="button" class="container-close" data-container-close="container3" aria-label="Container schließen">×</button>
+            <p class="widget-kicker">[W] WEATHER NODE</p>
+            <div class="widget-header">
                 <h2>Weather</h2>
-                <hr>
-                <p></p>
+                <span class="widget-chip">LIVE</span>
             </div>
+            <hr>
+            <div class="widget-content">
+                <div class="widget-collapsed">
+                    <p class="summary-caption" id="weatherCity">Berlin</p>
+                    <p class="summary-weather" id="weatherTemp">7°C</p>
+                    <p class="summary-sub" id="weatherMeta">bewölkt / Wind 14 km/h</p>
+                    <div class="metric-line">
+                        <span id="weatherHumidity">Feuchte 62%</span>
+                        <strong id="weatherRain">Regen 18%</strong>
+                    </div>
+                </div>
+                <div class="widget-expanded" aria-hidden="true"></div>
+            </div>
+        </div>
 
-            <div class="container4" id="container4">
-                <button type="button" class="container-close" data-container-close="container4" aria-label="Container schließen">×</button>
+        <div class="container4" id="container4">
+            <button type="button" class="container-close" data-container-close="container4" aria-label="Container schließen">×</button>
+            <p class="widget-kicker">[C] QUICK CAPTURE</p>
+            <div class="widget-header">
                 <h2>Quick Notes</h2>
-                <hr>
-                <p></p>
+                <span class="widget-chip">POST-IT</span>
             </div>
-
-            <div class="container5" id="container5">
-                <button type="button" class="container-close" data-container-close="container5" aria-label="Container schließen">×</button>
-                <h2>Help</h2>
-                <hr>
-                <p></p>
+            <hr>
+            <div class="widget-content">
+                <div class="widget-collapsed">
+                    <p class="summary-caption">Letzte Notiz</p>
+                    <p class="summary-hero" id="notePreview">Noch keine Notiz gespeichert.</p>
+                    <p class="summary-sub" id="noteUpdated">Status: inaktiv</p>
+                    <div class="metric-line">
+                        <span id="noteCount">0 Zeichen</span>
+                        <strong id="postitCount">0 Post-its</strong>
+                    </div>
+                </div>
+                <div class="widget-expanded" aria-hidden="true"></div>
             </div>
+        </div>
 
-            <div class="container6" id="container6">
-                <button type="button" class="container-close" data-container-close="container6" aria-label="Container schließen">×</button>
+        <div class="container5" id="container5">
+            <button type="button" class="container-close" data-container-close="container5" aria-label="Container schließen">×</button>
+            <p class="widget-kicker">[H] CHRONO MODULE</p>
+            <div class="widget-header">
+                <h2>Analog Clock</h2>
+                <span class="widget-chip">ANALOG</span>
+            </div>
+            <hr>
+            <div class="widget-content">
+                <div class="widget-collapsed clock-collapsed">
+                    <div class="analog-clock-shell" id="analogClockShell">
+                        <p class="clock-meta-top" id="clockTopLine">Berlin / Europe/Berlin</p>
+                        <div class="analog-clock-face" id="analogClockFace" aria-label="Analoge Uhr">
+                            <span class="clock-tick-ring" aria-hidden="true"></span>
+                            <span class="clock-number clock-number-12">12</span>
+                            <span class="clock-number clock-number-1">1</span>
+                            <span class="clock-number clock-number-2">2</span>
+                            <span class="clock-number clock-number-3">3</span>
+                            <span class="clock-number clock-number-4">4</span>
+                            <span class="clock-number clock-number-5">5</span>
+                            <span class="clock-number clock-number-6">6</span>
+                            <span class="clock-number clock-number-7">7</span>
+                            <span class="clock-number clock-number-8">8</span>
+                            <span class="clock-number clock-number-9">9</span>
+                            <span class="clock-number clock-number-10">10</span>
+                            <span class="clock-number clock-number-11">11</span>
+                            <span class="clock-hand clock-hand-hour" id="clockHourHand"></span>
+                            <span class="clock-hand clock-hand-minute" id="clockMinuteHand"></span>
+                            <span class="clock-hand clock-hand-second" id="clockSecondHand"></span>
+                            <span class="clock-center-dot"></span>
+                        </div>
+                        <p class="clock-meta-bottom" id="clockBottomLine">03/03/2026 · Tue</p>
+                    </div>
+                </div>
+                <div class="widget-expanded" aria-hidden="true"></div>
+            </div>
+        </div>
+
+        <div class="container6" id="container6">
+            <button type="button" class="container-close" data-container-close="container6" aria-label="Container schließen">×</button>
+            <p class="widget-kicker">[S] SYSTEM FLAGS</p>
+            <div class="widget-header">
                 <h2>Settings</h2>
-                <hr>
-                <p></p>
+                <span class="widget-chip">CONFIG</span>
             </div>
+            <hr>
+            <div class="widget-content">
+                <div class="widget-collapsed">
+                    <p class="summary-caption">Runtime</p>
+                    <p class="summary-hero" id="settingsSummary">24H ON / Focus OFF / Compact OFF</p>
+                    <p class="summary-sub" id="settingsZoneText">Europe/Berlin</p>
+                    <div class="metric-line">
+                        <span id="settingsModeCount">1 aktiv</span>
+                        <strong id="settingsHelpVisible">0 Help Einträge</strong>
+                    </div>
+                </div>
+                <div class="widget-expanded" aria-hidden="true"></div>
+            </div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="loginModal" hidden>
@@ -137,7 +242,7 @@
     <div class="modal-overlay" id="userModal" hidden>
         <div class="modal user-modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
             <button type="button" class="modal-close" data-modal-close="userModal" aria-label="Popup schließen">×</button>
-            <h3 id="userModalTitle">User Profil</h3>
+            <h3 id="userModalTitle">Benutzerprofil</h3>
             <div class="modal-state" id="userState"></div>
 
             <div class="user-meta">
@@ -157,6 +262,7 @@
 
 
     <script type="module" src="frontend/js/cardExpansion.js"></script>
+    <script src="frontend/js/cardContent.js"></script>
     <script src="frontend/js/profile.js"></script>
     <script src="frontend/js/hotkeys.js"></script>
 

@@ -27,6 +27,7 @@
 
     /* Status-Farben */
     --color-green: #2a6e2a;
+    --color-accent: color-mix(in srgb, var(--color-green) 35%, var(--color-primary-light) 65%);
     --color-success-bg: rgba(42, 110, 42, 0.1);
     --color-red: #803030;
     --color-error-bg: rgba(128, 48, 48, 0.1);
@@ -43,13 +44,15 @@
 
     --font-family-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
-    /* Font Sizes */
-    --font-size-xs: 0.7em;
-    --font-size-sm: 0.9em;
-    --font-size-base: 1em;
-    --font-size-md: 1.1em;
-    --font-size-lg: 1.2em;
-    --font-size-xl: 1.3em;
+    /* Font Sizes (Baseline 16px, rem-basiert) */
+    --font-size-xs: 0.72rem;
+    --font-size-sm: 0.84rem;
+    --font-size-base: 1rem;
+    --font-size-md: 1.02rem;
+    --font-size-lg: 1.2rem;
+    --font-size-xl: 1.38rem;
+    --font-size-2xl: 1.88rem;
+    --font-size-3xl: 2.72rem;
 
     /* Font Weights */
     --font-weight-light: 200;
@@ -59,17 +62,17 @@
     --font-weight-bold: 700;
 
     /* Line Heights */
-    --line-height-tight: 1.0;
-    --line-height-normal: 1.5;
-    --line-height-relaxed: 1.6;
-    --line-height-loose: 1.7;
+    --line-height-tight: 1.1;
+    --line-height-normal: 1.4;
+    --line-height-relaxed: 1.52;
+    --line-height-loose: 1.65;
 
     /* Letter Spacing */
-    --letter-spacing-tight: -0.04em;
+    --letter-spacing-tight: -0.03em;
     --letter-spacing-normal: 0;
     --letter-spacing-wide: 0.02em;
-    --letter-spacing-wider: 0.05em;
-    --letter-spacing-widest: 0.1em;
+    --letter-spacing-wider: 0.045em;
+    --letter-spacing-widest: 0.09em;
 
     /* ============================
      * ABSTÄNDE (SPACING)
@@ -79,9 +82,9 @@
     --spacing-sm: 8px;
     --spacing-md: 12px;
     --spacing-lg: 16px;
-    --spacing-xl: 20px;
-    --spacing-2xl: 24px;
-    --spacing-3xl: 32px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+    --spacing-3xl: 40px;
     --spacing-4xl: 48px;
     --spacing-5xl: 64px;
 
