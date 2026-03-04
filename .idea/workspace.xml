@@ -5,15 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d2982c12-31fa-4164-b47a-8077018928eb" name="Changes" comment="-update input&#10;-update styles">
-      <change afterPath="$PROJECT_DIR$/frontend/assets/video/855005-hd_1920_1080_30fps.mp4" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/css/main.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/css/modals.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/modals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/css/navbar.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/navbar.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/css/token.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/token.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/cardContent.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/cardContent.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/cardExpansion.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/cardExpansion.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/hotkeys.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/hotkeys.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/profile.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -125,7 +116,7 @@
       <updated>1772440044990</updated>
       <workItem from="1772440047362" duration="27628000" />
       <workItem from="1772530653396" duration="8272000" />
-      <workItem from="1772544614259" duration="28550000" />
+      <workItem from="1772544614259" duration="28786000" />
     </task>
     <task id="LOCAL-00001" summary="update css">
       <option name="closed" value="true" />
