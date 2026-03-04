@@ -10,8 +10,6 @@ const NIGHT_START_HOUR = 20;
 const NIGHT_END_HOUR = 6;
 const MIN_PRECIP_MM_FOR_RAIN_SCENE = 0.08;
 const MIN_SNOW_CM_FOR_SNOW_SCENE = 0.03;
-const SKY_PLAYBACK_RATE = 0.48;
-const DEFAULT_SKY_VIDEO_SOURCE = 'frontend/assets/video/855005-hd_1920_1080_30fps.mp4';
 
 const WMO_CONDITION_LABELS = {
     0: 'sonnig',
@@ -113,57 +111,6 @@ export function createWeatherRenderer(elements) {
     let requestCounter = 0;
     const geocodeCache = new Map();
 
-    function enforceSkyPlaybackRate(video) {
-        if (!video) return;
-        video.defaultPlaybackRate = SKY_PLAYBACK_RATE;
-        video.playbackRate = SKY_PLAYBACK_RATE;
-        if ('preservesPitch' in video) video.preservesPitch = false;
-        if ('webkitPreservesPitch' in video) video.webkitPreservesPitch = false;
-    }
-
-    function ensureSkyVideoPlayback(video) {
-        if (!video) return;
-
-        video.loop = true;
-        video.muted = true;
-        video.defaultMuted = true;
-        video.setAttribute('muted', '');
-        video.playsInline = true;
-        video.setAttribute('playsinline', '');
-        video.autoplay = true;
-        video.preload = 'auto';
-        enforceSkyPlaybackRate(video);
-
-        if (!video.getAttribute('src') && !video.currentSrc) {
-            video.src = DEFAULT_SKY_VIDEO_SOURCE;
-        }
-
-        if (!video.currentSrc) {
-            video.load();
-        }
-
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch(() => {
-                // Retry after a user interaction in setupSkyVideoListeners.
-            });
-        }
-    }
-
-    function applySkyVideo() {
-        const video = elements.skyBackgroundVideo;
-        if (!video) return;
-
-        const source = video.getAttribute('src') || DEFAULT_SKY_VIDEO_SOURCE;
-        const hasSourceLoaded = Boolean(video.currentSrc && video.currentSrc.includes(source));
-        if (!hasSourceLoaded) {
-            video.src = source;
-            video.load();
-        }
-
-        ensureSkyVideoPlayback(video);
-    }
-
     function renderWeatherValues(weather, state, unit) {
         const wind = Math.round(Number(weather.wind ?? 0));
         const humidity = Math.round(Number(weather.humidity ?? 0));
@@ -180,7 +127,6 @@ export function createWeatherRenderer(elements) {
         setText(elements.weatherRain, precipitationText);
 
         state.weather.timezone = weather.timezone;
-        applySkyVideo();
     }
 
     async function resolveGeocode(city) {
@@ -302,34 +248,8 @@ export function createWeatherRenderer(elements) {
         return renderWeatherCollapsed(state);
     }
 
-    function setupSkyVideoListeners() {
-        const video = elements.skyBackgroundVideo;
-        if (!video) return;
-
-        const handlePlaybackRate = () => enforceSkyPlaybackRate(video);
-        handlePlaybackRate();
-        applySkyVideo();
-        video.addEventListener('loadedmetadata', handlePlaybackRate);
-        video.addEventListener('ratechange', handlePlaybackRate);
-        video.addEventListener('loadeddata', () => applySkyVideo());
-        video.addEventListener('canplay', () => applySkyVideo());
-
-        video.addEventListener('error', () => {
-            window.setTimeout(() => {
-                applySkyVideo();
-            }, 300);
-        });
-
-        const resumeSkyPlayback = () => applySkyVideo();
-        window.addEventListener('click', resumeSkyPlayback, { passive: true });
-        window.addEventListener('pointerdown', resumeSkyPlayback, { passive: true });
-        window.addEventListener('touchstart', resumeSkyPlayback, { passive: true });
-        window.addEventListener('keydown', resumeSkyPlayback);
-    }
-
     return {
         renderWeatherCollapsed,
         refreshSkyScene,
-        setupSkyVideoListeners,
     };
 }

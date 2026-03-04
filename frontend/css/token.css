@@ -13,13 +13,14 @@
     /* Hintergrund & Oberflächen */
     --color-background: #f3f2ed;
     --color-background-alt: #e9e7df;
+    --color-card-bg: rgb(241, 240, 235);
     --color-surface: rgba(255, 255, 252, 0.66);
     --color-surface-hover: rgba(255, 255, 252, 0.84);
 
     /* Text */
     --color-text: #201f1d;
-    --color-text-muted: #e3e3e3;
-    --color-text-light: #ffffff;
+    --color-text-muted: #4d4b47;
+    --color-text-light: #201f1d;
     --color-text-inverted: #fcfbf7;
 
     /* Status-Farben */
@@ -29,6 +30,7 @@
     --color-red: #803030;
     --color-error-bg: rgba(128, 48, 48, 0.1);
     --color-warning: #ff4444;
+    --color-accent-blue: #5b9dff;
 
     /* Borders & Dividers */
     --color-border: #9e998f;

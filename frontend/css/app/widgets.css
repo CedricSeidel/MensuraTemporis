@@ -61,7 +61,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    gap: 14px;
+    gap: clamp(16px, 1.8vh, 24px);
     min-width: 0;
 }
 
@@ -76,7 +76,7 @@
     line-height: 1.32;
     letter-spacing: 0.058em;
     font-weight: var(--font-weight-semibold);
-    color: color-mix(in srgb, var(--color-text-muted) 78%, white 22%);
+    color: var(--color-text-muted);
     text-transform: uppercase;
 }
 
@@ -103,7 +103,7 @@
     font-size: clamp(0.96rem, 1.08vw, 1.12rem);
     line-height: 1.46;
     letter-spacing: 0.007em;
-    color: color-mix(in srgb, var(--color-text-muted) 80%, white 20%);
+    color: var(--color-text-muted);
 }
 
 .metric-line {
@@ -112,16 +112,16 @@
     justify-content: space-between;
     align-items: flex-end;
     gap: var(--spacing-md);
-    padding-top: 14px;
+    padding-top: 18px;
     border-top: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
     font-size: 0.92rem;
     line-height: 1.34;
-    color: #fff;
+    color: var(--color-text);
     text-shadow: none;
 }
 
 .metric-line strong {
-    color: var(--color-accent);
+    color: var(--color-text);
     font-weight: var(--font-weight-semibold);
     font-size: 0.98rem;
     letter-spacing: 0.012em;
@@ -133,25 +133,44 @@
     color: color-mix(in srgb, var(--card-tint) 22%, var(--color-text) 78%);
 }
 
+.container2 .summary-hero,
+.container3 .summary-weather,
+.container4 .summary-hero,
+.container6 .summary-hero {
+    margin-top: auto;
+}
+
+.container2 .metric-line,
+.container3 .metric-line,
+.container4 .metric-line,
+.container6 .metric-line {
+    margin-top: var(--spacing-sm);
+}
+
 /* ============================
  * CALENDAR
  * ============================ */
 
 .calendar-collapsed {
     justify-content: flex-end;
-    gap: clamp(8px, 1vh, 14px);
+    gap: clamp(12px, 1.6vh, 20px);
     position: relative;
     overflow: hidden;
 }
 
 .calendar-collapsed .summary-caption {
     margin-top: auto;
+    color: color-mix(in srgb, var(--color-accent-blue) 82%, var(--color-text) 18%);
+}
+
+.container1 .calendar-collapsed .summary-caption {
+    margin-top: clamp(100px, 20vh, 120px);
 }
 
 .calendar-day-number {
     margin: 0;
     margin-top: auto;
-    font-size: clamp(8rem, 16vw, 16rem);
+    font-size: clamp(12rem, 20vw, 50rem);
     line-height: 0.74;
     letter-spacing: -0.106em;
     font-weight: var(--font-weight-bold);
@@ -167,12 +186,12 @@
     margin: 0;
     position: absolute;
     left: 50%;
-    top: 66%;
+    top: 85%;
     transform: translate(-50%, -46%);
     width: 100%;
     text-align: center;
     font-size: clamp(1.18rem, 2.2vw, 2.2rem);
-    color: color-mix(in srgb, #fff 78%, var(--color-accent) 22%);
+    color: color-mix(in srgb, var(--color-accent-blue) 88%, var(--color-text) 12%);
     text-transform: uppercase;
     letter-spacing: 0.048em;
     line-height: 1.09;
@@ -217,7 +236,7 @@
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.048em;
-    color: #fff;
+    color: var(--color-text);
     font-weight: var(--font-weight-semibold);
     text-shadow: none;
     text-align: center;
@@ -284,7 +303,7 @@
     margin: 0;
     font-size: clamp(0.72rem, 0.9vw, 0.9rem);
     letter-spacing: 0.044em;
-    color: #fff;
+    color: var(--color-text);
     text-transform: uppercase;
     text-align: center;
     line-height: 1.28;
@@ -301,7 +320,7 @@
 .clock-meta-bottom {
     bottom: 2px;
     font-weight: var(--font-weight-semibold);
-    color: #fff;
+    color: var(--color-text);
 }
 
 .analog-clock-face {
@@ -413,19 +432,19 @@
 .clock-hand-hour {
     width: 5px;
     height: 31%;
-    background: #1f2732;
+    background: color-mix(in srgb, var(--color-accent-blue) 68%, var(--color-text) 32%);
 }
 
 .clock-hand-minute {
     width: 3.5px;
     height: 40%;
-    background: #2b3440;
+    background: color-mix(in srgb, var(--color-accent-blue) 82%, var(--color-text) 18%);
 }
 
 .clock-hand-second {
     width: 1.5px;
     height: 44%;
-    background: color-mix(in srgb, var(--color-accent) 78%, #1f2b3b 22%);
+    background: var(--color-accent-blue);
     box-shadow: none;
 }
 
@@ -478,7 +497,7 @@
     font-size: 0.82rem;
     line-height: 1.42;
     letter-spacing: 0.006em;
-    color: color-mix(in srgb, var(--color-text-muted) 82%, white 18%);
+    color: var(--color-text-muted);
 }
 
 .summary-hero,

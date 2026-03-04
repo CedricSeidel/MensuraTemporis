@@ -5,9 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d2982c12-31fa-4164-b47a-8077018928eb" name="Changes" comment="-update input&#10;-update styles">
+      <change afterPath="$PROJECT_DIR$/frontend/assets/video/12820849_1080_1920_30fps.mp4" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/css/app/base.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/app/base.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/app/expansion.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/app/expansion.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/app/grid.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/app/grid.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/app/responsive.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/app/responsive.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/css/app/widgets.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/app/widgets.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/modals.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/modals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/css/navbar.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/navbar.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/css/token.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/css/token.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/card-content/dom.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/card-content/dom.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/card-content/init.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/card-content/init.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/card-content/weather.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/card-content/weather.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/cardExpansion.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/cardExpansion.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/js/profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/profile.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -120,7 +132,7 @@
       <workItem from="1772440047362" duration="27628000" />
       <workItem from="1772530653396" duration="8272000" />
       <workItem from="1772544614259" duration="29698000" />
-      <workItem from="1772633080330" duration="1469000" />
+      <workItem from="1772633080330" duration="5071000" />
     </task>
     <task id="LOCAL-00001" summary="update css">
       <option name="closed" value="true" />

@@ -11,7 +11,6 @@ export function getCardContentElements() {
         weatherMeta: document.getElementById('weatherMeta'),
         weatherHumidity: document.getElementById('weatherHumidity'),
         weatherRain: document.getElementById('weatherRain'),
-        skyBackgroundVideo: document.getElementById('skyBackgroundVideo'),
         notePreview: document.getElementById('notePreview'),
         noteUpdated: document.getElementById('noteUpdated'),
         noteCount: document.getElementById('noteCount'),

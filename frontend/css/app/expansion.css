@@ -2,29 +2,36 @@
  * EXPANDED CARD STATE
  * ============================ */
 
-.card--expanded {
+.card--expanded,
+.card--closing {
     overflow: hidden;
-    z-index: 1000 !important;
     border-radius: clamp(16px, 1.4vw, 24px);
+    background: var(--color-card-bg);
+    backdrop-filter: blur(10px) saturate(105%) brightness(105%);
+    -webkit-backdrop-filter: blur(10px) saturate(105%) brightness(105%);
 }
 
-.card--expanded .widget-kicker,
-.card--expanded .widget-header {
+.card--expanded {
+    z-index: 1000 !important;
+}
+
+:is(.card--expanded, .card--closing) .widget-kicker,
+:is(.card--expanded, .card--closing) .widget-header {
     display: none;
 }
 
-.card--expanded .widget-content {
+:is(.card--expanded, .card--closing) .widget-content {
     display: block;
     min-height: 0;
     height: 100%;
     width: 100%;
 }
 
-.card--expanded .widget-collapsed {
+:is(.card--expanded, .card--closing) .widget-collapsed {
     display: none;
 }
 
-.card--expanded .widget-expanded {
+:is(.card--expanded, .card--closing) .widget-expanded {
     display: flex;
     flex-direction: column;
     justify-content: normal;

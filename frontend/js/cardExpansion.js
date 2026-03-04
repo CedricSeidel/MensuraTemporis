@@ -9,6 +9,7 @@ export class CardExpansion {
         expandedInstance: null,
         isAnimating: false,
     };
+    static NAV_ACTIVE_CLASS = 'is-active';
 
     static TIMING = {
         expand: 600,
@@ -28,6 +29,75 @@ export class CardExpansion {
         });
     }
 
+    static syncActiveNav(cardId = '') {
+        const links = document.querySelectorAll('a[data-target-card]');
+        links.forEach((link) => {
+            const isActive = link.dataset.targetCard === cardId;
+            link.classList.toggle(CardExpansion.NAV_ACTIVE_CLASS, isActive);
+            if (isActive) {
+                link.setAttribute('aria-current', 'true');
+            } else {
+                link.removeAttribute('aria-current');
+            }
+        });
+    }
+
+    static switchExpandedCard(nextInstance) {
+        const current = CardExpansion.state.expandedInstance;
+        if (!current || current === nextInstance || CardExpansion.state.isAnimating) return;
+
+        const grid = document.querySelector('.grid');
+        if (!grid) return;
+
+        CardExpansion.state.isAnimating = true;
+
+        const currentCard = current.card;
+        const nextCard = nextInstance.card;
+        const expandedRect = currentCard.getBoundingClientRect();
+
+        current.cleanupExpandedInteractions({ keepHiddenCards: true });
+        currentCard.classList.add('card--closing');
+        currentCard.classList.add('card--hidden');
+        current.restoreCardToGrid({ keepClosingState: true });
+        currentCard._isExpanded = false;
+
+        const nextCardRect = nextCard.getBoundingClientRect();
+        nextCard._originalRect = nextCardRect;
+        nextCard._originalStyles = {
+            position: nextCard.style.position,
+            top: nextCard.style.top,
+            left: nextCard.style.left,
+            width: nextCard.style.width,
+            height: nextCard.style.height,
+            zIndex: nextCard.style.zIndex,
+            transition: nextCard.style.transition,
+            opacity: nextCard.style.opacity,
+        };
+
+        const otherCards = Array.from(grid.children).filter((card) => card !== nextCard);
+        otherCards.forEach((card) => card.classList.add('card--hidden'));
+        nextCard._hiddenCards = otherCards;
+
+        nextCard.classList.remove('card--closing');
+        nextCard.classList.remove('card--hidden');
+        nextCard.style.position = 'fixed';
+        nextCard.style.top = `${expandedRect.top}px`;
+        nextCard.style.left = `${expandedRect.left}px`;
+        nextCard.style.width = `${expandedRect.width}px`;
+        nextCard.style.height = `${expandedRect.height}px`;
+        nextCard.style.zIndex = '1000';
+        nextCard.style.opacity = '1';
+        nextCard.style.transition = 'none';
+        nextCard.classList.add('card--expanded');
+        nextCard._isExpanded = true;
+
+        CardExpansion.state.expandedInstance = nextInstance;
+        CardExpansion.syncActiveNav(nextCard.id);
+        nextInstance.setupExpandedInteractions();
+
+        CardExpansion.state.isAnimating = false;
+    }
+
     handleCardClick(event) {
         if (CardExpansion.state.isAnimating) return;
 
@@ -45,7 +115,7 @@ export class CardExpansion {
         }
 
         if (CardExpansion.state.expandedInstance) {
-            CardExpansion.closeExpandedCard().then(() => this.expandCard());
+            CardExpansion.switchExpandedCard(this);
             return;
         }
 
@@ -60,6 +130,9 @@ export class CardExpansion {
         CardExpansion.state.isAnimating = true;
         CardExpansion.state.expandedInstance = this;
         this.card._isExpanded = true;
+        this.card.classList.remove('card--closing');
+        this.card.classList.remove('card--hidden');
+        CardExpansion.syncActiveNav(this.card.id);
 
         const otherCards = Array.from(grid.children).filter((card) => card !== this.card);
         otherCards.forEach((card) => card.classList.add('card--hidden'));
@@ -138,14 +211,19 @@ export class CardExpansion {
         this.card._escapeHandler = handleEscape;
     }
 
-    cleanupExpandedInteractions() {
+    cleanupExpandedInteractions({ keepHiddenCards = false } = {}) {
         if (this.card._outsideClickTimeoutId) {
             window.clearTimeout(this.card._outsideClickTimeoutId);
             delete this.card._outsideClickTimeoutId;
         }
 
         if (this.card._hiddenCards) {
-            this.card._hiddenCards.forEach((card) => card.classList.remove('card--hidden'));
+            if (!keepHiddenCards) {
+                this.card._hiddenCards.forEach((card) => {
+                    card.classList.remove('card--hidden');
+                    card.classList.remove('card--closing');
+                });
+            }
             delete this.card._hiddenCards;
         }
 
@@ -160,7 +238,7 @@ export class CardExpansion {
         }
     }
 
-    restoreCardToGrid() {
+    restoreCardToGrid({ keepClosingState = false } = {}) {
         if (this.card._originalStyles) {
             this.card.style.position = this.card._originalStyles.position;
             this.card.style.top = this.card._originalStyles.top;
@@ -174,6 +252,9 @@ export class CardExpansion {
         }
 
         this.card.classList.remove('card--expanded');
+        if (!keepClosingState) {
+            this.card.classList.remove('card--closing');
+        }
         delete this.card._originalRect;
     }
 
@@ -190,6 +271,7 @@ export class CardExpansion {
 
             const card = expansion.card;
             const originalRect = card._originalRect || card.getBoundingClientRect();
+            card.classList.add('card--closing');
 
             card.style.transition = `all ${CardExpansion.TIMING.expand}ms ${CardExpansion.TIMING.easeOut}`;
             card.style.top = `${originalRect.top}px`;
@@ -201,6 +283,7 @@ export class CardExpansion {
                 expansion.restoreCardToGrid();
                 card._isExpanded = false;
                 CardExpansion.state.expandedInstance = null;
+                CardExpansion.syncActiveNav('');
                 CardExpansion.state.isAnimating = false;
                 resolve();
             }, CardExpansion.TIMING.expand);

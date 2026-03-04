@@ -39,6 +39,8 @@
 
     const FALLBACK_HTTP_STATUSES = new Set([404, 405, 500, 502, 503, 504]);
     const REGISTER_ALREADY_LOGGED_IN_TEXT = 'Du bist bereits eingeloggt. Logout im Login-Popup.';
+    const MODAL_EXPAND_MS = 600;
+    const MODAL_EXPAND_EASE = 'cubic-bezier(0.2, 0.0, 0.2, 1)';
 
     const API_BASES = (() => {
         const bases = [];
@@ -233,16 +235,160 @@
         return [elements.loginModal, elements.registerModal, elements.userModal].some((modal) => modal && !modal.hidden);
     }
 
-    function openModal(modal) {
+    function setGridModalState(isOpen) {
+        const grid = document.querySelector('.grid');
+        if (!grid) return;
+        grid.classList.toggle('modal-grid-open', isOpen);
+    }
+
+    function resolveOriginRect(origin) {
+        if (!origin) return null;
+        if (origin instanceof Element) {
+            return origin.getBoundingClientRect();
+        }
+
+        if (typeof origin === 'object') {
+            const top = Number(origin.top);
+            const left = Number(origin.left);
+            const width = Number(origin.width);
+            const height = Number(origin.height);
+            if ([top, left, width, height].every(Number.isFinite)) {
+                return { top, left, width, height };
+            }
+        }
+
+        return null;
+    }
+
+    function clearModalAnimation(modalOverlay) {
+        if (!modalOverlay?._openAnimationTimeoutId) return;
+        window.clearTimeout(modalOverlay._openAnimationTimeoutId);
+        delete modalOverlay._openAnimationTimeoutId;
+    }
+
+    function clearModalGridLayout(modalOverlay) {
+        if (!modalOverlay) return;
+        clearModalAnimation(modalOverlay);
+        modalOverlay.classList.remove('is-grid-modal');
+        const modalCard = modalOverlay.querySelector('.modal');
+        if (!modalCard) return;
+
+        modalCard.style.top = '';
+        modalCard.style.left = '';
+        modalCard.style.width = '';
+        modalCard.style.height = '';
+        modalCard.style.opacity = '';
+        modalCard.style.transition = '';
+    }
+
+    function applyModalGridLayout(modalOverlay) {
+        if (!modalOverlay) return;
+        const modalCard = modalOverlay.querySelector('.modal');
+        const grid = document.querySelector('.grid');
+        if (!modalCard || !grid) {
+            clearModalGridLayout(modalOverlay);
+            return null;
+        }
+
+        const gridRect = grid.getBoundingClientRect();
+        const gridStyles = window.getComputedStyle(grid);
+        const paddingTop = parseFloat(gridStyles.paddingTop) || 0;
+        const paddingLeft = parseFloat(gridStyles.paddingLeft) || 0;
+        const paddingRight = parseFloat(gridStyles.paddingRight) || 0;
+        const paddingBottom = parseFloat(gridStyles.paddingBottom) || 0;
+
+        const targetTop = gridRect.top + paddingTop;
+        const targetLeft = gridRect.left + paddingLeft;
+        const targetWidth = gridRect.width - paddingLeft - paddingRight;
+        const targetHeight = gridRect.height - paddingTop - paddingBottom;
+
+        modalOverlay.classList.add('is-grid-modal');
+        modalCard.style.top = `${targetTop}px`;
+        modalCard.style.left = `${targetLeft}px`;
+        modalCard.style.width = `${targetWidth}px`;
+        modalCard.style.height = `${targetHeight}px`;
+        modalCard.style.opacity = '1';
+
+        return {
+            top: targetTop,
+            left: targetLeft,
+            width: targetWidth,
+            height: targetHeight,
+        };
+    }
+
+    function animateModalOpen(modalOverlay, origin) {
+        if (!modalOverlay) return;
+        const modalCard = modalOverlay.querySelector('.modal');
+        if (!modalCard) return;
+
+        const targetRect = applyModalGridLayout(modalOverlay);
+        if (!targetRect) return;
+
+        const originRect = resolveOriginRect(origin);
+        const fallbackWidth = Math.max(44, targetRect.width * 0.24);
+        const fallbackHeight = Math.max(44, targetRect.height * 0.24);
+        const startRect = originRect || {
+            top: targetRect.top + (targetRect.height - fallbackHeight) / 2,
+            left: targetRect.left + (targetRect.width - fallbackWidth) / 2,
+            width: fallbackWidth,
+            height: fallbackHeight,
+        };
+
+        clearModalAnimation(modalOverlay);
+
+        modalCard.style.transition = 'none';
+        modalCard.style.top = `${startRect.top}px`;
+        modalCard.style.left = `${startRect.left}px`;
+        modalCard.style.width = `${Math.max(44, startRect.width)}px`;
+        modalCard.style.height = `${Math.max(44, startRect.height)}px`;
+        modalCard.style.opacity = '0.92';
+
+        modalCard.offsetHeight;
+
+        modalCard.style.transition = [
+            `top ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
+            `left ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
+            `width ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
+            `height ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
+            `opacity ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
+        ].join(', ');
+
+        modalCard.style.top = `${targetRect.top}px`;
+        modalCard.style.left = `${targetRect.left}px`;
+        modalCard.style.width = `${targetRect.width}px`;
+        modalCard.style.height = `${targetRect.height}px`;
+        modalCard.style.opacity = '1';
+
+        modalOverlay._openAnimationTimeoutId = window.setTimeout(() => {
+            if (!modalOverlay.hidden) {
+                modalCard.style.transition = '';
+            }
+            delete modalOverlay._openAnimationTimeoutId;
+        }, MODAL_EXPAND_MS);
+    }
+
+    function refreshOpenModalLayouts() {
+        [elements.loginModal, elements.registerModal, elements.userModal].forEach((modal) => {
+            if (!modal || modal.hidden) return;
+            applyModalGridLayout(modal);
+        });
+    }
+
+    function openModal(modal, origin) {
         if (!modal) return;
         modal.hidden = false;
+        setGridModalState(true);
+        animateModalOpen(modal, origin);
         document.body.classList.add('modal-open');
     }
 
     function closeModal(modal) {
         if (!modal) return;
         modal.hidden = true;
+        clearModalGridLayout(modal);
         if (!anyModalOpen()) {
+            setGridModalState(false);
             document.body.classList.remove('modal-open');
         }
     }
@@ -478,20 +624,22 @@
         }
     }
 
-    function openLoginModal() {
+    function openLoginModal(origin = elements.fingerprintImage) {
+        const originRect = resolveOriginRect(origin);
         closeModal(elements.registerModal);
         setStateMessage(elements.loginState, '');
         syncUi();
-        openModal(elements.loginModal);
+        openModal(elements.loginModal, originRect);
 
         if (!isLoggedIn()) {
             document.getElementById('loginUsername')?.focus();
         }
     }
 
-    function openRegisterModal() {
+    function openRegisterModal(origin = elements.openRegisterModalButton) {
+        const originRect = resolveOriginRect(origin);
         if (isLoggedIn()) {
-            openLoginModal();
+            openLoginModal(originRect);
             setStateMessage(elements.loginState, 'Du bist bereits eingeloggt.', 'success');
             return;
         }
@@ -499,25 +647,30 @@
         closeModal(elements.loginModal);
         setStateMessage(elements.registerState, '');
         syncUi();
-        openModal(elements.registerModal);
+        openModal(elements.registerModal, originRect);
         document.getElementById('registerUsername')?.focus();
     }
 
-    function openUserModal() {
+    function openUserModal(origin = elements.profileImage) {
+        const originRect = resolveOriginRect(origin);
         if (!state.user) {
-            openLoginModal();
+            openLoginModal(originRect);
             setStateMessage(elements.loginState, 'Bitte zuerst einloggen', 'error');
             return;
         }
 
         setStateMessage(elements.userState, '');
         updateUserPanel();
-        openModal(elements.userModal);
+        openModal(elements.userModal, originRect);
     }
 
     function attachEvents() {
-        elements.fingerprintImage?.addEventListener('click', openLoginModal);
-        elements.profileImage?.addEventListener('click', openUserModal);
+        elements.fingerprintImage?.addEventListener('click', (event) => {
+            openLoginModal(event.currentTarget);
+        });
+        elements.profileImage?.addEventListener('click', (event) => {
+            openUserModal(event.currentTarget);
+        });
 
         elements.profileContainer?.addEventListener('mouseenter', updateTooltips);
         elements.fingerprintContainer?.addEventListener('mouseenter', updateTooltips);
@@ -526,8 +679,12 @@
         elements.registerForm?.addEventListener('submit', handleRegister);
         elements.logoutButton?.addEventListener('click', handleLogout);
         elements.userDataForm?.addEventListener('submit', handleSaveUserData);
-        elements.openRegisterModalButton?.addEventListener('click', openRegisterModal);
-        elements.openLoginModalButton?.addEventListener('click', openLoginModal);
+        elements.openRegisterModalButton?.addEventListener('click', (event) => {
+            openRegisterModal(event.currentTarget);
+        });
+        elements.openLoginModalButton?.addEventListener('click', (event) => {
+            openLoginModal(event.currentTarget);
+        });
 
         document.querySelectorAll('[data-modal-close]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -548,6 +705,8 @@
                 closeAllModals();
             }
         });
+
+        window.addEventListener('resize', refreshOpenModalLayouts);
     }
 
     attachEvents();

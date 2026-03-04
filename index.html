@@ -15,9 +15,6 @@
 
 </head>
 <body>
-<div class="sky-video-layer" aria-hidden="true">
-    <video id="skyBackgroundVideo" class="sky-video" autoplay muted loop playsinline webkit-playsinline preload="auto" src="frontend/assets/video/855005-hd_1920_1080_30fps.mp4"></video>
-</div>
 <header>
     <nav class="nav-bar">
         <!-- Logo (Links) -->
@@ -27,17 +24,29 @@
 
         <!-- Navigation Links (Mitte) -->
         <div class="nav-bar-links-container">
-            <a class="nav-bar-links" href="#container1" data-hotkey="d" data-target-card="container1">
-                <span class="nav-button__hotkey">[D]</span>
-                Date
-            </a>
-            <a class="nav-bar-links" href="#container4" data-hotkey="c" data-target-card="container4">
+            <a class="nav-bar-links" href="#container1" data-hotkey="c" data-target-card="container1">
                 <span class="nav-button__hotkey">[C]</span>
-                Create
+                Calendar
             </a>
-            <a class="nav-bar-links" href="#container5" data-hotkey="h" data-target-card="container5">
-                <span class="nav-button__hotkey">[H]</span>
-                Help
+            <a class="nav-bar-links" href="#container2" data-hotkey="e" data-target-card="container2">
+                <span class="nav-button__hotkey">[E]</span>
+                Events
+            </a>
+            <a class="nav-bar-links" href="#container3" data-hotkey="w" data-target-card="container3">
+                <span class="nav-button__hotkey">[W]</span>
+                Weather
+            </a>
+            <a class="nav-bar-links" href="#container4" data-hotkey="n" data-target-card="container4">
+                <span class="nav-button__hotkey">[N]</span>
+                Notes
+            </a>
+            <a class="nav-bar-links" href="#container5" data-hotkey="a" data-target-card="container5">
+                <span class="nav-button__hotkey">[A]</span>
+                Clock
+            </a>
+            <a class="nav-bar-links" href="#container6" data-hotkey="s" data-target-card="container6">
+                <span class="nav-button__hotkey">[S]</span>
+                Settings
             </a>
         </div>
 
@@ -57,7 +66,7 @@
     <div class="grid">
         <div class="container1" id="container1">
             <button type="button" class="container-close" data-container-close="container1" aria-label="Container schließen">×</button>
-            <p class="widget-kicker">[D] DATE PROTOCOL</p>
+            <p class="widget-kicker">[C] CALENDAR</p>
             <div class="widget-header">
                 <h2>Calendar</h2>
                 <span class="widget-chip">LOCAL</span>
@@ -74,7 +83,7 @@
 
         <div class="container2" id="container2">
             <button type="button" class="container-close" data-container-close="container2" aria-label="Container schließen">×</button>
-            <p class="widget-kicker">[E] EVENT QUEUE</p>
+            <p class="widget-kicker">[E] EVENTS</p>
             <div class="widget-header">
                 <h2>Upcoming Events</h2>
                 <span class="widget-chip">SYNC</span>
@@ -95,7 +104,7 @@
 
         <div class="container3" id="container3">
             <button type="button" class="container-close" data-container-close="container3" aria-label="Container schließen">×</button>
-            <p class="widget-kicker">[W] WEATHER NODE</p>
+            <p class="widget-kicker">[W] WEATHER</p>
             <div class="widget-header">
                 <h2>Weather</h2>
                 <span class="widget-chip">LIVE</span>
@@ -116,7 +125,7 @@
 
         <div class="container4" id="container4">
             <button type="button" class="container-close" data-container-close="container4" aria-label="Container schließen">×</button>
-            <p class="widget-kicker">[C] QUICK CAPTURE</p>
+            <p class="widget-kicker">[N] QUICK NOTES</p>
             <div class="widget-header">
                 <h2>Quick Notes</h2>
                 <span class="widget-chip">POST-IT</span>
@@ -137,7 +146,7 @@
 
         <div class="container5" id="container5">
             <button type="button" class="container-close" data-container-close="container5" aria-label="Container schließen">×</button>
-            <p class="widget-kicker">[H] CHRONO MODULE</p>
+            <p class="widget-kicker">[A] ANALOG CLOCK</p>
             <div class="widget-header">
                 <h2>Analog Clock</h2>
                 <span class="widget-chip">ANALOG</span>
@@ -162,7 +171,7 @@
 
         <div class="container6" id="container6">
             <button type="button" class="container-close" data-container-close="container6" aria-label="Container schließen">×</button>
-            <p class="widget-kicker">[S] SYSTEM FLAGS</p>
+            <p class="widget-kicker">[S] SETTINGS</p>
             <div class="widget-header">
                 <h2>Settings</h2>
                 <span class="widget-chip">CONFIG</span>
@@ -253,35 +262,5 @@
     <script type="module" src="frontend/js/cardContent.js"></script>
     <script src="frontend/js/profile.js"></script>
     <script src="frontend/js/hotkeys.js"></script>
-    <script>
-        (() => {
-            const video = document.getElementById('skyBackgroundVideo');
-            if (!video) return;
-
-            const tryPlaySky = () => {
-                video.loop = true;
-                video.muted = true;
-                video.defaultMuted = true;
-                video.setAttribute('muted', '');
-                video.setAttribute('playsinline', '');
-                video.setAttribute('webkit-playsinline', '');
-
-                const playPromise = video.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                    playPromise.catch(() => {});
-                }
-            };
-
-            video.addEventListener('loadeddata', tryPlaySky);
-            video.addEventListener('canplay', tryPlaySky);
-            window.addEventListener('pointerdown', tryPlaySky, { passive: true });
-            window.addEventListener('touchstart', tryPlaySky, { passive: true });
-            window.addEventListener('keydown', tryPlaySky);
-            window.addEventListener('click', tryPlaySky, { passive: true });
-
-            tryPlaySky();
-        })();
-    </script>
-
 </body>
 </html>

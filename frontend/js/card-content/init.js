@@ -21,7 +21,6 @@ export function initCardContent() {
     const clockController = createClockController(elements, state);
 
     restoreState(state);
-    weatherRenderer.setupSkyVideoListeners();
 
     applyBodyModes(state);
     renderCalendarCollapsed(elements, state);

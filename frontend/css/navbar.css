@@ -44,7 +44,7 @@
 }
 
 .navbar-logo a:hover {
-    color: var(--color-text-light);
+    color: var(--color-accent-blue);
 }
 
 /* ============================
@@ -85,7 +85,22 @@
 }
 
 .nav-bar-links:hover {
-    color: var(--color-text-light);
+    color: var(--color-accent-blue);
+}
+
+.nav-bar-links.is-active {
+    color: var(--color-text);
+    box-shadow:
+            inset 0 6px 12px rgba(0, 0, 0, 0.22),
+            inset 0 2px 4px rgba(0, 0, 0, 0.16);
+}
+
+.nav-bar-links.is-active:hover {
+    color: var(--color-accent-blue);
+}
+
+.nav-bar-links.is-active .nav-button__hotkey {
+    opacity: 1;
 }
 
 .nav-bar-links:active {
