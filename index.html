@@ -299,19 +299,73 @@
         <div class="modal user-modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
             <button type="button" class="modal-close" data-modal-close="userModal" aria-label="Popup schließen">×</button>
             <h3 id="userModalTitle">Benutzerprofil</h3>
-            <div class="modal-state" id="userState"></div>
 
-            <div class="user-meta">
-                <p><span>Username:</span> <strong id="userNameValue">-</strong></p>
-                <p><span>Erstellt:</span> <strong id="userCreatedValue">-</strong></p>
-                <p><span>Geändert:</span> <strong id="userUpdatedValue">-</strong></p>
+            <div class="user-modal-layout">
+                <div class="auth-illustration auth-illustration--characters user-avatar-scene" id="userCharacterScene" data-selected-avatar="purple" aria-hidden="true">
+                    <div class="floor-shadow"></div>
+                    <div class="ground"></div>
+
+                    <div class="cluster" id="userCharacterFigure">
+                        <div class="character purple" data-avatar-choice="purple" data-move="12" data-rotate="4.8" data-skew="6" data-lift="7" data-pupil="4.4">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker white left"><div class="iris"></div></div>
+                                <div class="tracker white right"><div class="iris"></div></div>
+                                <div class="mouth line"></div>
+                            </div>
+                        </div>
+
+                        <div class="character orange" data-avatar-choice="orange" data-move="9" data-rotate="2.2" data-skew="1.2" data-lift="4" data-pupil="1.8">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker dot left"><div class="iris"></div></div>
+                                <div class="tracker dot right"><div class="iris"></div></div>
+                                <div class="mouth smile"></div>
+                            </div>
+                        </div>
+
+                        <div class="character black" data-avatar-choice="black" data-move="10" data-rotate="4.1" data-skew="4.2" data-lift="5" data-pupil="4.2">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker white left"><div class="iris"></div></div>
+                                <div class="tracker white right"><div class="iris"></div></div>
+                            </div>
+                        </div>
+
+                        <div class="character yellow" data-avatar-choice="yellow" data-move="8" data-rotate="3.2" data-skew="1.8" data-lift="4" data-pupil="1.6">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker dot left"><div class="iris"></div></div>
+                                <div class="tracker dot right"><div class="iris"></div></div>
+                                <div class="mouth line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="user-profile-stack">
+                    <div class="modal-state" id="userState"></div>
+
+                    <div class="user-meta">
+                        <p><span>Username:</span> <strong id="userNameValue">-</strong></p>
+                        <p><span>Avatar:</span> <strong id="userAvatarValue">-</strong></p>
+                    </div>
+
+                    <form class="user-data-form" id="userDataForm">
+                        <label for="userNameInput">Username</label>
+                        <input id="userNameInput" name="displayName" type="text" minlength="2" required>
+
+                        <label>Profil-Figur</label>
+                        <div class="user-avatar-choices" id="userAvatarChoices">
+                            <button type="button" class="avatar-choice" data-avatar-choice="purple">Purple</button>
+                            <button type="button" class="avatar-choice" data-avatar-choice="orange">Orange</button>
+                            <button type="button" class="avatar-choice" data-avatar-choice="black">Black</button>
+                            <button type="button" class="avatar-choice" data-avatar-choice="yellow">Yellow</button>
+                        </div>
+                        <button type="submit">Speichern</button>
+                    </form>
+                </div>
             </div>
-
-            <form class="user-data-form" id="userDataForm">
-                <label for="userDataInput">User-Daten (JSON)</label>
-                <textarea id="userDataInput" spellcheck="false" rows="8"></textarea>
-                <button type="submit">Speichern</button>
-            </form>
         </div>
     </div>
 

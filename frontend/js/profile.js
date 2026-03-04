@@ -1,6 +1,7 @@
 (function initProfileAndAuth() {
     const state = {
         user: null,
+        profile: null,
     };
 
     const elements = {
@@ -32,10 +33,12 @@
         openRegisterModalButton: document.getElementById('openRegisterModalButton'),
         openLoginModalButton: document.getElementById('openLoginModalButton'),
         userNameValue: document.getElementById('userNameValue'),
-        userCreatedValue: document.getElementById('userCreatedValue'),
-        userUpdatedValue: document.getElementById('userUpdatedValue'),
+        userAvatarValue: document.getElementById('userAvatarValue'),
+        userNameInput: document.getElementById('userNameInput'),
         userDataForm: document.getElementById('userDataForm'),
-        userDataInput: document.getElementById('userDataInput'),
+        userAvatarChoices: document.getElementById('userAvatarChoices'),
+        userCharacterScene: document.getElementById('userCharacterScene'),
+        userCharacterFigure: document.getElementById('userCharacterFigure'),
         loginCharacterScene: document.getElementById('loginCharacterScene'),
         loginCharacterFigure: document.getElementById('loginCharacterFigure'),
     };
@@ -45,9 +48,27 @@
     const STORAGE_KEYS = {
         users: 'mensura-auth-users-v1',
         session: 'mensura-auth-session-v1',
+        profile: 'mensura-user-profile-card-v1',
     };
-
-    const FALLBACK_HTTP_STATUSES = new Set([404, 405, 500, 501, 502, 503, 504]);
+    const AVATAR_CHOICES = ['purple', 'orange', 'black', 'yellow'];
+    const AVATAR_THEME_COLORS = {
+        purple: {
+            accent: '#d8c7ff',
+            accentBlue: '#7c4dff',
+        },
+        orange: {
+            accent: '#ffd2ac',
+            accentBlue: '#f28b30',
+        },
+        black: {
+            accent: '#c7ccd6',
+            accentBlue: '#4d5976',
+        },
+        yellow: {
+            accent: '#ffeaa3',
+            accentBlue: '#c5a200',
+        },
+    };
     const MODAL_EXPAND_MS = 600;
     const MODAL_EXPAND_EASE = 'cubic-bezier(0.2, 0.0, 0.2, 1)';
     const MODAL_CLOSE_MS = 600;
@@ -60,21 +81,6 @@
         y: 0.28,
     };
     const REGISTER_USERNAME_MIN_LEN = 3;
-
-    const API_BASES = (() => {
-        const bases = [];
-        const origin = window.location.origin;
-
-        if (origin && origin !== 'null') {
-            bases.push(origin);
-        }
-
-        if (!bases.includes('http://localhost:3000')) {
-            bases.push('http://localhost:3000');
-        }
-
-        return bases;
-    })();
 
     const authUi = {
         mode: 'login',
@@ -98,6 +104,20 @@
         blinkTimerId: 0,
         isPasswordMode: false,
         isReactionLocked: false,
+    };
+
+    const userCharacter = {
+        scene: elements.userCharacterScene,
+        cluster: elements.userCharacterFigure,
+        chars: [],
+        hasFigure: false,
+        rafId: 0,
+        pointer: {
+            x: window.innerWidth * 0.5,
+            y: window.innerHeight * 0.5,
+            inside: false,
+        },
+        blinkTimerId: 0,
     };
 
     if (loginCharacter.scene) {
@@ -135,6 +155,41 @@
         loginCharacter.chars.length
     );
 
+    if (userCharacter.scene) {
+        const characters = Array.from(userCharacter.scene.querySelectorAll('.character'));
+        userCharacter.chars = characters.map((character) => {
+            const toNumber = (value, fallback = 0) => {
+                const number = Number.parseFloat(value);
+                return Number.isFinite(number) ? number : fallback;
+            };
+
+            return {
+                el: character,
+                body: character.querySelector('.body'),
+                trackers: Array.from(character.querySelectorAll('.tracker')),
+                cfg: {
+                    move: toNumber(character.dataset.move),
+                    rotate: toNumber(character.dataset.rotate),
+                    skew: toNumber(character.dataset.skew),
+                    lift: toNumber(character.dataset.lift),
+                    pupil: toNumber(character.dataset.pupil, 1.8),
+                },
+                state: {
+                    tx: 0,
+                    ty: 0,
+                    rot: 0,
+                    skew: 0,
+                },
+            };
+        });
+    }
+
+    userCharacter.hasFigure = Boolean(
+        userCharacter.scene &&
+        userCharacter.cluster &&
+        userCharacter.chars.length
+    );
+
     function createHttpError(message, status = 400) {
         const error = new Error(message);
         error.status = status;
@@ -169,6 +224,69 @@
 
     function normalizeUsername(value) {
         return (value || '').trim();
+    }
+
+    function sanitizeAvatarChoice(value) {
+        return AVATAR_CHOICES.includes(value) ? value : AVATAR_CHOICES[0];
+    }
+
+    function createDefaultProfile() {
+        const now = new Date().toISOString();
+        return {
+            username: 'Gast',
+            avatar: 'purple',
+            data: {},
+            createdAt: now,
+            updatedAt: now,
+        };
+    }
+
+    function sanitizeProfile(value) {
+        const fallback = createDefaultProfile();
+        if (!value || typeof value !== 'object') return fallback;
+
+        const username = normalizeUsername(value.username) || fallback.username;
+        const createdAt = typeof value.createdAt === 'string' ? value.createdAt : fallback.createdAt;
+        const updatedAt = typeof value.updatedAt === 'string' ? value.updatedAt : createdAt;
+        const avatar = sanitizeAvatarChoice(value.avatar);
+        const data = value.data && typeof value.data === 'object' && !Array.isArray(value.data)
+            ? value.data
+            : {};
+
+        return {
+            username,
+            avatar,
+            data,
+            createdAt,
+            updatedAt,
+        };
+    }
+
+    function loadProfile() {
+        const profile = sanitizeProfile(readStorage(STORAGE_KEYS.profile, null));
+        writeStorage(STORAGE_KEYS.profile, profile);
+        return profile;
+    }
+
+    function saveProfile() {
+        if (!state.profile) return;
+        writeStorage(STORAGE_KEYS.profile, state.profile);
+    }
+
+    function getAvatarThemeColors(avatar) {
+        const normalized = sanitizeAvatarChoice(avatar);
+        return AVATAR_THEME_COLORS[normalized] || AVATAR_THEME_COLORS.purple;
+    }
+
+    function applyAvatarTheme(avatar) {
+        const root = document.documentElement;
+        if (!root) return;
+
+        const normalized = sanitizeAvatarChoice(avatar);
+        const colors = getAvatarThemeColors(normalized);
+        root.style.setProperty('--color-accent', colors.accent);
+        root.style.setProperty('--color-accent-blue', colors.accentBlue);
+        root.dataset.avatarTheme = normalized;
     }
 
     function toPublicUser(user) {
@@ -448,13 +566,6 @@
             return error.message;
         }
         return fallback;
-    }
-
-    function formatTimestamp(value) {
-        if (!value) return '-';
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return value;
-        return date.toLocaleString('de-DE');
     }
 
     function clamp(value, min, max) {
@@ -755,6 +866,186 @@
         if (!loginCharacter.hasFigure) return;
         if (loginCharacter.isPasswordMode) return;
         centerLoginCharacterPointer();
+    }
+
+    function centerUserCharacterPointer() {
+        if (!userCharacter.scene) return;
+        const rect = userCharacter.scene.getBoundingClientRect();
+        if (!rect.width || !rect.height) {
+            userCharacter.pointer.x = window.innerWidth * 0.5;
+            userCharacter.pointer.y = window.innerHeight * 0.5;
+            userCharacter.pointer.inside = false;
+            return;
+        }
+
+        userCharacter.pointer.x = rect.left + (rect.width * 0.5);
+        userCharacter.pointer.y = rect.top + (rect.height * 0.5);
+        userCharacter.pointer.inside = false;
+    }
+
+    function getUserCharacterPointerTarget() {
+        const sceneRect = userCharacter.scene?.getBoundingClientRect();
+        if (!sceneRect || !sceneRect.width || !sceneRect.height) {
+            return {
+                x: userCharacter.pointer.x,
+                y: userCharacter.pointer.y,
+            };
+        }
+
+        if (userCharacter.pointer.inside) {
+            return {
+                x: userCharacter.pointer.x,
+                y: userCharacter.pointer.y,
+            };
+        }
+
+        return {
+            x: sceneRect.left + (sceneRect.width * 0.5),
+            y: sceneRect.top + (sceneRect.height * 0.48),
+        };
+    }
+
+    function updateUserCharacterTrackers(character, pointerTarget) {
+        character.trackers.forEach((tracker) => {
+            const rect = tracker.getBoundingClientRect();
+            const centerX = rect.left + (rect.width * 0.5);
+            const centerY = rect.top + (rect.height * 0.5);
+
+            const dx = pointerTarget.x - centerX;
+            const dy = pointerTarget.y - centerY;
+            const distance = Math.hypot(dx, dy) || 1;
+            const maxMove = tracker.classList.contains('white')
+                ? character.cfg.pupil
+                : Math.min(character.cfg.pupil, 1.8);
+            const reach = Math.min(maxMove, distance * 0.12);
+
+            tracker.style.setProperty('--px', `${(dx / distance) * reach}px`);
+            tracker.style.setProperty('--py', `${(dy / distance) * reach}px`);
+        });
+    }
+
+    function updateUserCharacterBodies(time, pointerTarget) {
+        const sceneRect = userCharacter.scene?.getBoundingClientRect();
+        if (!sceneRect || !sceneRect.width || !sceneRect.height) return;
+
+        const centerX = sceneRect.left + (sceneRect.width * 0.5);
+        const centerY = sceneRect.top + (sceneRect.height * 0.55);
+
+        const normalizedX = clamp((pointerTarget.x - centerX) / (sceneRect.width * 0.5), -1, 1);
+        const normalizedY = clamp((pointerTarget.y - centerY) / (sceneRect.height * 0.5), -1, 1);
+
+        userCharacter.chars.forEach((character, index) => {
+            const wobble = Math.sin((time * 0.0018) + (index * 0.9)) * 0.25;
+
+            const targetTx = normalizedX * character.cfg.move;
+            const targetTy = -Math.abs(normalizedY) * character.cfg.lift;
+            const targetRot = (normalizedX * character.cfg.rotate) + wobble;
+            const targetSkew = normalizedX * character.cfg.skew;
+
+            character.state.tx = lerp(character.state.tx, targetTx, 0.14);
+            character.state.ty = lerp(character.state.ty, targetTy, 0.14);
+            character.state.rot = lerp(character.state.rot, targetRot, 0.14);
+            character.state.skew = lerp(character.state.skew, targetSkew, 0.14);
+
+            character.el.style.transform = `translate3d(${character.state.tx}px, ${character.state.ty}px, 0) rotate(${character.state.rot}deg)`;
+
+            if (character.body) {
+                character.body.style.transform = `skewX(${character.state.skew}deg)`;
+            }
+        });
+    }
+
+    function renderUserCharacterFrame(time) {
+        userCharacter.rafId = 0;
+        if (!userCharacter.hasFigure) return;
+        if (!isModalOpen(elements.userModal)) return;
+
+        const pointerTarget = getUserCharacterPointerTarget();
+        updateUserCharacterBodies(time, pointerTarget);
+        userCharacter.chars.forEach((character) => updateUserCharacterTrackers(character, pointerTarget));
+
+        userCharacter.rafId = window.requestAnimationFrame(renderUserCharacterFrame);
+    }
+
+    function startUserCharacterAnimation() {
+        if (!userCharacter.hasFigure) return;
+        if (!isModalOpen(elements.userModal)) return;
+
+        if (!userCharacter.rafId) {
+            userCharacter.rafId = window.requestAnimationFrame(renderUserCharacterFrame);
+        }
+
+        if (!userCharacter.blinkTimerId) {
+            userCharacter.blinkTimerId = window.setTimeout(runUserCharacterBlinkSequence, 900);
+        }
+    }
+
+    function runUserCharacterBlinkSequence() {
+        userCharacter.blinkTimerId = 0;
+        if (!userCharacter.hasFigure || !userCharacter.scene) return;
+        if (!isModalOpen(elements.userModal)) return;
+
+        const order = ['purple', 'black', 'yellow', 'orange'];
+        const nodes = order
+            .map((name) => userCharacter.scene.querySelector(`.character.${name}`))
+            .filter((node) => node instanceof Element);
+
+        nodes.forEach((node, index) => {
+            window.setTimeout(() => node.classList.add('blink'), index * 45);
+        });
+
+        window.setTimeout(() => {
+            nodes.forEach((node, index) => {
+                window.setTimeout(() => node.classList.remove('blink'), index * 35);
+            });
+        }, 120);
+
+        const nextBlinkInMs = 1800 + (Math.random() * 2400);
+        userCharacter.blinkTimerId = window.setTimeout(runUserCharacterBlinkSequence, nextBlinkInMs);
+    }
+
+    function resetUserCharacterState() {
+        if (!userCharacter.hasFigure || !userCharacter.scene) return;
+
+        if (userCharacter.rafId) {
+            window.cancelAnimationFrame(userCharacter.rafId);
+            userCharacter.rafId = 0;
+        }
+        if (userCharacter.blinkTimerId) {
+            window.clearTimeout(userCharacter.blinkTimerId);
+            userCharacter.blinkTimerId = 0;
+        }
+
+        centerUserCharacterPointer();
+        userCharacter.chars.forEach((character) => {
+            character.state.tx = 0;
+            character.state.ty = 0;
+            character.state.rot = 0;
+            character.state.skew = 0;
+            character.el.style.transform = '';
+            if (character.body) {
+                character.body.style.transform = '';
+            }
+            character.trackers.forEach((tracker) => {
+                tracker.style.setProperty('--px', '0px');
+                tracker.style.setProperty('--py', '0px');
+                tracker.classList.remove('blink');
+            });
+        });
+    }
+
+    function handleUserModalPointerMove(event) {
+        if (!userCharacter.hasFigure) return;
+        if (event.pointerType === 'touch') return;
+        userCharacter.pointer.x = event.clientX;
+        userCharacter.pointer.y = event.clientY;
+        userCharacter.pointer.inside = true;
+        startUserCharacterAnimation();
+    }
+
+    function handleUserModalPointerLeave() {
+        if (!userCharacter.hasFigure) return;
+        centerUserCharacterPointer();
     }
 
     function anyModalOpen() {
@@ -1143,6 +1434,9 @@
                     setLoginPasswordVisibility(false);
                     resetLoginCharacterState();
                 }
+                if (modal === elements.userModal) {
+                    resetUserCharacterState();
+                }
                 return closed;
             });
         }
@@ -1154,6 +1448,9 @@
             setAuthMode('login');
             setLoginPasswordVisibility(false);
             resetLoginCharacterState();
+        }
+        if (modal === elements.userModal) {
+            resetUserCharacterState();
         }
         if (!anyModalOpen() && !preserveExpandedState) {
             setGridModalState(false);
@@ -1177,31 +1474,101 @@
 
     function updateTooltips() {
         const loggedIn = isLoggedIn();
+        const profileName = normalizeUsername(state.profile?.username) || (loggedIn ? state.user?.username : '') || 'Gast';
         if (elements.profileTooltip) {
-            elements.profileTooltip.textContent = loggedIn ? 'Profil' : 'Profil (nicht eingeloggt)';
+            elements.profileTooltip.textContent = `Profil: ${profileName}`;
         }
         if (elements.fingerprintTooltip) {
             elements.fingerprintTooltip.textContent = loggedIn ? 'Account' : 'Login';
         }
     }
 
+    function applySelectedUserAvatar(avatar) {
+        const normalized = sanitizeAvatarChoice(avatar);
+        applyAvatarTheme(normalized);
+        if (elements.userCharacterScene) {
+            elements.userCharacterScene.dataset.selectedAvatar = normalized;
+        }
+        if (elements.userAvatarValue) {
+            const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+            elements.userAvatarValue.textContent = label;
+        }
+        if (elements.userAvatarChoices) {
+            Array.from(elements.userAvatarChoices.querySelectorAll('[data-avatar-choice]')).forEach((button) => {
+                const isActive = button instanceof HTMLElement && button.dataset.avatarChoice === normalized;
+                button.classList.toggle('is-active', isActive);
+            });
+        }
+    }
+
     function updateUserPanel() {
-        if (!elements.userNameValue || !elements.userCreatedValue || !elements.userUpdatedValue || !elements.userDataInput) {
+        if (
+            !elements.userNameValue ||
+            !elements.userNameInput
+        ) {
             return;
         }
 
-        if (!state.user) {
-            elements.userNameValue.textContent = '-';
-            elements.userCreatedValue.textContent = '-';
-            elements.userUpdatedValue.textContent = '-';
-            elements.userDataInput.value = '';
-            return;
-        }
+        const profile = state.profile || createDefaultProfile();
+        state.profile = profile;
 
-        elements.userNameValue.textContent = state.user.username || '-';
-        elements.userCreatedValue.textContent = formatTimestamp(state.user.createdAt);
-        elements.userUpdatedValue.textContent = formatTimestamp(state.user.updatedAt);
-        elements.userDataInput.value = JSON.stringify(state.user.data || {}, null, 2);
+        elements.userNameValue.textContent = profile.username || '-';
+        elements.userNameInput.value = profile.username || '';
+        applySelectedUserAvatar(profile.avatar);
+        updateTooltips();
+    }
+
+    function handleUserNameInput() {
+        if (!elements.userNameInput || !elements.userNameValue) return;
+        const value = normalizeUsername(elements.userNameInput.value) || 'Gast';
+        elements.userNameValue.textContent = value;
+        if (state.profile) {
+            state.profile.username = value;
+        }
+        updateTooltips();
+    }
+
+    function selectUserAvatar(avatar) {
+        if (!state.profile) state.profile = createDefaultProfile();
+        const normalized = sanitizeAvatarChoice(avatar);
+        const changed = state.profile.avatar !== normalized;
+        state.profile.avatar = normalized;
+        if (changed) {
+            state.profile.updatedAt = new Date().toISOString();
+            saveProfile();
+        }
+        applySelectedUserAvatar(state.profile.avatar);
+    }
+
+    function handleUserAvatarChoice(event) {
+        const target = getEventElement(event);
+        const choiceElement = target?.closest?.('[data-avatar-choice]');
+        if (!choiceElement) return;
+        const avatar = choiceElement.getAttribute('data-avatar-choice');
+        if (!avatar) return;
+        selectUserAvatar(avatar);
+    }
+
+    function handleUserCharacterChoice(event) {
+        const target = getEventElement(event);
+        const character = target?.closest?.('.character[data-avatar-choice]');
+        if (!character) return;
+        const avatar = character.getAttribute('data-avatar-choice');
+        if (!avatar) return;
+        selectUserAvatar(avatar);
+    }
+
+    function syncProfileUsernameFromAuth() {
+        if (!state.profile) return;
+        const authName = normalizeUsername(state.user?.username);
+        const currentProfileName = normalizeUsername(state.profile.username);
+        if (!authName) return;
+
+        if (!currentProfileName || currentProfileName === 'Gast') {
+            state.profile.username = authName;
+            state.profile.updatedAt = new Date().toISOString();
+            saveProfile();
+        }
     }
 
     function updateAuthPanels() {
@@ -1217,58 +1584,7 @@
         syncProfileNavActive();
     }
 
-    async function requestBackend(path, options = {}) {
-        const request = {
-            method: options.method || 'GET',
-            credentials: 'include',
-            headers: {},
-        };
-
-        if (options.body !== undefined) {
-            request.headers['Content-Type'] = 'application/json';
-            request.body = JSON.stringify(options.body);
-        }
-
-        for (const base of API_BASES) {
-            const url = `${base}${path}`;
-
-            try {
-                const response = await fetch(url, request);
-                let payload = null;
-
-                try {
-                    payload = await response.json();
-                } catch {
-                    payload = null;
-                }
-
-                if (!response.ok) {
-                    const error = createHttpError(
-                        payload?.error || `Request fehlgeschlagen (${response.status})`,
-                        response.status
-                    );
-
-                    if (!FALLBACK_HTTP_STATUSES.has(response.status)) {
-                        throw error;
-                    }
-                    continue;
-                }
-
-                return payload;
-            } catch (error) {
-                const status = typeof error?.status === 'number' ? error.status : null;
-                if (status && !FALLBACK_HTTP_STATUSES.has(status)) {
-                    throw error;
-                }
-            }
-        }
-
-        return null;
-    }
-
     async function apiRequest(path, options = {}) {
-        const backendPayload = await requestBackend(path, options);
-        if (backendPayload !== null) return backendPayload;
         return localAuthRequest(path, options.method || 'GET', options.body);
     }
 
@@ -1297,6 +1613,7 @@
                 body: { username, password },
             });
             state.user = payload.user;
+            syncProfileUsernameFromAuth();
             syncUi();
             setStateMessage(elements.loginState, 'Login erfolgreich', 'success');
             triggerLoginCharacterReaction('success');
@@ -1340,6 +1657,7 @@
                 body: { username, password, data: {} },
             });
             state.user = payload.user;
+            syncProfileUsernameFromAuth();
             resetRegisterAvailabilityUi();
             setAuthMode('login');
             syncUi();
@@ -1369,36 +1687,25 @@
 
     async function handleSaveUserData(event) {
         event.preventDefault();
-        if (!state.user) {
-            setStateMessage(elements.userState, 'Bitte zuerst einloggen', 'error');
-            return;
-        }
+        if (!state.profile) state.profile = createDefaultProfile();
 
-        let parsedData;
-        try {
-            parsedData = JSON.parse(elements.userDataInput.value || '{}');
-        } catch {
-            setStateMessage(elements.userState, 'Ungültiges JSON', 'error');
-            return;
-        }
-
-        if (!parsedData || typeof parsedData !== 'object' || Array.isArray(parsedData)) {
-            setStateMessage(elements.userState, 'Bitte ein JSON-Objekt eingeben', 'error');
+        const username = normalizeUsername(elements.userNameInput?.value);
+        if (username.length < 2) {
+            setStateMessage(elements.userState, 'Username muss mindestens 2 Zeichen haben', 'error');
             return;
         }
 
         setStateMessage(elements.userState, '');
-        try {
-            const payload = await apiRequest('/api/me/data', {
-                method: 'PUT',
-                body: { data: parsedData },
-            });
-            state.user = payload.user;
-            syncUi();
-            setStateMessage(elements.userState, 'User-Daten gespeichert', 'success');
-        } catch (error) {
-            setStateMessage(elements.userState, getErrorMessage(error), 'error');
-        }
+        state.profile = {
+            ...state.profile,
+            username,
+            avatar: sanitizeAvatarChoice(state.profile.avatar),
+            updatedAt: new Date().toISOString(),
+        };
+
+        saveProfile();
+        updateUserPanel();
+        setStateMessage(elements.userState, 'Profil gespeichert', 'success');
     }
 
     async function openLoginModal(origin = elements.fingerprintImage) {
@@ -1459,12 +1766,6 @@
 
     async function openUserModal(origin = elements.profileImage) {
         const originRect = resolveOriginRect(origin);
-        if (!state.user) {
-            await openLoginModal(originRect);
-            setStateMessage(elements.loginState, 'Bitte zuerst einloggen', 'error');
-            return;
-        }
-
         const switchingFromModal = isModalOpen(elements.loginModal);
         const switchingFromExpandedCard = switchExpandedCardToModalContext();
         const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
@@ -1473,6 +1774,9 @@
         setStateMessage(elements.userState, '');
         updateUserPanel();
         await openModal(elements.userModal, originRect, { animate: shouldAnimateOpen });
+        centerUserCharacterPointer();
+        startUserCharacterAnimation();
+        elements.userNameInput?.focus();
     }
 
     async function toggleAuthModal(origin = elements.fingerprintImage) {
@@ -1487,11 +1791,6 @@
     async function toggleUserModal(origin = elements.profileImage) {
         if (isModalOpen(elements.userModal)) {
             await closeModal(elements.userModal);
-            return;
-        }
-
-        if (!state.user && isModalOpen(elements.loginModal)) {
-            await closeModal(elements.loginModal);
             return;
         }
 
@@ -1516,7 +1815,10 @@
         elements.registerUsername?.addEventListener('focus', handleRegisterUsernameFocus);
         elements.registerUsername?.addEventListener('blur', handleRegisterUsernameBlur);
         elements.logoutButton?.addEventListener('click', handleLogout);
+        elements.userNameInput?.addEventListener('input', handleUserNameInput);
         elements.userDataForm?.addEventListener('submit', handleSaveUserData);
+        elements.userAvatarChoices?.addEventListener('click', handleUserAvatarChoice);
+        elements.userCharacterScene?.addEventListener('click', handleUserCharacterChoice);
         elements.openRegisterModalButton?.addEventListener('click', (event) => {
             void openRegisterModal(event.currentTarget);
         });
@@ -1525,6 +1827,8 @@
         });
         elements.loginModal?.addEventListener('pointermove', handleLoginModalPointerMove);
         elements.loginModal?.addEventListener('pointerleave', handleLoginModalPointerLeave);
+        elements.userModal?.addEventListener('pointermove', handleUserModalPointerMove);
+        elements.userModal?.addEventListener('pointerleave', handleUserModalPointerLeave);
 
         document.addEventListener('click', (event) => {
             const target = getEventElement(event);
@@ -1578,6 +1882,8 @@
         },
     };
 
+    state.profile = loadProfile();
+    applyAvatarTheme(state.profile?.avatar);
     attachEvents();
     refreshSession();
 })();

@@ -133,6 +133,10 @@
     transition: box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
+.fingerprint-container {
+    padding: 8px;
+}
+
 .profile-container.is-active,
 .fingerprint-container.is-active,
 .profile-container:active,
