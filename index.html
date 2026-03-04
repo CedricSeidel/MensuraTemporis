@@ -192,47 +192,106 @@
     </div>
 
     <div class="modal-overlay" id="loginModal" hidden>
-        <div class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+        <div class="modal auth-modal auth-modal--bauhaus" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
             <button type="button" class="modal-close" data-modal-close="loginModal" aria-label="Popup schließen">×</button>
             <h3 id="loginModalTitle">Login</h3>
 
-            <div class="modal-state" id="loginState"></div>
+            <div class="auth-modal-layout auth-modal-layout--login">
+                <div class="auth-illustration auth-illustration--characters scene" id="loginCharacterScene" aria-hidden="true">
+                    <div class="floor-shadow"></div>
+                    <div class="ground"></div>
 
-            <form class="auth-form" id="loginForm" autocomplete="on">
-                <label for="loginUsername">Username</label>
-                <input id="loginUsername" name="username" type="text" minlength="3" required>
-                <label for="loginPassword">Passwort</label>
-                <input id="loginPassword" name="password" type="password" minlength="8" required>
-                <button type="submit">Login</button>
-            </form>
+                    <div class="cluster" id="loginCharacterFigure">
+                        <div class="character purple" data-move="12" data-rotate="4.8" data-skew="6" data-lift="7" data-pupil="4.4">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker white left"><div class="iris"></div></div>
+                                <div class="tracker white right"><div class="iris"></div></div>
+                                <div class="mouth line"></div>
+                            </div>
+                        </div>
 
-            <button type="button" class="auth-switch" id="openRegisterModalButton">Noch keinen Account? Register</button>
+                        <div class="character orange" data-move="9" data-rotate="2.2" data-skew="1.2" data-lift="4" data-pupil="1.8">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker dot left"><div class="iris"></div></div>
+                                <div class="tracker dot right"><div class="iris"></div></div>
+                                <div class="mouth smile"></div>
+                            </div>
+                        </div>
 
-            <div class="auth-logged-in" id="loggedInPanel" hidden>
-                <p class="logged-in-text">Du bist eingeloggt als <strong id="loggedInUsername">-</strong>.</p>
-                <button type="button" id="logoutButton">Logout</button>
+                        <div class="character black" data-move="10" data-rotate="4.1" data-skew="4.2" data-lift="5" data-pupil="4.2">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker white left"><div class="iris"></div></div>
+                                <div class="tracker white right"><div class="iris"></div></div>
+                            </div>
+                        </div>
+
+                        <div class="character yellow" data-move="8" data-rotate="3.2" data-skew="1.8" data-lift="4" data-pupil="1.6">
+                            <div class="body"></div>
+                            <div class="face">
+                                <div class="tracker dot left"><div class="iris"></div></div>
+                                <div class="tracker dot right"><div class="iris"></div></div>
+                                <div class="mouth line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-content-stack">
+                    <div class="auth-pane auth-pane--login" id="loginPane">
+                        <div class="modal-state" id="loginState"></div>
+
+                        <form class="auth-form" id="loginForm" autocomplete="on">
+                            <label for="loginUsername">Username</label>
+                            <input id="loginUsername" name="username" type="text" minlength="3" required>
+                            <label for="loginPassword">Passwort</label>
+                            <div class="password-field">
+                                <input id="loginPassword" name="password" type="password" minlength="8" autocomplete="current-password" required>
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    id="loginPasswordToggle"
+                                    aria-controls="loginPassword"
+                                    aria-pressed="false"
+                                    aria-label="Passwort anzeigen"
+                                >
+                                    Anzeigen
+                                </button>
+                            </div>
+                            <button type="submit">Login</button>
+                        </form>
+
+                        <button type="button" class="auth-switch" id="openRegisterModalButton">Noch keinen Account? Register</button>
+                    </div>
+
+                    <div class="auth-pane auth-pane--register" id="registerPane" hidden>
+                        <div class="modal-state" id="registerState"></div>
+
+                        <form class="auth-form" id="registerForm" autocomplete="on">
+                            <label for="registerUsername">Username</label>
+                            <div class="username-field">
+                                <input id="registerUsername" name="username" type="text" minlength="3" required>
+                                <output class="username-check" id="registerUsernameCheck" aria-live="polite">Check</output>
+                            </div>
+                            <p class="field-hint" id="registerUsernameHint"></p>
+                            <label for="registerPassword">Passwort</label>
+                            <input id="registerPassword" name="password" type="password" minlength="8" required>
+                            <label for="registerPasswordConfirm">Passwort bestätigen</label>
+                            <input id="registerPasswordConfirm" name="passwordConfirm" type="password" minlength="8" required>
+                            <button type="submit">Register</button>
+                        </form>
+
+                        <button type="button" class="auth-switch" id="openLoginModalButton">Bereits Account? Login</button>
+                    </div>
+
+                    <div class="auth-logged-in" id="loggedInPanel" hidden>
+                        <p class="logged-in-text">Du bist eingeloggt als <strong id="loggedInUsername">-</strong>.</p>
+                        <button type="button" id="logoutButton">Logout</button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="registerModal" hidden>
-        <div class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
-            <button type="button" class="modal-close" data-modal-close="registerModal" aria-label="Popup schließen">×</button>
-            <h3 id="registerModalTitle">Register</h3>
-
-            <div class="modal-state" id="registerState"></div>
-
-            <form class="auth-form" id="registerForm" autocomplete="on">
-                <label for="registerUsername">Username</label>
-                <input id="registerUsername" name="username" type="text" minlength="3" required>
-                <label for="registerPassword">Passwort</label>
-                <input id="registerPassword" name="password" type="password" minlength="8" required>
-                <label for="registerPasswordConfirm">Passwort bestätigen</label>
-                <input id="registerPasswordConfirm" name="passwordConfirm" type="password" minlength="8" required>
-                <button type="submit">Register</button>
-            </form>
-
-            <button type="button" class="auth-switch" id="openLoginModalButton">Bereits Account? Login</button>
         </div>
     </div>
 

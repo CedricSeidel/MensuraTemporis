@@ -11,13 +11,21 @@
         profileContainer: document.querySelector('.profile-container'),
         fingerprintContainer: document.querySelector('.fingerprint-container'),
         loginModal: document.getElementById('loginModal'),
-        registerModal: document.getElementById('registerModal'),
         userModal: document.getElementById('userModal'),
+        loginModalTitle: document.getElementById('loginModalTitle'),
         loginState: document.getElementById('loginState'),
         registerState: document.getElementById('registerState'),
         userState: document.getElementById('userState'),
+        loginPane: document.getElementById('loginPane'),
+        registerPane: document.getElementById('registerPane'),
         loginForm: document.getElementById('loginForm'),
+        loginUsername: document.getElementById('loginUsername'),
+        loginPassword: document.getElementById('loginPassword'),
+        loginPasswordToggle: document.getElementById('loginPasswordToggle'),
         registerForm: document.getElementById('registerForm'),
+        registerUsername: document.getElementById('registerUsername'),
+        registerUsernameCheck: document.getElementById('registerUsernameCheck'),
+        registerUsernameHint: document.getElementById('registerUsernameHint'),
         loggedInPanel: document.getElementById('loggedInPanel'),
         loggedInUsername: document.getElementById('loggedInUsername'),
         logoutButton: document.getElementById('logoutButton'),
@@ -28,6 +36,8 @@
         userUpdatedValue: document.getElementById('userUpdatedValue'),
         userDataForm: document.getElementById('userDataForm'),
         userDataInput: document.getElementById('userDataInput'),
+        loginCharacterScene: document.getElementById('loginCharacterScene'),
+        loginCharacterFigure: document.getElementById('loginCharacterFigure'),
     };
 
     if (!elements.profileImage || !elements.fingerprintImage) return;
@@ -37,13 +47,19 @@
         session: 'mensura-auth-session-v1',
     };
 
-    const FALLBACK_HTTP_STATUSES = new Set([404, 405, 500, 502, 503, 504]);
-    const REGISTER_ALREADY_LOGGED_IN_TEXT = 'Du bist bereits eingeloggt. Logout im Login-Popup.';
+    const FALLBACK_HTTP_STATUSES = new Set([404, 405, 500, 501, 502, 503, 504]);
     const MODAL_EXPAND_MS = 600;
     const MODAL_EXPAND_EASE = 'cubic-bezier(0.2, 0.0, 0.2, 1)';
     const MODAL_CLOSE_MS = 600;
     const MODAL_CLOSE_EASE = 'cubic-bezier(0.0, 0.0, 0.2, 1)';
     const NAV_ACTIVE_CLASS = 'is-active';
+    const LOGIN_CHARACTER_ERROR_MS = 720;
+    const LOGIN_CHARACTER_SUCCESS_MS = 640;
+    const LOGIN_CHARACTER_PASSWORD_LOOK = {
+        x: 0.24,
+        y: 0.28,
+    };
+    const REGISTER_USERNAME_MIN_LEN = 3;
 
     const API_BASES = (() => {
         const bases = [];
@@ -59,6 +75,65 @@
 
         return bases;
     })();
+
+    const authUi = {
+        mode: 'login',
+        usernameCheckRequestId: 0,
+        registerUsernameFocused: false,
+        usernameTakenReactionTimerId: 0,
+    };
+
+    const loginCharacter = {
+        scene: elements.loginCharacterScene,
+        cluster: elements.loginCharacterFigure,
+        chars: [],
+        hasFigure: false,
+        rafId: 0,
+        pointer: {
+            x: window.innerWidth * 0.5,
+            y: window.innerHeight * 0.5,
+            inside: false,
+        },
+        reactionTimerId: 0,
+        blinkTimerId: 0,
+        isPasswordMode: false,
+        isReactionLocked: false,
+    };
+
+    if (loginCharacter.scene) {
+        const characters = Array.from(loginCharacter.scene.querySelectorAll('.character'));
+        loginCharacter.chars = characters.map((character) => {
+            const toNumber = (value, fallback = 0) => {
+                const number = Number.parseFloat(value);
+                return Number.isFinite(number) ? number : fallback;
+            };
+
+            return {
+                el: character,
+                body: character.querySelector('.body'),
+                trackers: Array.from(character.querySelectorAll('.tracker')),
+                cfg: {
+                    move: toNumber(character.dataset.move),
+                    rotate: toNumber(character.dataset.rotate),
+                    skew: toNumber(character.dataset.skew),
+                    lift: toNumber(character.dataset.lift),
+                    pupil: toNumber(character.dataset.pupil, 1.8),
+                },
+                state: {
+                    tx: 0,
+                    ty: 0,
+                    rot: 0,
+                    skew: 0,
+                },
+            };
+        });
+    }
+
+    loginCharacter.hasFigure = Boolean(
+        loginCharacter.scene &&
+        loginCharacter.cluster &&
+        loginCharacter.chars.length
+    );
 
     function createHttpError(message, status = 400) {
         const error = new Error(message);
@@ -138,6 +213,154 @@
         const session = getLocalSession();
         if (!session) return null;
         return users.find((entry) => entry?.username === session.username) || null;
+    }
+
+    function setRegisterUsernameHint(text, type = '') {
+        if (!elements.registerUsernameHint) return;
+        elements.registerUsernameHint.textContent = text || '';
+        elements.registerUsernameHint.className = `field-hint${type ? ` is-${type}` : ''}`;
+
+        if (!elements.registerUsernameCheck) return;
+        let label = 'Check';
+        if (type === 'pending') label = 'Pruefe';
+        if (type === 'success') label = 'OK';
+        if (type === 'error') label = 'Belegt';
+        if (type === 'short') label = 'Kurz';
+
+        elements.registerUsernameCheck.textContent = label;
+        elements.registerUsernameCheck.className = `username-check${type ? ` is-${type}` : ''}`;
+    }
+
+    function clearRegisterUsernameTakenReactionTimer() {
+        if (!authUi.usernameTakenReactionTimerId) return;
+        window.clearTimeout(authUi.usernameTakenReactionTimerId);
+        authUi.usernameTakenReactionTimerId = 0;
+    }
+
+    function clearRegisterUsernameTakenReaction() {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        clearRegisterUsernameTakenReactionTimer();
+        loginCharacter.scene.classList.remove('is-register-username-taken');
+    }
+
+    function triggerRegisterUsernameTakenReaction() {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        clearRegisterUsernameTakenReactionTimer();
+        loginCharacter.scene.classList.remove('is-register-username-taken');
+        loginCharacter.scene.offsetWidth;
+        loginCharacter.scene.classList.add('is-register-username-taken');
+        authUi.usernameTakenReactionTimerId = window.setTimeout(() => {
+            loginCharacter.scene?.classList.remove('is-register-username-taken');
+            authUi.usernameTakenReactionTimerId = 0;
+        }, 520);
+    }
+
+    function setLoginCharacterNodState(isActive) {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        const shouldShow = Boolean(isActive)
+            && authUi.mode === 'register'
+            && !isLoggedIn()
+            && authUi.registerUsernameFocused;
+        loginCharacter.scene.classList.toggle('is-register-username-ok', shouldShow);
+    }
+
+    function applyAuthCardVisibility() {
+        const loggedIn = isLoggedIn();
+        const showRegister = !loggedIn && authUi.mode === 'register';
+        const showLogin = !loggedIn && !showRegister;
+
+        if (elements.loginModalTitle) {
+            elements.loginModalTitle.textContent = showRegister ? 'Register' : 'Login';
+        }
+
+        if (elements.loginPane) elements.loginPane.hidden = !showLogin;
+        if (elements.registerPane) elements.registerPane.hidden = !showRegister;
+        if (elements.loggedInPanel) elements.loggedInPanel.hidden = !loggedIn;
+
+        if (!showRegister) {
+            authUi.registerUsernameFocused = false;
+            setRegisterUsernameHint('');
+        }
+
+        if (loggedIn || !showRegister) {
+            setLoginCharacterNodState(false);
+            clearRegisterUsernameTakenReaction();
+        }
+    }
+
+    function setAuthMode(mode) {
+        authUi.mode = mode === 'register' ? 'register' : 'login';
+        applyAuthCardVisibility();
+    }
+
+    async function checkRegisterUsernameAvailability(username) {
+        const normalized = normalizeUsername(username);
+        if (normalized.length < REGISTER_USERNAME_MIN_LEN) {
+            return null;
+        }
+
+        const users = getLocalUsers();
+        return !findLocalUser(users, normalized);
+    }
+
+    async function runRegisterUsernameAvailabilityCheck() {
+        if (authUi.mode !== 'register' || isLoggedIn()) return;
+        if (!elements.registerUsername) return;
+
+        const username = normalizeUsername(elements.registerUsername.value);
+        authUi.usernameCheckRequestId += 1;
+        const requestId = authUi.usernameCheckRequestId;
+
+        if (username.length < REGISTER_USERNAME_MIN_LEN) {
+            setRegisterUsernameHint(username ? `Mindestens ${REGISTER_USERNAME_MIN_LEN} Zeichen` : '');
+            setLoginCharacterNodState(false);
+            clearRegisterUsernameTakenReaction();
+            return;
+        }
+
+        setRegisterUsernameHint('Pruefe Username...');
+        setLoginCharacterNodState(false);
+        clearRegisterUsernameTakenReaction();
+
+        const available = await checkRegisterUsernameAvailability(username);
+        if (requestId !== authUi.usernameCheckRequestId) return;
+
+        const latestValue = normalizeUsername(elements.registerUsername?.value || '');
+        if (latestValue !== username) return;
+
+        if (available) {
+            setRegisterUsernameHint('Username ist verfuegbar', 'success');
+            setLoginCharacterNodState(true);
+            clearRegisterUsernameTakenReaction();
+            return;
+        }
+
+        setRegisterUsernameHint('Username bereits vergeben', 'error');
+        setLoginCharacterNodState(false);
+        triggerRegisterUsernameTakenReaction();
+    }
+
+    function handleRegisterUsernameInput() {
+        void runRegisterUsernameAvailabilityCheck();
+    }
+
+    function handleRegisterUsernameFocus() {
+        authUi.registerUsernameFocused = true;
+        void runRegisterUsernameAvailabilityCheck();
+    }
+
+    function handleRegisterUsernameBlur() {
+        authUi.registerUsernameFocused = false;
+        setLoginCharacterNodState(false);
+        void runRegisterUsernameAvailabilityCheck();
+    }
+
+    function resetRegisterAvailabilityUi() {
+        authUi.usernameCheckRequestId += 1;
+        authUi.registerUsernameFocused = false;
+        setRegisterUsernameHint('');
+        setLoginCharacterNodState(false);
+        clearRegisterUsernameTakenReaction();
     }
 
     function localAuthRequest(path, method, body) {
@@ -234,12 +457,312 @@
         return date.toLocaleString('de-DE');
     }
 
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function lerp(start, end, amount) {
+        return start + ((end - start) * amount);
+    }
+
+    function clearLoginCharacterRaf() {
+        if (!loginCharacter.rafId) return;
+        window.cancelAnimationFrame(loginCharacter.rafId);
+        loginCharacter.rafId = 0;
+    }
+
+    function clearLoginCharacterBlinkTimer() {
+        if (!loginCharacter.blinkTimerId) return;
+        window.clearTimeout(loginCharacter.blinkTimerId);
+        loginCharacter.blinkTimerId = 0;
+    }
+
+    function clearLoginCharacterReactionTimer() {
+        if (!loginCharacter.reactionTimerId) return;
+        window.clearTimeout(loginCharacter.reactionTimerId);
+        loginCharacter.reactionTimerId = 0;
+    }
+
+    function setLoginCharacterConcernedState() {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        const concerned = loginCharacter.isPasswordMode;
+        loginCharacter.scene.classList.toggle('concerned', concerned);
+    }
+
+    function centerLoginCharacterPointer() {
+        if (!loginCharacter.scene) return;
+        const rect = loginCharacter.scene.getBoundingClientRect();
+        if (!rect.width || !rect.height) {
+            loginCharacter.pointer.x = window.innerWidth * 0.5;
+            loginCharacter.pointer.y = window.innerHeight * 0.5;
+            loginCharacter.pointer.inside = false;
+            return;
+        }
+
+        loginCharacter.pointer.x = rect.left + (rect.width * 0.5);
+        loginCharacter.pointer.y = rect.top + (rect.height * 0.5);
+        loginCharacter.pointer.inside = false;
+    }
+
+    function clearLoginCharacterReactionClasses() {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        loginCharacter.scene.classList.remove('is-error', 'is-success', 'is-shaking');
+    }
+
+    function getLoginCharacterPointerTarget() {
+        const sceneRect = loginCharacter.scene?.getBoundingClientRect();
+        if (!sceneRect || !sceneRect.width || !sceneRect.height) {
+            return {
+                x: loginCharacter.pointer.x,
+                y: loginCharacter.pointer.y,
+            };
+        }
+
+        if (loginCharacter.isPasswordMode) {
+            return {
+                x: sceneRect.left + (sceneRect.width * LOGIN_CHARACTER_PASSWORD_LOOK.x),
+                y: sceneRect.top + (sceneRect.height * LOGIN_CHARACTER_PASSWORD_LOOK.y),
+            };
+        }
+
+        if (loginCharacter.isReactionLocked) {
+            return {
+                x: sceneRect.left + (sceneRect.width * 0.5),
+                y: sceneRect.top + (sceneRect.height * 0.42),
+            };
+        }
+
+        if (loginCharacter.pointer.inside) {
+            return {
+                x: loginCharacter.pointer.x,
+                y: loginCharacter.pointer.y,
+            };
+        }
+
+        return {
+            x: sceneRect.left + (sceneRect.width * 0.5),
+            y: sceneRect.top + (sceneRect.height * 0.48),
+        };
+    }
+
+    function updateLoginCharacterTrackers(character, pointerTarget) {
+        character.trackers.forEach((tracker) => {
+            const rect = tracker.getBoundingClientRect();
+            const centerX = rect.left + (rect.width * 0.5);
+            const centerY = rect.top + (rect.height * 0.5);
+
+            const dx = pointerTarget.x - centerX;
+            const dy = pointerTarget.y - centerY;
+            const distance = Math.hypot(dx, dy) || 1;
+            const maxMove = tracker.classList.contains('white')
+                ? character.cfg.pupil
+                : Math.min(character.cfg.pupil, 1.8);
+            const reach = Math.min(maxMove, distance * 0.12);
+
+            tracker.style.setProperty('--px', `${(dx / distance) * reach}px`);
+            tracker.style.setProperty('--py', `${(dy / distance) * reach}px`);
+        });
+    }
+
+    function updateLoginCharacterBodies(time, pointerTarget) {
+        const sceneRect = loginCharacter.scene?.getBoundingClientRect();
+        if (!sceneRect || !sceneRect.width || !sceneRect.height) return;
+
+        const centerX = sceneRect.left + (sceneRect.width * 0.5);
+        const centerY = sceneRect.top + (sceneRect.height * 0.55);
+
+        const normalizedX = clamp((pointerTarget.x - centerX) / (sceneRect.width * 0.5), -1, 1);
+        const normalizedY = clamp((pointerTarget.y - centerY) / (sceneRect.height * 0.5), -1, 1);
+
+        loginCharacter.chars.forEach((character, index) => {
+            const wobble = Math.sin((time * 0.0018) + (index * 0.9)) * 0.25;
+
+            const targetTx = normalizedX * character.cfg.move;
+            const targetTy = (-Math.abs(normalizedY) * character.cfg.lift) + (loginCharacter.isPasswordMode ? 3 : 0);
+            const targetRot = (normalizedX * character.cfg.rotate) + wobble;
+            const targetSkew = normalizedX * character.cfg.skew;
+
+            character.state.tx = lerp(character.state.tx, targetTx, 0.14);
+            character.state.ty = lerp(character.state.ty, targetTy, 0.14);
+            character.state.rot = lerp(character.state.rot, targetRot, 0.14);
+            character.state.skew = lerp(character.state.skew, targetSkew, 0.14);
+
+            character.el.style.transform = `translate3d(${character.state.tx}px, ${character.state.ty}px, 0) rotate(${character.state.rot}deg)`;
+
+            if (character.body) {
+                const squash = loginCharacter.isPasswordMode ? 0.965 : 1;
+                character.body.style.transform = `skewX(${character.state.skew}deg) scaleY(${squash})`;
+            }
+        });
+    }
+
+    function renderLoginCharacterFrame(time) {
+        loginCharacter.rafId = 0;
+        if (!loginCharacter.hasFigure) return;
+        if (!isModalOpen(elements.loginModal)) return;
+
+        const pointerTarget = getLoginCharacterPointerTarget();
+        updateLoginCharacterBodies(time, pointerTarget);
+        loginCharacter.chars.forEach((character) => updateLoginCharacterTrackers(character, pointerTarget));
+
+        loginCharacter.rafId = window.requestAnimationFrame(renderLoginCharacterFrame);
+    }
+
+    function startLoginCharacterAnimation() {
+        if (!loginCharacter.hasFigure) return;
+        if (!isModalOpen(elements.loginModal)) return;
+
+        if (!loginCharacter.rafId) {
+            loginCharacter.rafId = window.requestAnimationFrame(renderLoginCharacterFrame);
+        }
+
+        if (!loginCharacter.blinkTimerId) {
+            loginCharacter.blinkTimerId = window.setTimeout(runLoginCharacterBlinkSequence, 900);
+        }
+    }
+
+    function runLoginCharacterBlinkSequence() {
+        loginCharacter.blinkTimerId = 0;
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        if (!isModalOpen(elements.loginModal)) return;
+
+        const order = ['purple', 'black', 'yellow', 'orange'];
+        const nodes = order
+            .map((name) => loginCharacter.scene.querySelector(`.character.${name}`))
+            .filter((node) => node instanceof Element);
+
+        nodes.forEach((node, index) => {
+            window.setTimeout(() => node.classList.add('blink'), index * 45);
+        });
+
+        window.setTimeout(() => {
+            nodes.forEach((node, index) => {
+                window.setTimeout(() => node.classList.remove('blink'), index * 35);
+            });
+        }, 120);
+
+        const nextBlinkInMs = 1800 + (Math.random() * 2400);
+        loginCharacter.blinkTimerId = window.setTimeout(runLoginCharacterBlinkSequence, nextBlinkInMs);
+    }
+
+    function setLoginPasswordVisibility(isVisible, options = {}) {
+        if (!elements.loginPassword) return;
+        const { focusInput = false } = options;
+        const visible = Boolean(isVisible);
+
+        elements.loginPassword.type = visible ? 'text' : 'password';
+        elements.loginPasswordToggle?.setAttribute('aria-pressed', String(visible));
+        elements.loginPasswordToggle?.setAttribute('aria-label', visible ? 'Passwort verbergen' : 'Passwort anzeigen');
+
+        if (elements.loginPasswordToggle) {
+            elements.loginPasswordToggle.textContent = visible ? 'Verbergen' : 'Anzeigen';
+        }
+
+        setLoginCharacterPasswordMode(visible);
+
+        if (!focusInput) return;
+        elements.loginPassword.focus();
+        const length = elements.loginPassword.value.length;
+        elements.loginPassword.setSelectionRange(length, length);
+    }
+
+    function toggleLoginPasswordVisibility() {
+        if (!elements.loginPassword) return;
+        const isVisible = elements.loginPassword.type === 'text';
+        setLoginPasswordVisibility(!isVisible, { focusInput: true });
+    }
+
+    function setLoginCharacterPasswordMode(isActive) {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        loginCharacter.isPasswordMode = Boolean(isActive);
+        loginCharacter.scene.classList.toggle('is-password-mode', loginCharacter.isPasswordMode);
+        setLoginCharacterConcernedState();
+        startLoginCharacterAnimation();
+    }
+
+    function finishLoginCharacterReaction() {
+        if (!loginCharacter.hasFigure) return;
+        clearLoginCharacterReactionTimer();
+        clearLoginCharacterReactionClasses();
+        loginCharacter.isReactionLocked = false;
+        setLoginCharacterConcernedState();
+        startLoginCharacterAnimation();
+    }
+
+    function triggerLoginCharacterReaction(type) {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+
+        clearLoginCharacterReactionTimer();
+        clearLoginCharacterReactionClasses();
+        loginCharacter.isReactionLocked = true;
+        setLoginCharacterConcernedState();
+
+        if (type === 'error') {
+            loginCharacter.scene.classList.add('is-error', 'is-shaking');
+            loginCharacter.reactionTimerId = window.setTimeout(finishLoginCharacterReaction, LOGIN_CHARACTER_ERROR_MS);
+            startLoginCharacterAnimation();
+            return;
+        }
+
+        if (type === 'success') {
+            loginCharacter.isPasswordMode = false;
+            loginCharacter.scene.classList.remove('is-password-mode');
+            loginCharacter.scene.classList.add('is-success');
+            setLoginCharacterConcernedState();
+            loginCharacter.reactionTimerId = window.setTimeout(finishLoginCharacterReaction, LOGIN_CHARACTER_SUCCESS_MS);
+            startLoginCharacterAnimation();
+        }
+    }
+
+    function resetLoginCharacterState() {
+        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
+        clearLoginCharacterRaf();
+        clearLoginCharacterReactionTimer();
+        clearLoginCharacterBlinkTimer();
+        clearLoginCharacterReactionClasses();
+        loginCharacter.isPasswordMode = false;
+        loginCharacter.isReactionLocked = false;
+        loginCharacter.scene.classList.remove('is-password-mode', 'concerned', 'is-register-username-ok', 'is-register-username-taken');
+        centerLoginCharacterPointer();
+
+        loginCharacter.chars.forEach((character) => {
+            character.state.tx = 0;
+            character.state.ty = 0;
+            character.state.rot = 0;
+            character.state.skew = 0;
+            character.el.style.transform = '';
+            if (character.body) {
+                character.body.style.transform = '';
+            }
+            character.trackers.forEach((tracker) => {
+                tracker.style.setProperty('--px', '0px');
+                tracker.style.setProperty('--py', '0px');
+                tracker.classList.remove('blink');
+            });
+        });
+    }
+
+    function handleLoginModalPointerMove(event) {
+        if (!loginCharacter.hasFigure) return;
+        if (event.pointerType === 'touch') return;
+        loginCharacter.pointer.x = event.clientX;
+        loginCharacter.pointer.y = event.clientY;
+        loginCharacter.pointer.inside = true;
+        startLoginCharacterAnimation();
+    }
+
+    function handleLoginModalPointerLeave() {
+        if (!loginCharacter.hasFigure) return;
+        if (loginCharacter.isPasswordMode) return;
+        centerLoginCharacterPointer();
+    }
+
     function anyModalOpen() {
-        return [elements.loginModal, elements.registerModal, elements.userModal].some((modal) => modal && !modal.hidden);
+        return [elements.loginModal, elements.userModal].some((modal) => modal && !modal.hidden);
     }
 
     function getOpenModal() {
-        return [elements.loginModal, elements.registerModal, elements.userModal]
+        return [elements.loginModal, elements.userModal]
             .find((modal) => modal && !modal.hidden) || null;
     }
 
@@ -261,10 +784,10 @@
     }
 
     function syncProfileNavActive() {
-        const openModalId = [elements.loginModal, elements.registerModal, elements.userModal]
+        const openModalId = [elements.loginModal, elements.userModal]
             .find((modal) => modal && !modal.hidden)?.id || '';
 
-        const loginActive = openModalId === 'loginModal' || openModalId === 'registerModal';
+        const loginActive = openModalId === 'loginModal';
         const userActive = openModalId === 'userModal';
 
         elements.fingerprintContainer?.classList.toggle(NAV_ACTIVE_CLASS, loginActive);
@@ -494,7 +1017,7 @@
         if (!modalOverlay || modalOverlay.hidden) return Promise.resolve(false);
         if (modalOverlay._isClosing) return modalOverlay._closePromise || Promise.resolve(true);
         const { preserveExpandedState = false } = options;
-        const hasOtherOpenModal = [elements.loginModal, elements.registerModal, elements.userModal]
+        const hasOtherOpenModal = [elements.loginModal, elements.userModal]
             .some((modal) => modal && modal !== modalOverlay && !modal.hidden);
         const revealGridDuringClose = !preserveExpandedState && !hasOtherOpenModal;
 
@@ -571,7 +1094,7 @@
     }
 
     function refreshOpenModalLayouts() {
-        [elements.loginModal, elements.registerModal, elements.userModal].forEach((modal) => {
+        [elements.loginModal, elements.userModal].forEach((modal) => {
             if (!modal || modal.hidden) return;
             applyModalGridLayout(modal);
         });
@@ -613,11 +1136,25 @@
         if (modal._isClosing) return modal._closePromise || Promise.resolve(true);
 
         if (animate && !modal.hidden) {
-            return animateModalClose(modal, origin, { preserveExpandedState });
+            return animateModalClose(modal, origin, { preserveExpandedState }).then((closed) => {
+                if (modal === elements.loginModal) {
+                    resetRegisterAvailabilityUi();
+                    setAuthMode('login');
+                    setLoginPasswordVisibility(false);
+                    resetLoginCharacterState();
+                }
+                return closed;
+            });
         }
 
         modal.hidden = true;
         clearModalGridLayout(modal);
+        if (modal === elements.loginModal) {
+            resetRegisterAvailabilityUi();
+            setAuthMode('login');
+            setLoginPasswordVisibility(false);
+            resetLoginCharacterState();
+        }
         if (!anyModalOpen() && !preserveExpandedState) {
             setGridModalState(false);
             document.body.classList.remove('modal-open');
@@ -630,7 +1167,6 @@
     function closeAllModals(options = {}) {
         return Promise.all([
             closeModal(elements.loginModal, options),
-            closeModal(elements.registerModal, options),
             closeModal(elements.userModal, options),
         ]);
     }
@@ -669,21 +1205,8 @@
     }
 
     function updateAuthPanels() {
-        const loggedIn = isLoggedIn();
-
-        if (elements.loginForm) elements.loginForm.hidden = loggedIn;
-        if (elements.openRegisterModalButton) elements.openRegisterModalButton.hidden = loggedIn;
-        if (elements.loggedInPanel) elements.loggedInPanel.hidden = !loggedIn;
         if (elements.loggedInUsername) elements.loggedInUsername.textContent = state.user?.username || '-';
-
-        if (elements.registerForm) elements.registerForm.hidden = loggedIn;
-        if (elements.openLoginModalButton) elements.openLoginModalButton.hidden = loggedIn;
-
-        if (loggedIn) {
-            setStateMessage(elements.registerState, REGISTER_ALREADY_LOGGED_IN_TEXT, 'success');
-        } else if (elements.registerState?.textContent === REGISTER_ALREADY_LOGGED_IN_TEXT) {
-            setStateMessage(elements.registerState, '');
-        }
+        applyAuthCardVisibility();
 
         updateTooltips();
     }
@@ -776,10 +1299,16 @@
             state.user = payload.user;
             syncUi();
             setStateMessage(elements.loginState, 'Login erfolgreich', 'success');
-            closeModal(elements.loginModal);
+            triggerLoginCharacterReaction('success');
+            await new Promise((resolve) => window.setTimeout(resolve, 220));
+            setLoginPasswordVisibility(false);
+            await closeModal(elements.loginModal);
             form.reset();
         } catch (error) {
             setStateMessage(elements.loginState, getErrorMessage(error), 'error');
+            triggerLoginCharacterReaction('error');
+            elements.loginPassword?.focus();
+            elements.loginPassword?.select?.();
         }
     }
 
@@ -797,17 +1326,28 @@
             return;
         }
 
+        const usernameAvailable = await checkRegisterUsernameAvailability(username);
+        if (usernameAvailable === false) {
+            setRegisterUsernameHint('Username bereits vergeben', 'error');
+            setLoginCharacterNodState(false);
+            setStateMessage(elements.registerState, 'Username bereits vergeben', 'error');
+            return;
+        }
+
         try {
             const payload = await apiRequest('/api/register', {
                 method: 'POST',
                 body: { username, password, data: {} },
             });
             state.user = payload.user;
+            resetRegisterAvailabilityUi();
+            setAuthMode('login');
             syncUi();
             setStateMessage(elements.registerState, 'Registrierung erfolgreich', 'success');
-            closeModal(elements.registerModal);
+            await closeModal(elements.loginModal);
             form.reset();
         } catch (error) {
+            setLoginCharacterNodState(false);
             setStateMessage(elements.registerState, getErrorMessage(error), 'error');
         }
     }
@@ -863,18 +1403,28 @@
 
     async function openLoginModal(origin = elements.fingerprintImage) {
         const originRect = resolveOriginRect(origin);
-        const switchingFromModal = isModalOpen(elements.registerModal) || isModalOpen(elements.userModal);
+        const loginAlreadyOpen = isModalOpen(elements.loginModal);
+        const switchingFromModal = isModalOpen(elements.userModal);
         const switchingFromExpandedCard = switchExpandedCardToModalContext();
-        const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
+        const shouldAnimateOpen = !loginAlreadyOpen && !switchingFromModal && !switchingFromExpandedCard;
 
-        await closeModal(elements.registerModal, { animate: false, preserveExpandedState: switchingFromModal });
         await closeModal(elements.userModal, { animate: false, preserveExpandedState: switchingFromModal });
+        resetRegisterAvailabilityUi();
+        setAuthMode('login');
+        setStateMessage(elements.registerState, '');
         setStateMessage(elements.loginState, '');
+        if (!loginAlreadyOpen) {
+            resetLoginCharacterState();
+            await openModal(elements.loginModal, originRect, { animate: shouldAnimateOpen });
+            centerLoginCharacterPointer();
+            startLoginCharacterAnimation();
+        }
+
+        setLoginPasswordVisibility(false);
         syncUi();
-        await openModal(elements.loginModal, originRect, { animate: shouldAnimateOpen });
 
         if (!isLoggedIn()) {
-            document.getElementById('loginUsername')?.focus();
+            elements.loginUsername?.focus();
         }
     }
 
@@ -886,16 +1436,25 @@
             return;
         }
 
-        const switchingFromModal = isModalOpen(elements.loginModal) || isModalOpen(elements.userModal);
+        const loginAlreadyOpen = isModalOpen(elements.loginModal);
+        const switchingFromModal = isModalOpen(elements.userModal);
         const switchingFromExpandedCard = switchExpandedCardToModalContext();
-        const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
+        const shouldAnimateOpen = !loginAlreadyOpen && !switchingFromModal && !switchingFromExpandedCard;
 
-        await closeModal(elements.loginModal, { animate: false, preserveExpandedState: switchingFromModal });
         await closeModal(elements.userModal, { animate: false, preserveExpandedState: switchingFromModal });
+        setLoginPasswordVisibility(false);
+        if (!loginAlreadyOpen) {
+            resetLoginCharacterState();
+            await openModal(elements.loginModal, originRect, { animate: shouldAnimateOpen });
+            centerLoginCharacterPointer();
+            startLoginCharacterAnimation();
+        }
+        setAuthMode('register');
         setStateMessage(elements.registerState, '');
+        setStateMessage(elements.loginState, '');
         syncUi();
-        await openModal(elements.registerModal, originRect, { animate: shouldAnimateOpen });
-        document.getElementById('registerUsername')?.focus();
+        void runRegisterUsernameAvailabilityCheck();
+        elements.registerUsername?.focus();
     }
 
     async function openUserModal(origin = elements.profileImage) {
@@ -906,21 +1465,19 @@
             return;
         }
 
-        const switchingFromModal = isModalOpen(elements.loginModal) || isModalOpen(elements.registerModal);
+        const switchingFromModal = isModalOpen(elements.loginModal);
         const switchingFromExpandedCard = switchExpandedCardToModalContext();
         const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
 
         await closeModal(elements.loginModal, { animate: false, preserveExpandedState: switchingFromModal });
-        await closeModal(elements.registerModal, { animate: false, preserveExpandedState: switchingFromModal });
         setStateMessage(elements.userState, '');
         updateUserPanel();
         await openModal(elements.userModal, originRect, { animate: shouldAnimateOpen });
     }
 
     async function toggleAuthModal(origin = elements.fingerprintImage) {
-        if (isModalOpen(elements.loginModal) || isModalOpen(elements.registerModal)) {
+        if (isModalOpen(elements.loginModal)) {
             await closeModal(elements.loginModal);
-            await closeModal(elements.registerModal);
             return;
         }
 
@@ -933,9 +1490,8 @@
             return;
         }
 
-        if (!state.user && (isModalOpen(elements.loginModal) || isModalOpen(elements.registerModal))) {
+        if (!state.user && isModalOpen(elements.loginModal)) {
             await closeModal(elements.loginModal);
-            await closeModal(elements.registerModal);
             return;
         }
 
@@ -954,7 +1510,11 @@
         elements.fingerprintContainer?.addEventListener('mouseenter', updateTooltips);
 
         elements.loginForm?.addEventListener('submit', handleLogin);
+        elements.loginPasswordToggle?.addEventListener('click', toggleLoginPasswordVisibility);
         elements.registerForm?.addEventListener('submit', handleRegister);
+        elements.registerUsername?.addEventListener('input', handleRegisterUsernameInput);
+        elements.registerUsername?.addEventListener('focus', handleRegisterUsernameFocus);
+        elements.registerUsername?.addEventListener('blur', handleRegisterUsernameBlur);
         elements.logoutButton?.addEventListener('click', handleLogout);
         elements.userDataForm?.addEventListener('submit', handleSaveUserData);
         elements.openRegisterModalButton?.addEventListener('click', (event) => {
@@ -963,6 +1523,8 @@
         elements.openLoginModalButton?.addEventListener('click', (event) => {
             void openLoginModal(event.currentTarget);
         });
+        elements.loginModal?.addEventListener('pointermove', handleLoginModalPointerMove);
+        elements.loginModal?.addEventListener('pointerleave', handleLoginModalPointerLeave);
 
         document.addEventListener('click', (event) => {
             const target = getEventElement(event);
