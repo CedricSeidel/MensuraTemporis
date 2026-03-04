@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>Mensura Temporis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="fff">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="frontend/css/main.css">
     <link rel="stylesheet" href="frontend/css/token.css">
+    <link rel="stylesheet" href="frontend/css/app/base.css">
+    <link rel="stylesheet" href="frontend/css/app/grid.css">
+    <link rel="stylesheet" href="frontend/css/app/widgets.css">
+    <link rel="stylesheet" href="frontend/css/app/forms.css">
+    <link rel="stylesheet" href="frontend/css/app/expansion.css">
+    <link rel="stylesheet" href="frontend/css/app/responsive.css">
     <link rel="stylesheet" href="frontend/css/navbar.css">
     <link rel="stylesheet" href="frontend/css/modals.css">
 
 </head>
 <body>
+<div class="sky-video-layer" aria-hidden="true">
+    <video id="skyBackgroundVideo" class="sky-video" autoplay muted loop playsinline webkit-playsinline preload="auto" src="frontend/assets/video/855005-hd_1920_1080_30fps.mp4"></video>
+</div>
 <header>
     <nav class="nav-bar">
         <!-- Logo (Links) -->
@@ -56,7 +65,6 @@
                 <h2>Calendar</h2>
                 <span class="widget-chip">LOCAL</span>
             </div>
-            <hr>
             <div class="widget-content">
                 <div class="widget-collapsed calendar-collapsed">
                     <p class="summary-caption">Heute</p>
@@ -74,7 +82,6 @@
                 <h2>Upcoming Events</h2>
                 <span class="widget-chip">SYNC</span>
             </div>
-            <hr>
             <div class="widget-content">
                 <div class="widget-collapsed">
                     <p class="summary-caption">Nächster Termin</p>
@@ -96,15 +103,14 @@
                 <h2>Weather</h2>
                 <span class="widget-chip">LIVE</span>
             </div>
-            <hr>
             <div class="widget-content">
                 <div class="widget-collapsed">
-                    <p class="summary-caption" id="weatherCity">Berlin</p>
-                    <p class="summary-weather" id="weatherTemp">7°C</p>
-                    <p class="summary-sub" id="weatherMeta">bewölkt / Wind 14 km/h</p>
+                    <p class="summary-caption" id="weatherCity">Kassel</p>
+                    <p class="summary-weather" id="weatherTemp">--°C</p>
+                    <p class="summary-sub" id="weatherMeta">lade wetterdaten...</p>
                     <div class="metric-line">
-                        <span id="weatherHumidity">Feuchte 62%</span>
-                        <strong id="weatherRain">Regen 18%</strong>
+                        <span id="weatherHumidity">Feuchte --%</span>
+                        <strong id="weatherRain">Niederschlag --.- mm</strong>
                     </div>
                 </div>
                 <div class="widget-expanded" aria-hidden="true"></div>
@@ -118,7 +124,6 @@
                 <h2>Quick Notes</h2>
                 <span class="widget-chip">POST-IT</span>
             </div>
-            <hr>
             <div class="widget-content">
                 <div class="widget-collapsed">
                     <p class="summary-caption">Letzte Notiz</p>
@@ -140,31 +145,18 @@
                 <h2>Analog Clock</h2>
                 <span class="widget-chip">ANALOG</span>
             </div>
-            <hr>
             <div class="widget-content">
                 <div class="widget-collapsed clock-collapsed">
                     <div class="analog-clock-shell" id="analogClockShell">
-                        <p class="clock-meta-top" id="clockTopLine">Berlin / Europe/Berlin</p>
+                        <p class="clock-meta-top" id="clockTopLine">--</p>
                         <div class="analog-clock-face" id="analogClockFace" aria-label="Analoge Uhr">
                             <span class="clock-tick-ring" aria-hidden="true"></span>
-                            <span class="clock-number clock-number-12">12</span>
-                            <span class="clock-number clock-number-1">1</span>
-                            <span class="clock-number clock-number-2">2</span>
-                            <span class="clock-number clock-number-3">3</span>
-                            <span class="clock-number clock-number-4">4</span>
-                            <span class="clock-number clock-number-5">5</span>
-                            <span class="clock-number clock-number-6">6</span>
-                            <span class="clock-number clock-number-7">7</span>
-                            <span class="clock-number clock-number-8">8</span>
-                            <span class="clock-number clock-number-9">9</span>
-                            <span class="clock-number clock-number-10">10</span>
-                            <span class="clock-number clock-number-11">11</span>
                             <span class="clock-hand clock-hand-hour" id="clockHourHand"></span>
                             <span class="clock-hand clock-hand-minute" id="clockMinuteHand"></span>
                             <span class="clock-hand clock-hand-second" id="clockSecondHand"></span>
                             <span class="clock-center-dot"></span>
                         </div>
-                        <p class="clock-meta-bottom" id="clockBottomLine">03/03/2026 · Tue</p>
+                        <p class="clock-meta-bottom" id="clockBottomLine">--:--:--</p>
                     </div>
                 </div>
                 <div class="widget-expanded" aria-hidden="true"></div>
@@ -178,7 +170,6 @@
                 <h2>Settings</h2>
                 <span class="widget-chip">CONFIG</span>
             </div>
-            <hr>
             <div class="widget-content">
                 <div class="widget-collapsed">
                     <p class="summary-caption">Runtime</p>
@@ -262,9 +253,38 @@
 
 
     <script type="module" src="frontend/js/cardExpansion.js"></script>
-    <script src="frontend/js/cardContent.js"></script>
+    <script type="module" src="frontend/js/cardContent.js"></script>
     <script src="frontend/js/profile.js"></script>
     <script src="frontend/js/hotkeys.js"></script>
+    <script>
+        (() => {
+            const video = document.getElementById('skyBackgroundVideo');
+            if (!video) return;
+
+            const tryPlaySky = () => {
+                video.loop = true;
+                video.muted = true;
+                video.defaultMuted = true;
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+
+                const playPromise = video.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {});
+                }
+            };
+
+            video.addEventListener('loadeddata', tryPlaySky);
+            video.addEventListener('canplay', tryPlaySky);
+            window.addEventListener('pointerdown', tryPlaySky, { passive: true });
+            window.addEventListener('touchstart', tryPlaySky, { passive: true });
+            window.addEventListener('keydown', tryPlaySky);
+            window.addEventListener('click', tryPlaySky, { passive: true });
+
+            tryPlaySky();
+        })();
+    </script>
 
 </body>
 </html>

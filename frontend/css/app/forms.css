@@ -1,0 +1,232 @@
+/* ============================
+ * TECH FIELDS
+ * ============================ */
+
+.tech-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.tech-field {
+    display: grid;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+.tech-field span {
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+    font-size: var(--font-size-xs);
+}
+
+.tech-field input,
+.tech-field select,
+.tech-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 82%, var(--color-border) 18%);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-background) 92%, var(--color-background-alt) 8%);
+    color: var(--color-text);
+    font-family: var(--font-family-mono), monospace;
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.tech-field textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.tech-field input:focus,
+.tech-field select:focus,
+.tech-field textarea:focus {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 58%, var(--color-border-light) 42%);
+    outline-offset: 0;
+}
+
+.tech-button {
+    justify-self: start;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 72%, var(--color-border) 28%);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-surface) 90%, transparent 10%);
+    color: var(--color-text);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-family: var(--font-family-mono), monospace;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.tech-button--small {
+    padding: 5px 10px;
+    font-size: var(--font-size-xs);
+}
+
+.tech-button:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-light) 58%);
+    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface) 90%);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(54, 45, 35, 0.12);
+}
+
+.tech-button:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.tech-button:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 62%, white 38%);
+    outline-offset: 2px;
+}
+
+.tech-button--ghost {
+    background: transparent;
+}
+
+.tech-rows {
+    display: grid;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-background) 94%, var(--color-background-alt) 6%);
+}
+
+.tech-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    gap: var(--spacing-md);
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border-light) 86%, var(--color-border) 14%);
+    font-size: var(--font-size-sm);
+}
+
+.tech-row span,
+.tech-row strong {
+    min-width: 0;
+}
+
+.tech-row strong {
+    text-align: right;
+}
+
+.tech-row:last-child {
+    border-bottom: none;
+}
+
+.tech-row strong {
+    color: color-mix(in srgb, var(--card-accent) 62%, var(--color-text) 38%);
+}
+
+/* ============================
+ * TOGGLES
+ * ============================ */
+
+.toggle-stack {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+.toggle-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 74%, var(--color-border) 26%);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-chip input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border: 1px solid color-mix(in srgb, var(--color-border) 46%, var(--color-border-light) 54%);
+    border-radius: 2px;
+    background: transparent;
+    margin: 0;
+}
+
+.toggle-chip.is-active {
+    background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface) 86%);
+    border-color: color-mix(in srgb, var(--color-accent) 46%, var(--color-border-light) 54%);
+}
+
+.toggle-chip.is-active input {
+    background: color-mix(in srgb, var(--color-accent) 76%, var(--color-text-inverted) 24%);
+    border-color: color-mix(in srgb, var(--color-accent) 66%, var(--color-border) 34%);
+}
+
+.toggle-chip:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-border-light) 64%);
+}
+
+.toggle-chip:focus-within {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 62%, white 38%);
+    outline-offset: 2px;
+}
+
+/* ============================
+ * POST-IT BOARD
+ * ============================ */
+
+.notes-toolbar {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.postit-board {
+    position: relative;
+    min-height: 360px;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-background) 96%, var(--color-background-alt) 4%);
+    overflow: hidden;
+}
+
+.postit-note {
+    position: absolute;
+    width: 150px;
+    min-height: 120px;
+    background: color-mix(in srgb, var(--color-surface) 90%, var(--color-background) 10%);
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 82%, var(--color-border) 18%);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 6px;
+}
+
+.postit-remove {
+    justify-self: end;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    line-height: 1;
+    padding: 0;
+}
+
+.postit-text {
+    width: 100%;
+    min-height: 82px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--color-text);
+    font-family: var(--font-family-mono), monospace;
+    font-size: var(--font-size-sm);
+    resize: none;
+}
+

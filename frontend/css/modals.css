@@ -5,9 +5,9 @@
     align-items: center;
     justify-content: center;
     padding: var(--spacing-3xl);
-    background: rgba(20, 20, 20, 0.4);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
 }
 
@@ -24,9 +24,11 @@
     width: min(560px, 100%);
     border: 1px solid var(--color-border-light);
     border-radius: var(--radius-md);
-    background: rgba(224, 224, 224, 0.95);
     color: var(--color-text);
+    background: #ffffffcc;
     box-shadow: var(--shadow-md);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     padding: var(--spacing-2xl);
 }
 
@@ -54,8 +56,8 @@
 
 
 .modal-close:hover {
-    background: #1a1a1a;
-    color: #d0d0d0;
+    background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
+    border-color: color-mix(in srgb, var(--color-accent) 46%, var(--color-border-light) 54%);
 }
 
 .auth-tabs {
@@ -112,7 +114,7 @@
     width: 100%;
     box-sizing: border-box;
     border: 1px solid var(--color-border-light);
-    background: rgba(255, 255, 255, 0.25);
+    background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
     color: var(--color-text);
     border-radius: var(--radius-sm);
     padding: var(--spacing-md);
@@ -135,6 +137,26 @@
     line-height: var(--line-height-normal);
     letter-spacing: var(--letter-spacing-wide);
     text-transform: uppercase;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.auth-form button:hover,
+.user-data-form button:hover,
+.auth-logged-in button:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-light) 58%);
+    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface) 90%);
+    transform: translateY(-1px);
+}
+
+.modal-close:focus-visible,
+.auth-form input:focus-visible,
+.user-data-form textarea:focus-visible,
+.auth-form button:focus-visible,
+.user-data-form button:focus-visible,
+.auth-logged-in button:focus-visible,
+.auth-switch:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 62%, white 38%);
+    outline-offset: 2px;
 }
 
 .auth-logged-in {

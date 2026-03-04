@@ -31,7 +31,8 @@ export class CardExpansion {
     handleCardClick(event) {
         if (CardExpansion.state.isAnimating) return;
 
-        const closeButton = event.target.closest('[data-container-close]');
+        const target = event.target instanceof Element ? event.target : null;
+        const closeButton = target ? target.closest('[data-container-close]') : null;
         if (closeButton) {
             if (CardExpansion.state.expandedInstance === this) {
                 void CardExpansion.closeExpandedCard();
@@ -120,9 +121,11 @@ export class CardExpansion {
             void CardExpansion.closeExpandedCard();
         };
 
-        setTimeout(() => {
+        this.card._outsideClickTimeoutId = window.setTimeout(() => {
+            if (!this.card._isExpanded) return;
             document.addEventListener('click', handleOutsideClick);
             this.card._outsideClickHandler = handleOutsideClick;
+            delete this.card._outsideClickTimeoutId;
         }, 100);
 
         const handleEscape = (event) => {
@@ -136,6 +139,11 @@ export class CardExpansion {
     }
 
     cleanupExpandedInteractions() {
+        if (this.card._outsideClickTimeoutId) {
+            window.clearTimeout(this.card._outsideClickTimeoutId);
+            delete this.card._outsideClickTimeoutId;
+        }
+
         if (this.card._hiddenCards) {
             this.card._hiddenCards.forEach((card) => card.classList.remove('card--hidden'));
             delete this.card._hiddenCards;

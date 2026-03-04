@@ -44,7 +44,7 @@
 }
 
 .navbar-logo a:hover {
-    color: color-mix(in srgb, var(--color-accent) 62%, var(--color-text) 38%);
+    color: var(--color-text-light);
 }
 
 /* ============================
@@ -85,7 +85,7 @@
 }
 
 .nav-bar-links:hover {
-    color: var(--color-accent);
+    color: var(--color-text-light);
 }
 
 .nav-bar-links:active {

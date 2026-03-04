@@ -1,0 +1,109 @@
+/* ============================
+ * EXPANDED CARD STATE
+ * ============================ */
+
+.card--expanded {
+    overflow: hidden;
+    z-index: 1000 !important;
+    border-radius: clamp(16px, 1.4vw, 24px);
+}
+
+.card--expanded .widget-kicker,
+.card--expanded .widget-header {
+    display: none;
+}
+
+.card--expanded .widget-content {
+    display: block;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.card--expanded .widget-collapsed {
+    display: none;
+}
+
+.card--expanded .widget-expanded {
+    display: flex;
+    flex-direction: column;
+    justify-content: normal;
+    gap: var(--spacing-xl);
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: auto;
+    padding: clamp(18px, 2vw, 32px);
+    padding-right: clamp(60px, 5.2vw, 92px);
+    box-sizing: border-box;
+}
+
+.card--hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ============================
+ * CARD CLOSE BUTTON
+ * ============================ */
+
+.container-close {
+    display: none;
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: 2;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 76%, var(--color-border) 24%);
+    background: color-mix(in srgb, var(--color-surface) 86%, transparent 14%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    font-size: 0;
+    line-height: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    cursor: pointer;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.container-close::before,
+.container-close::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 13px;
+    height: 1.6px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.container-close::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.container-close::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.card--expanded .container-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container-close:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-light) 58%);
+    background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
+}
+
+.container-close:active {
+    transform: translateY(1px);
+}
+
+.container-close:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 62%, white 38%);
+    outline-offset: 2px;
+}

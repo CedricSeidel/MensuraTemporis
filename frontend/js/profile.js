@@ -459,6 +459,11 @@
             return;
         }
 
+        if (!parsedData || typeof parsedData !== 'object' || Array.isArray(parsedData)) {
+            setStateMessage(elements.userState, 'Bitte ein JSON-Objekt eingeben', 'error');
+            return;
+        }
+
         setStateMessage(elements.userState, '');
         try {
             const payload = await apiRequest('/api/me/data', {

@@ -1,4 +1,15 @@
 (function initHotkeys() {
+    function escapeCssValue(value) {
+        if (window.CSS && typeof window.CSS.escape === 'function') {
+            return window.CSS.escape(value);
+        }
+        return String(value).replace(/["\\]/g, '\\$&');
+    }
+
+    function hasModifierKeys(event) {
+        return event.altKey || event.ctrlKey || event.metaKey;
+    }
+
     function isTypingTarget(target) {
         if (!target) return false;
         const tag = target.tagName;
@@ -12,6 +23,7 @@
 
     function isVisible(element) {
         if (!element) return false;
+        if (element.hidden) return false;
         const style = window.getComputedStyle(element);
         return style.display !== 'none' && style.visibility !== 'hidden';
     }
@@ -22,10 +34,11 @@
 
     document.addEventListener('keydown', (event) => {
         if (!event?.key || isTypingTarget(event.target)) return;
+        if (event.repeat || hasModifierKeys(event)) return;
         if (hasOpenModal()) return;
 
         const key = event.key.toLowerCase();
-        const selector = `[data-hotkey="${CSS.escape(key)}"]`;
+        const selector = `[data-hotkey="${escapeCssValue(key)}"]`;
         const target = document.querySelector(selector);
 
         if (!isVisible(target)) return;
@@ -35,7 +48,8 @@
     });
 
     document.addEventListener('click', (event) => {
-        const link = event.target.closest('a[data-target-card]');
+        const target = event.target instanceof Element ? event.target : null;
+        const link = target ? target.closest('a[data-target-card]') : null;
         if (!link) return;
 
         event.preventDefault();
@@ -47,8 +61,10 @@
     });
 
     document.addEventListener('keydown', (event) => {
+        if (hasModifierKeys(event)) return;
         if (event.key !== 'Enter' && event.key !== ' ') return;
-        const trigger = event.target.closest('[role="button"]');
+        const target = event.target instanceof Element ? event.target : null;
+        const trigger = target ? target.closest('[role="button"]') : null;
         if (!trigger) return;
 
         event.preventDefault();
