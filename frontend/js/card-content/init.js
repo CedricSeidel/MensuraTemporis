@@ -33,6 +33,12 @@ export function initCardContent() {
     clockController.updateClock(true);
     clockController.startClockAnimationLoop();
 
+    void weatherRenderer.detectSystemLocation(state).then((detected) => {
+        if (!detected) return;
+        clockController.updateClock(true);
+        void weatherRenderer.renderWeatherCollapsed(state, { forceFetch: true });
+    });
+
     window.addEventListener('resize', clockController.resizeAnalogClockFace);
 
     setInterval(() => {

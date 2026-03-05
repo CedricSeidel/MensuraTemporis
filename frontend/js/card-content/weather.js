@@ -5,12 +5,15 @@ import {
 import { getDateInTimezone, sanitizeTimezone, setText } from './core.js';
 
 const GEOCODING_ENDPOINT = 'https://geocoding-api.open-meteo.com/v1/search';
+const REVERSE_GEOCODING_ENDPOINT = 'https://api-bdc.io/data/reverse-geocode-client';
 const FORECAST_ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
 const FETCH_THROTTLE_MS = 90 * 1000;
 const NIGHT_START_HOUR = 20;
 const NIGHT_END_HOUR = 6;
 const MIN_PRECIP_MM_FOR_RAIN_SCENE = 0.08;
 const MIN_SNOW_CM_FOR_SNOW_SCENE = 0.03;
+const GEOLOCATION_TIMEOUT_MS = 7000;
+const GEOLOCATION_MAX_AGE_MS = 15 * 60 * 1000;
 
 const WMO_CONDITION_LABELS = {
     0: 'sunny',
@@ -91,6 +94,29 @@ function toCityShort(cityInput) {
     return stripped.slice(0, 3).toUpperCase();
 }
 
+function getSystemTimezone() {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE;
+    } catch {
+        return DEFAULT_TIMEZONE;
+    }
+}
+
+function extractCityFromReverseGeocode(payload) {
+    const candidates = [
+        payload?.city,
+        payload?.locality,
+        payload?.principalSubdivision,
+    ];
+
+    for (let index = 0; index < candidates.length; index += 1) {
+        const city = String(candidates[index] || '').trim();
+        if (city) return city;
+    }
+
+    return DEFAULT_CITY;
+}
+
 function toUnit(tempCelsius, unit) {
     const value = Number(tempCelsius);
     const safeValue = Number.isFinite(value) ? value : 0;
@@ -144,11 +170,49 @@ async function fetchJson(url) {
     return response.json();
 }
 
+function getSystemCoordinates() {
+    return new Promise((resolve, reject) => {
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const latitude = Number(position?.coords?.latitude);
+                const longitude = Number(position?.coords?.longitude);
+                if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                    reject(new Error('Invalid geolocation coordinates'));
+                    return;
+                }
+                resolve({ latitude, longitude });
+            },
+            (error) => reject(error),
+            {
+                enableHighAccuracy: false,
+                timeout: GEOLOCATION_TIMEOUT_MS,
+                maximumAge: GEOLOCATION_MAX_AGE_MS,
+            }
+        );
+    });
+}
+
+async function resolveCityByCoordinates(latitude, longitude) {
+    const url = new URL(REVERSE_GEOCODING_ENDPOINT);
+    url.searchParams.set('latitude', String(latitude));
+    url.searchParams.set('longitude', String(longitude));
+    url.searchParams.set('localityLanguage', 'en');
+
+    const payload = await fetchJson(url);
+    return normalizeCity(extractCityFromReverseGeocode(payload));
+}
+
 export function createWeatherRenderer(elements) {
     let lastCityKey = '';
     let lastFetchAt = 0;
     let lastWeather = null;
     let requestCounter = 0;
+    let systemLocationPromise = null;
     const geocodeCache = new Map();
 
     function renderWeatherValues(weather, state, unit) {
@@ -292,11 +356,38 @@ export function createWeatherRenderer(elements) {
         }
     }
 
+    async function detectSystemLocation(state) {
+        if (systemLocationPromise) return systemLocationPromise;
+
+        systemLocationPromise = (async () => {
+            try {
+                const { latitude, longitude } = await getSystemCoordinates();
+                const city = await resolveCityByCoordinates(latitude, longitude);
+                const timezone = sanitizeTimezone(getSystemTimezone(), DEFAULT_TIMEZONE);
+
+                state.weather.city = city;
+                state.weather.timezone = timezone;
+
+                if (state.clock) {
+                    state.clock.city = city;
+                    state.clock.timezone = timezone;
+                }
+
+                return true;
+            } catch {
+                return false;
+            }
+        })();
+
+        return systemLocationPromise;
+    }
+
     function refreshSkyScene(state) {
         return renderWeatherCollapsed(state);
     }
 
     return {
+        detectSystemLocation,
         renderWeatherCollapsed,
         refreshSkyScene,
     };
