@@ -1,28 +1,21 @@
 import { DEFAULT_TIMEZONE } from './config.js';
+import {
+    applyAlwaysOnBodyModes,
+    isValidTimezone,
+    readBoolean,
+    readStorage,
+} from '../core/runtimeUtils.js';
+
+export {
+    applyAlwaysOnBodyModes,
+    isValidTimezone,
+    readBoolean,
+    readStorage,
+};
 
 export function setText(element, value) {
     if (!element) return;
     element.textContent = value;
-}
-
-export function readStorage(key, fallback) {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return fallback;
-        return JSON.parse(raw);
-    } catch {
-        return fallback;
-    }
-}
-
-export function isValidTimezone(value) {
-    if (!value || typeof value !== 'string') return false;
-    try {
-        new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
-        return true;
-    } catch {
-        return false;
-    }
 }
 
 export function sanitizeTimezone(value, fallback = DEFAULT_TIMEZONE) {

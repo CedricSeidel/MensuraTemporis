@@ -1,5 +1,6 @@
 import { renderCalendarCollapsed } from './calendar.js';
 import { createClockController } from './clock.js';
+import { isValidTimezone } from './core.js';
 import { getCardContentElements, hasRequiredElements } from './dom.js';
 import { renderEventsCollapsed } from './events.js';
 import { renderNoteSummary } from './notes.js';
@@ -19,16 +20,6 @@ export function initCardContent() {
     const state = createInitialState();
     const weatherRenderer = createWeatherRenderer(elements);
     const clockController = createClockController(elements, state);
-
-    function isValidTimezone(value) {
-        if (!value || typeof value !== 'string') return false;
-        try {
-            new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
-            return true;
-        } catch {
-            return false;
-        }
-    }
 
     function applyRuntimePreferences(detail) {
         if (!detail || typeof detail !== 'object') return;

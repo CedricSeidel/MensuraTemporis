@@ -1,9 +1,5 @@
 import { DEFAULT_CITY, DEFAULT_TIMEZONE, STORAGE_KEYS } from './config.js';
-import { readStorage, sanitizeTimezone } from './core.js';
-
-function readBoolean(value, fallback) {
-    return typeof value === 'boolean' ? value : fallback;
-}
+import { readBoolean, readStorage, sanitizeTimezone } from './core.js';
 
 function sanitizeCity(value, fallback = DEFAULT_CITY) {
     const normalized = String(value || '').trim();

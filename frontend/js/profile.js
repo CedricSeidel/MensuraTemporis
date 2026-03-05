@@ -1,97 +1,41 @@
+import {
+    applyAlwaysOnBodyModes as applyBodyModeClasses,
+    isValidTimezone,
+    readBoolean,
+    readStorage,
+    writeStorage,
+    removeStorage,
+} from './core/runtimeUtils.js';
+import { getEventElement } from './core/domUtils.js';
+import {
+    APP_STORAGE_KEYS,
+    AVATAR_CHOICES,
+    AVATAR_THEME_COLORS,
+    DEFAULT_PREFERENCES,
+    MODAL_CLOSE_EASE,
+    MODAL_CLOSE_MS,
+    MODAL_EXPAND_EASE,
+    MODAL_EXPAND_MS,
+    NAV_ACTIVE_CLASS,
+    REGISTER_USERNAME_MIN_LEN,
+    STORAGE_KEYS,
+    USER_SAVE_TOAST_FADE_MS,
+    USER_SAVE_TOAST_MS,
+} from './profile/constants.js';
+import { getProfileElements } from './profile/elements.js';
+import { createLocalAuthApi } from './profile/localAuth.js';
+import { createModalManager } from './profile/modalManager.js';
+import { createProfileModel } from './profile/model.js';
+import { createPreferencesService } from './profile/preferences.js';
+
 (function initProfileAndAuth() {
     const state = {
         user: null,
         profile: null,
     };
 
-    const elements = {
-        profileImage: document.getElementById('profileImage'),
-        fingerprintImage: document.getElementById('fingerprintImage'),
-        profileTooltip: document.getElementById('profileTooltip'),
-        fingerprintTooltip: document.getElementById('fingerprintTooltip'),
-        profileContainer: document.querySelector('.profile-container'),
-        fingerprintContainer: document.querySelector('.fingerprint-container'),
-        loginModal: document.getElementById('loginModal'),
-        userModal: document.getElementById('userModal'),
-        loginModalTitle: document.getElementById('loginModalTitle'),
-        loginState: document.getElementById('loginState'),
-        registerState: document.getElementById('registerState'),
-        userState: document.getElementById('userState'),
-        loginPane: document.getElementById('loginPane'),
-        registerPane: document.getElementById('registerPane'),
-        loginForm: document.getElementById('loginForm'),
-        loginUsername: document.getElementById('loginUsername'),
-        loginPassword: document.getElementById('loginPassword'),
-        loginPasswordToggle: document.getElementById('loginPasswordToggle'),
-        registerForm: document.getElementById('registerForm'),
-        registerUsername: document.getElementById('registerUsername'),
-        registerUsernameCheck: document.getElementById('registerUsernameCheck'),
-        registerUsernameHint: document.getElementById('registerUsernameHint'),
-        loggedInPanel: document.getElementById('loggedInPanel'),
-        loggedInUsername: document.getElementById('loggedInUsername'),
-        logoutButton: document.getElementById('logoutButton'),
-        openRegisterModalButton: document.getElementById('openRegisterModalButton'),
-        openLoginModalButton: document.getElementById('openLoginModalButton'),
-        userNameValue: document.getElementById('userNameValue'),
-        userAvatarValue: document.getElementById('userAvatarValue'),
-        userNameInput: document.getElementById('userNameInput'),
-        userTimezoneInput: document.getElementById('userTimezoneInput'),
-        userWeatherCityInput: document.getElementById('userWeatherCityInput'),
-        userTemperatureUnitSelect: document.getElementById('userTemperatureUnitSelect'),
-        userTimeFormatSelect: document.getElementById('userTimeFormatSelect'),
-        userDataForm: document.getElementById('userDataForm'),
-        userAvatarChoices: document.getElementById('userAvatarChoices'),
-        userCharacterScene: document.getElementById('userCharacterScene'),
-        userCharacterFigure: document.getElementById('userCharacterFigure'),
-        loginCharacterScene: document.getElementById('loginCharacterScene'),
-        loginCharacterFigure: document.getElementById('loginCharacterFigure'),
-    };
-
+    const elements = getProfileElements();
     if (!elements.profileImage || !elements.fingerprintImage) return;
-
-    const STORAGE_KEYS = {
-        users: 'mensura-auth-users-v1',
-        session: 'mensura-auth-session-v1',
-        profile: 'mensura-user-profile-card-v1',
-    };
-    const APP_STORAGE_KEYS = {
-        settings: 'mensura-settings-v2',
-        weather: 'mensura-weather-v2',
-        clock: 'mensura-clock-v2',
-    };
-    const DEFAULT_PREFERENCES = {
-        timezone: 'Europe/Berlin',
-        weatherCity: 'Kassel',
-        temperatureUnit: 'c',
-        mode24h: true,
-    };
-    const AVATAR_CHOICES = ['purple', 'orange', 'black', 'yellow'];
-    const AVATAR_THEME_COLORS = {
-        purple: {
-            accent: '#d8c7ff',
-            accentBlue: '#7c4dff',
-        },
-        orange: {
-            accent: '#ffd2ac',
-            accentBlue: '#f28b30',
-        },
-        black: {
-            accent: '#c7ccd6',
-            accentBlue: '#4d5976',
-        },
-        yellow: {
-            accent: '#fff08e',
-            accentBlue: '#f0cb00',
-        },
-    };
-    const MODAL_EXPAND_MS = 600;
-    const MODAL_EXPAND_EASE = 'cubic-bezier(0.2, 0.0, 0.2, 1)';
-    const MODAL_CLOSE_MS = 600;
-    const MODAL_CLOSE_EASE = 'cubic-bezier(0.0, 0.0, 0.2, 1)';
-    const NAV_ACTIVE_CLASS = 'is-active';
-    const REGISTER_USERNAME_MIN_LEN = 3;
-    const USER_SAVE_TOAST_MS = 1800;
-    const USER_SAVE_TOAST_FADE_MS = 180;
 
     const authUi = {
         mode: 'login',
@@ -118,285 +62,67 @@
         return error;
     }
 
-    function readStorage(key, fallback) {
-        try {
-            const raw = localStorage.getItem(key);
-            if (!raw) return fallback;
-            return JSON.parse(raw);
-        } catch {
-            return fallback;
-        }
-    }
-
-    function writeStorage(key, value) {
-        try {
-            localStorage.setItem(key, JSON.stringify(value));
-        } catch {
-            // ignore write errors
-        }
-    }
-
-    function removeStorage(key) {
-        try {
-            localStorage.removeItem(key);
-        } catch {
-            // ignore remove errors
-        }
-    }
-
     function normalizeUsername(value) {
         return (value || '').trim();
     }
 
-    function isValidTimezone(value) {
-        if (!value || typeof value !== 'string') return false;
-        try {
-            new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
-            return true;
-        } catch {
-            return false;
-        }
-    }
+    const profileModel = createProfileModel({
+        avatarChoices: AVATAR_CHOICES,
+        avatarThemeColors: AVATAR_THEME_COLORS,
+        storageKey: STORAGE_KEYS.profile,
+        readStorage,
+        writeStorage,
+        normalizeUsername,
+    });
 
-    function sanitizeTimezoneInput(value, fallback = DEFAULT_PREFERENCES.timezone) {
-        return isValidTimezone(value) ? value : fallback;
-    }
-
-    function sanitizeTemperatureUnit(value) {
-        return value === 'f' ? 'f' : 'c';
-    }
-
-    function readBoolean(value, fallback) {
-        return typeof value === 'boolean' ? value : fallback;
-    }
-
-    function readUserPreferences() {
-        const savedSettings = readStorage(APP_STORAGE_KEYS.settings, {});
-        const savedWeather = readStorage(APP_STORAGE_KEYS.weather, {});
-        const savedClock = readStorage(APP_STORAGE_KEYS.clock, {});
-        const profilePreferences = state.profile?.data && typeof state.profile.data === 'object'
-            ? state.profile.data.preferences
-            : null;
-        const profilePrefs = profilePreferences && typeof profilePreferences === 'object'
-            ? profilePreferences
-            : {};
-
-        const timezone = sanitizeTimezoneInput(
-            savedSettings.timezone || savedWeather.timezone || savedClock.timezone || profilePrefs.timezone,
-            DEFAULT_PREFERENCES.timezone
-        );
-        const weatherCity = String(
-            savedWeather.city || savedClock.city || profilePrefs.weatherCity || DEFAULT_PREFERENCES.weatherCity
-        ).trim()
-            || DEFAULT_PREFERENCES.weatherCity;
-
-        return {
-            timezone,
-            weatherCity,
-            temperatureUnit: sanitizeTemperatureUnit(savedWeather.unit || profilePrefs.temperatureUnit),
-            mode24h: readBoolean(savedSettings.mode24h, readBoolean(profilePrefs.mode24h, DEFAULT_PREFERENCES.mode24h)),
-        };
-    }
-
-    function applyBodyModeClasses() {
-        document.body.classList.add('app-focus');
-        document.body.classList.add('app-compact');
-    }
-
-    function writeUserPreferences(preferences) {
-        const savedSettings = readStorage(APP_STORAGE_KEYS.settings, {});
-        const settingsWithoutModeToggles = savedSettings && typeof savedSettings === 'object'
-            ? Object.fromEntries(
-                Object.entries(savedSettings).filter(([key]) => key !== 'focus' && key !== 'compact')
-            )
-            : {};
-        const savedWeather = readStorage(APP_STORAGE_KEYS.weather, {});
-        const savedClock = readStorage(APP_STORAGE_KEYS.clock, {});
-
-        writeStorage(APP_STORAGE_KEYS.settings, {
-            ...settingsWithoutModeToggles,
-            mode24h: Boolean(preferences.mode24h),
-            focus: true,
-            compact: true,
-            timezone: preferences.timezone,
-        });
-
-        writeStorage(APP_STORAGE_KEYS.weather, {
-            ...savedWeather,
-            city: preferences.weatherCity,
-            timezone: preferences.timezone,
-            unit: sanitizeTemperatureUnit(preferences.temperatureUnit),
-        });
-
-        writeStorage(APP_STORAGE_KEYS.clock, {
-            ...savedClock,
-            city: preferences.weatherCity,
-            timezone: preferences.timezone,
-        });
-    }
-
-    function readPreferencesFromForm() {
-        const timezone = sanitizeTimezoneInput(
-            String(elements.userTimezoneInput?.value || '').trim(),
-            DEFAULT_PREFERENCES.timezone
-        );
-        const weatherCity = String(elements.userWeatherCityInput?.value || '').trim()
-            || DEFAULT_PREFERENCES.weatherCity;
-        const temperatureUnit = sanitizeTemperatureUnit(elements.userTemperatureUnitSelect?.value);
-        const mode24h = (elements.userTimeFormatSelect?.value || '24h') !== '12h';
-
-        return {
-            timezone,
-            weatherCity,
-            temperatureUnit,
-            mode24h,
-        };
-    }
-
-    function populatePreferenceForm(preferences) {
-        if (elements.userTimezoneInput) {
-            elements.userTimezoneInput.value = preferences.timezone;
-        }
-        if (elements.userWeatherCityInput) {
-            elements.userWeatherCityInput.value = preferences.weatherCity;
-        }
-        if (elements.userTemperatureUnitSelect) {
-            elements.userTemperatureUnitSelect.value = sanitizeTemperatureUnit(preferences.temperatureUnit);
-        }
-        if (elements.userTimeFormatSelect) {
-            elements.userTimeFormatSelect.value = preferences.mode24h ? '24h' : '12h';
-        }
-    }
-
-    function dispatchPreferencesUpdated(preferences) {
-        window.dispatchEvent(new CustomEvent('mensura:preferences-updated', {
-            detail: {
-                settings: {
-                    mode24h: Boolean(preferences.mode24h),
-                    focus: true,
-                    compact: true,
-                    timezone: preferences.timezone,
-                },
-                weather: {
-                    city: preferences.weatherCity,
-                    timezone: preferences.timezone,
-                    unit: sanitizeTemperatureUnit(preferences.temperatureUnit),
-                },
-                clock: {
-                    city: preferences.weatherCity,
-                    timezone: preferences.timezone,
-                },
-            },
-        }));
-    }
-
-    function sanitizeAvatarChoice(value) {
-        return AVATAR_CHOICES.includes(value) ? value : AVATAR_CHOICES[0];
-    }
-
-    function createDefaultProfile() {
-        const now = new Date().toISOString();
-        return {
-            username: 'Guest',
-            avatar: 'purple',
-            data: {},
-            createdAt: now,
-            updatedAt: now,
-        };
-    }
-
-    function sanitizeProfile(value) {
-        const fallback = createDefaultProfile();
-        if (!value || typeof value !== 'object') return fallback;
-
-        const username = normalizeUsername(value.username) || fallback.username;
-        const createdAt = typeof value.createdAt === 'string' ? value.createdAt : fallback.createdAt;
-        const updatedAt = typeof value.updatedAt === 'string' ? value.updatedAt : createdAt;
-        const avatar = sanitizeAvatarChoice(value.avatar);
-        const data = value.data && typeof value.data === 'object' && !Array.isArray(value.data)
-            ? value.data
-            : {};
-
-        return {
-            username,
-            avatar,
-            data,
-            createdAt,
-            updatedAt,
-        };
-    }
-
-    function loadProfile() {
-        const profile = sanitizeProfile(readStorage(STORAGE_KEYS.profile, null));
-        writeStorage(STORAGE_KEYS.profile, profile);
-        return profile;
-    }
+    const {
+        applyAvatarTheme,
+        createDefaultProfile,
+        loadProfile,
+        sanitizeAvatarChoice,
+        saveProfile: saveProfileToStorage,
+    } = profileModel;
 
     function saveProfile() {
         if (!state.profile) return;
-        writeStorage(STORAGE_KEYS.profile, state.profile);
+        saveProfileToStorage(state.profile);
     }
 
-    function getAvatarThemeColors(avatar) {
-        const normalized = sanitizeAvatarChoice(avatar);
-        return AVATAR_THEME_COLORS[normalized] || AVATAR_THEME_COLORS.purple;
-    }
+    const localAuthApi = createLocalAuthApi({
+        storageKeys: STORAGE_KEYS,
+        readStorage,
+        writeStorage,
+        removeStorage,
+        normalizeUsername,
+        createHttpError,
+    });
 
-    function applyAvatarTheme(avatar) {
-        const root = document.documentElement;
-        if (!root) return;
+    const {
+        findLocalUser,
+        getLocalUsers,
+        getSessionUser,
+        localAuthRequest,
+        toPublicUser,
+    } = localAuthApi;
 
-        const normalized = sanitizeAvatarChoice(avatar);
-        const colors = getAvatarThemeColors(normalized);
-        root.style.setProperty('--color-accent', colors.accent);
-        root.style.setProperty('--color-accent-blue', colors.accentBlue);
-        root.dataset.avatarTheme = normalized;
-    }
+    const preferencesService = createPreferencesService({
+        appStorageKeys: APP_STORAGE_KEYS,
+        defaultPreferences: DEFAULT_PREFERENCES,
+        state,
+        elements,
+        isValidTimezone,
+        readBoolean,
+        readStorage,
+        writeStorage,
+    });
 
-    function toPublicUser(user) {
-        if (!user) return null;
-        return {
-            username: user.username,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-            data: user.data && typeof user.data === 'object' ? user.data : {},
-        };
-    }
-
-    function getLocalUsers() {
-        const users = readStorage(STORAGE_KEYS.users, []);
-        return Array.isArray(users) ? users : [];
-    }
-
-    function saveLocalUsers(users) {
-        writeStorage(STORAGE_KEYS.users, users);
-    }
-
-    function getLocalSession() {
-        const session = readStorage(STORAGE_KEYS.session, null);
-        if (!session || typeof session.username !== 'string') return null;
-        return session;
-    }
-
-    function setLocalSession(username) {
-        writeStorage(STORAGE_KEYS.session, { username });
-    }
-
-    function clearLocalSession() {
-        removeStorage(STORAGE_KEYS.session);
-    }
-
-    function findLocalUser(users, username) {
-        const wanted = normalizeUsername(username).toLowerCase();
-        return users.find((entry) => entry?.username?.toLowerCase() === wanted) || null;
-    }
-
-    function getSessionUser(users) {
-        const session = getLocalSession();
-        if (!session) return null;
-        return users.find((entry) => entry?.username === session.username) || null;
-    }
-
+    const {
+        dispatchPreferencesUpdated,
+        populatePreferenceForm,
+        readPreferencesFromForm,
+        readUserPreferences,
+        writeUserPreferences,
+    } = preferencesService;
     function setRegisterUsernameHint(text, type = '') {
         if (!elements.registerUsernameHint) return;
         elements.registerUsernameHint.textContent = text || '';
@@ -526,80 +252,6 @@
         setRegisterUsernameHint('');
         setLoginCharacterNodState(false);
         clearRegisterUsernameTakenReaction();
-    }
-
-    function localAuthRequest(path, method, body) {
-        const upperMethod = method.toUpperCase();
-        const users = getLocalUsers();
-        const now = new Date().toISOString();
-
-        if (path === '/api/me' && upperMethod === 'GET') {
-            const currentUser = getSessionUser(users);
-            return { user: toPublicUser(currentUser) };
-        }
-
-        if (path === '/api/login' && upperMethod === 'POST') {
-            const username = normalizeUsername(body?.username);
-            const password = body?.password || '';
-            const user = findLocalUser(users, username);
-
-            if (!user || user.password !== password) {
-                throw createHttpError('Invalid credentials', 401);
-            }
-
-            setLocalSession(user.username);
-            return { user: toPublicUser(user) };
-        }
-
-        if (path === '/api/register' && upperMethod === 'POST') {
-            const username = normalizeUsername(body?.username);
-            const password = body?.password || '';
-
-            if (username.length < 3) {
-                throw createHttpError('Username must be at least 3 characters', 400);
-            }
-
-            if (password.length < 8) {
-                throw createHttpError('Password must be at least 8 characters', 400);
-            }
-
-            if (findLocalUser(users, username)) {
-                throw createHttpError('Username is already taken', 409);
-            }
-
-            const newUser = {
-                username,
-                password,
-                data: body?.data && typeof body.data === 'object' ? body.data : {},
-                createdAt: now,
-                updatedAt: now,
-            };
-
-            users.push(newUser);
-            saveLocalUsers(users);
-            setLocalSession(newUser.username);
-            return { user: toPublicUser(newUser) };
-        }
-
-        if (path === '/api/logout' && upperMethod === 'POST') {
-            clearLocalSession();
-            return { ok: true };
-        }
-
-        if (path === '/api/me/data' && upperMethod === 'PUT') {
-            const currentUser = getSessionUser(users);
-            if (!currentUser) {
-                throw createHttpError('Please log in first', 401);
-            }
-
-            currentUser.data = body?.data && typeof body.data === 'object' ? body.data : {};
-            currentUser.updatedAt = now;
-
-            saveLocalUsers(users);
-            return { user: toPublicUser(currentUser) };
-        }
-
-        throw createHttpError('Action not available', 404);
     }
 
     function setStateMessage(target, text, type = '') {
@@ -755,430 +407,39 @@
         profileFigures?.handleUserPointerLeave();
     }
 
-    function anyModalOpen() {
-        return [elements.loginModal, elements.userModal].some((modal) => modal && !modal.hidden);
-    }
-
-    function getOpenModal() {
-        return [elements.loginModal, elements.userModal]
-            .find((modal) => modal && !modal.hidden) || null;
-    }
-
-    function setGridModalState(isOpen) {
-        const grid = document.querySelector('.grid');
-        if (!grid) return;
-        grid.classList.toggle('modal-grid-open', isOpen);
-    }
-
-    function getEventElement(event) {
-        if (event.target instanceof Element) return event.target;
-        if (typeof event.composedPath !== 'function') return null;
-        const path = event.composedPath();
-        return path.find((node) => node instanceof Element) || null;
-    }
-
-    function isModalOpen(modal) {
-        return Boolean(modal && !modal.hidden);
-    }
-
-    function syncProfileNavActive() {
-        const openModalId = [elements.loginModal, elements.userModal]
-            .find((modal) => modal && !modal.hidden)?.id || '';
-
-        const loginActive = openModalId === 'loginModal';
-        const userActive = openModalId === 'userModal';
-
-        elements.fingerprintContainer?.classList.toggle(NAV_ACTIVE_CLASS, loginActive);
-        elements.profileContainer?.classList.toggle(NAV_ACTIVE_CLASS, userActive);
-    }
-
-    function switchExpandedCardToModalContext() {
-        const expansionApi = window.CardExpansion;
-        const activeExpansion = expansionApi?.state?.expandedInstance;
-        if (!activeExpansion) return false;
-
-        const card = activeExpansion.card;
-        if (!card) return false;
-
-        activeExpansion.cleanupExpandedInteractions?.({ keepHiddenCards: true });
-        card.classList.add('card--hidden');
-        activeExpansion.restoreCardToGrid?.();
-        card._isExpanded = false;
-
-        expansionApi.state.expandedInstance = null;
-        expansionApi.state.isAnimating = false;
-        expansionApi.syncActiveNav?.('');
-        return true;
-    }
-
-    function restoreAllGridCards() {
-        const grid = document.querySelector('.grid');
-        if (!grid) return;
-
-        Array.from(grid.children).forEach((card) => {
-            if (!(card instanceof HTMLElement)) return;
-
-            card.classList.remove('card--hidden');
-            card.classList.remove('card--closing');
-            card.classList.remove('card--expanded');
-
-            card.style.position = '';
-            card.style.top = '';
-            card.style.left = '';
-            card.style.width = '';
-            card.style.height = '';
-            card.style.zIndex = '';
-            card.style.transition = '';
-            card.style.opacity = '';
-
-            card._isExpanded = false;
-            delete card._hiddenCards;
-            delete card._originalRect;
-            delete card._originalStyles;
-        });
-
-        const expansionApi = window.CardExpansion;
-        if (expansionApi?.state) {
-            expansionApi.state.expandedInstance = null;
-            expansionApi.state.isAnimating = false;
-            expansionApi.syncActiveNav?.('');
-        }
-    }
-
-    function resolveOriginRect(origin) {
-        if (!origin) return null;
-        if (origin instanceof Element) {
-            return origin.getBoundingClientRect();
-        }
-
-        if (typeof origin === 'object') {
-            const top = Number(origin.top);
-            const left = Number(origin.left);
-            const width = Number(origin.width);
-            const height = Number(origin.height);
-            if ([top, left, width, height].every(Number.isFinite)) {
-                return { top, left, width, height };
-            }
-        }
-
-        return null;
-    }
-
-    function clearModalAnimation(modalOverlay) {
-        if (!modalOverlay) return;
-
-        if (modalOverlay._openAnimationTimeoutId) {
-            window.clearTimeout(modalOverlay._openAnimationTimeoutId);
-            delete modalOverlay._openAnimationTimeoutId;
-        }
-
-        if (modalOverlay._closeAnimationTimeoutId) {
-            window.clearTimeout(modalOverlay._closeAnimationTimeoutId);
-            delete modalOverlay._closeAnimationTimeoutId;
-        }
-    }
-
-    function clearModalGridLayout(modalOverlay) {
-        if (!modalOverlay) return;
-        clearModalAnimation(modalOverlay);
-        modalOverlay.classList.remove('is-grid-modal');
-        modalOverlay.classList.remove('is-closing');
-        modalOverlay._isClosing = false;
-        delete modalOverlay._closePromise;
-        delete modalOverlay._modalOriginRect;
-        const modalCard = modalOverlay.querySelector('.modal');
-        if (!modalCard) return;
-
-        modalCard.style.top = '';
-        modalCard.style.left = '';
-        modalCard.style.width = '';
-        modalCard.style.height = '';
-        modalCard.style.opacity = '';
-        modalCard.style.transition = '';
-    }
-
-    function applyModalGridLayout(modalOverlay) {
-        if (!modalOverlay) return;
-        const modalCard = modalOverlay.querySelector('.modal');
-        const grid = document.querySelector('.grid');
-        if (!modalCard || !grid) {
-            clearModalGridLayout(modalOverlay);
-            return null;
-        }
-
-        const gridRect = grid.getBoundingClientRect();
-        const gridStyles = window.getComputedStyle(grid);
-        const paddingTop = parseFloat(gridStyles.paddingTop) || 0;
-        const paddingLeft = parseFloat(gridStyles.paddingLeft) || 0;
-        const paddingRight = parseFloat(gridStyles.paddingRight) || 0;
-        const paddingBottom = parseFloat(gridStyles.paddingBottom) || 0;
-
-        const targetTop = gridRect.top + paddingTop;
-        const targetLeft = gridRect.left + paddingLeft;
-        const targetWidth = gridRect.width - paddingLeft - paddingRight;
-        const targetHeight = gridRect.height - paddingTop - paddingBottom;
-
-        modalOverlay.classList.add('is-grid-modal');
-        modalCard.style.top = `${targetTop}px`;
-        modalCard.style.left = `${targetLeft}px`;
-        modalCard.style.width = `${targetWidth}px`;
-        modalCard.style.height = `${targetHeight}px`;
-        modalCard.style.opacity = '1';
-
-        return {
-            top: targetTop,
-            left: targetLeft,
-            width: targetWidth,
-            height: targetHeight,
-        };
-    }
-
-    function animateModalOpen(modalOverlay, origin) {
-        if (!modalOverlay) return;
-        const modalCard = modalOverlay.querySelector('.modal');
-        if (!modalCard) return;
-
-        const targetRect = applyModalGridLayout(modalOverlay);
-        if (!targetRect) return;
-
-        const originRect = resolveOriginRect(origin);
-        modalOverlay._modalOriginRect = originRect || null;
-        const fallbackWidth = Math.max(44, targetRect.width * 0.24);
-        const fallbackHeight = Math.max(44, targetRect.height * 0.24);
-        const startRect = originRect || {
-            top: targetRect.top + (targetRect.height - fallbackHeight) / 2,
-            left: targetRect.left + (targetRect.width - fallbackWidth) / 2,
-            width: fallbackWidth,
-            height: fallbackHeight,
-        };
-
-        clearModalAnimation(modalOverlay);
-
-        modalCard.style.transition = 'none';
-        modalCard.style.top = `${startRect.top}px`;
-        modalCard.style.left = `${startRect.left}px`;
-        modalCard.style.width = `${Math.max(44, startRect.width)}px`;
-        modalCard.style.height = `${Math.max(44, startRect.height)}px`;
-        modalCard.style.opacity = '0.92';
-
-        modalCard.offsetHeight;
-
-        modalCard.style.transition = [
-            `top ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
-            `left ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
-            `width ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
-            `height ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
-            `opacity ${MODAL_EXPAND_MS}ms ${MODAL_EXPAND_EASE}`,
-        ].join(', ');
-
-        modalCard.style.top = `${targetRect.top}px`;
-        modalCard.style.left = `${targetRect.left}px`;
-        modalCard.style.width = `${targetRect.width}px`;
-        modalCard.style.height = `${targetRect.height}px`;
-        modalCard.style.opacity = '1';
-
-        modalOverlay._openAnimationTimeoutId = window.setTimeout(() => {
-            if (!modalOverlay.hidden) {
-                modalCard.style.transition = '';
-            }
-            syncFigureSceneScales();
-            delete modalOverlay._openAnimationTimeoutId;
-        }, MODAL_EXPAND_MS);
-    }
-
-    function resolveCloseTargetRect(startRect, origin) {
-        const originRect = resolveOriginRect(origin) || null;
-        const storedRect = originRect || (startRect && typeof startRect === 'object' ? startRect : null);
-        const minSize = 42;
-
-        if (originRect) {
-            const width = Math.max(minSize, originRect.width || minSize);
-            const height = Math.max(minSize, originRect.height || minSize);
-            return {
-                top: originRect.top + (originRect.height - height) / 2,
-                left: originRect.left + (originRect.width - width) / 2,
-                width,
-                height,
-            };
-        }
-
-        const width = Math.max(minSize, (storedRect?.width || minSize) * 0.24);
-        const height = Math.max(minSize, (storedRect?.height || minSize) * 0.24);
-        return {
-            top: (storedRect?.top || 0) + ((storedRect?.height || height) - height) / 2,
-            left: (storedRect?.left || 0) + ((storedRect?.width || width) - width) / 2,
-            width,
-            height,
-        };
-    }
-
-    function animateModalClose(modalOverlay, origin, options = {}) {
-        if (!modalOverlay || modalOverlay.hidden) return Promise.resolve(false);
-        if (modalOverlay._isClosing) return modalOverlay._closePromise || Promise.resolve(true);
-        const { preserveExpandedState = false } = options;
-        const hasOtherOpenModal = [elements.loginModal, elements.userModal]
-            .some((modal) => modal && modal !== modalOverlay && !modal.hidden);
-        const revealGridDuringClose = !preserveExpandedState && !hasOtherOpenModal;
-
-        const modalCard = modalOverlay.querySelector('.modal');
-        if (!modalCard) {
-            modalOverlay.hidden = true;
-            return Promise.resolve(false);
-        }
-
-        clearModalAnimation(modalOverlay);
-        modalOverlay._isClosing = true;
-        modalOverlay.classList.add('is-closing');
-
-        if (revealGridDuringClose) {
-            // Reveal all cards at close-start so fade-in runs together with modal closing.
-            setGridModalState(false);
-            restoreAllGridCards();
-        }
-
-        const currentRect = applyModalGridLayout(modalOverlay) || (() => {
-            const rect = modalCard.getBoundingClientRect();
-            return {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-            };
-        })();
-
-        const closeTargetRect = resolveCloseTargetRect(currentRect, origin || modalOverlay._modalOriginRect);
-
-        modalCard.style.transition = 'none';
-        modalCard.style.top = `${currentRect.top}px`;
-        modalCard.style.left = `${currentRect.left}px`;
-        modalCard.style.width = `${currentRect.width}px`;
-        modalCard.style.height = `${currentRect.height}px`;
-        modalCard.style.opacity = '1';
-
-        modalCard.offsetHeight;
-
-        modalCard.style.transition = [
-            `top ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
-            `left ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
-            `width ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
-            `height ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
-            `opacity ${MODAL_CLOSE_MS}ms ${MODAL_CLOSE_EASE}`,
-        ].join(', ');
-
-        modalCard.style.top = `${closeTargetRect.top}px`;
-        modalCard.style.left = `${closeTargetRect.left}px`;
-        modalCard.style.width = `${closeTargetRect.width}px`;
-        modalCard.style.height = `${closeTargetRect.height}px`;
-        modalCard.style.opacity = '0';
-
-        modalOverlay._closePromise = new Promise((resolve) => {
-            modalOverlay._closeAnimationTimeoutId = window.setTimeout(() => {
-                modalOverlay.hidden = true;
-                clearModalGridLayout(modalOverlay);
-                delete modalOverlay._modalOriginRect;
-
-                if (!anyModalOpen()) {
-                    setGridModalState(false);
-                    document.body.classList.remove('modal-open');
-                    if (!preserveExpandedState && !revealGridDuringClose) {
-                        restoreAllGridCards();
-                    }
-                }
-                syncProfileNavActive();
-                resolve(true);
-            }, MODAL_CLOSE_MS);
-        });
-
-        return modalOverlay._closePromise;
-    }
-
-    function refreshOpenModalLayouts() {
-        [elements.loginModal, elements.userModal].forEach((modal) => {
-            if (!modal || modal.hidden) return;
-            applyModalGridLayout(modal);
-        });
-        syncFigureSceneScales();
-    }
-
-    function openModal(modal, origin, options = {}) {
-        if (!modal) return Promise.resolve(false);
-
-        const { animate = true } = options;
-        clearModalAnimation(modal);
-        modal.classList.remove('is-closing');
-        modal._isClosing = false;
-        modal.hidden = false;
-        setGridModalState(true);
-        syncProfileNavActive();
-        if (animate) {
-            animateModalOpen(modal, origin);
-        } else {
-            applyModalGridLayout(modal);
-            const modalCard = modal.querySelector('.modal');
-            if (modalCard) {
-                modalCard.style.transition = '';
-                modalCard.style.opacity = '1';
-            }
-        }
-        syncFigureSceneScales();
-        document.body.classList.add('modal-open');
-        return Promise.resolve(true);
-    }
-
-    function closeModal(modal, options = {}) {
-        if (!modal) return Promise.resolve(false);
-        if (modal.hidden && !modal._isClosing) return Promise.resolve(false);
-
-        const { animate = true, origin = null, preserveExpandedState = false } = options;
-        if (modal._isClosing && !animate) {
-            clearModalGridLayout(modal);
-            modal.hidden = true;
-        }
-        if (modal._isClosing) return modal._closePromise || Promise.resolve(true);
-
-        if (animate && !modal.hidden) {
-            return animateModalClose(modal, origin, { preserveExpandedState }).then((closed) => {
-                if (modal === elements.loginModal) {
-                    resetRegisterAvailabilityUi();
-                    setAuthMode('login');
-                    setLoginPasswordVisibility(false);
-                    resetLoginCharacterState();
-                }
-                if (modal === elements.userModal) {
-                    hideUserSaveToast({ immediate: true });
-                    resetUserCharacterState();
-                }
-                return closed;
-            });
-        }
-
-        modal.hidden = true;
-        clearModalGridLayout(modal);
-        if (modal === elements.loginModal) {
+    const modalManager = createModalManager({
+        elements,
+        navActiveClass: NAV_ACTIVE_CLASS,
+        modalExpandMs: MODAL_EXPAND_MS,
+        modalExpandEase: MODAL_EXPAND_EASE,
+        modalCloseMs: MODAL_CLOSE_MS,
+        modalCloseEase: MODAL_CLOSE_EASE,
+        onFigureScaleSync: syncFigureSceneScales,
+        onLoginModalClosed: () => {
             resetRegisterAvailabilityUi();
             setAuthMode('login');
             setLoginPasswordVisibility(false);
             resetLoginCharacterState();
-        }
-        if (modal === elements.userModal) {
+        },
+        onUserModalClosed: () => {
             hideUserSaveToast({ immediate: true });
             resetUserCharacterState();
-        }
-        if (!anyModalOpen() && !preserveExpandedState) {
-            setGridModalState(false);
-            document.body.classList.remove('modal-open');
-            restoreAllGridCards();
-        }
-        syncProfileNavActive();
-        return Promise.resolve(true);
-    }
+        },
+    });
 
-    function closeAllModals(options = {}) {
-        return Promise.all([
-            closeModal(elements.loginModal, options),
-            closeModal(elements.userModal, options),
-        ]);
-    }
+    const {
+        anyModalOpen,
+        closeAllModals,
+        closeModal,
+        getOpenModal,
+        isModalOpen,
+        openModal,
+        refreshOpenModalLayouts,
+        resolveOriginRect,
+        setGridModalState,
+        switchExpandedCardToModalContext,
+        syncProfileNavActive,
+    } = modalManager;
 
     function isLoggedIn() {
         return Boolean(state.user);
@@ -1302,14 +563,10 @@
     }
 
     async function refreshSession() {
-        try {
-            const payload = await apiRequest('/api/me');
-            state.user = payload?.user || null;
-        } catch {
-            state.user = null;
-        } finally {
-            syncUi();
-        }
+        const users = getLocalUsers();
+        const currentUser = getSessionUser(users);
+        state.user = toPublicUser(currentUser);
+        syncUi();
     }
 
     async function handleLogin(event) {

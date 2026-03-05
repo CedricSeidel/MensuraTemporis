@@ -1,10 +1,9 @@
-import { setText } from './core.js';
+import { applyAlwaysOnBodyModes, setText } from './core.js';
 
 export function applyBodyModes(state) {
     state.settings.focus = true;
     state.settings.compact = true;
-    document.body.classList.add('app-focus');
-    document.body.classList.add('app-compact');
+    applyAlwaysOnBodyModes();
 }
 
 export function renderSettingsSummary(elements, state) {

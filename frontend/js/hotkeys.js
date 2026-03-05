@@ -1,10 +1,6 @@
+import { escapeCssValue, getEventElement, isElementVisible } from './core/domUtils.js';
+
 (function initHotkeys() {
-    function escapeCssValue(value) {
-        if (window.CSS && typeof window.CSS.escape === 'function') {
-            return window.CSS.escape(value);
-        }
-        return String(value).replace(/["\\]/g, '\\$&');
-    }
 
     function hasModifierKeys(event) {
         return event.altKey || event.ctrlKey || event.metaKey;
@@ -19,13 +15,6 @@
             tag === 'SELECT' ||
             target.isContentEditable
         );
-    }
-
-    function isVisible(element) {
-        if (!element) return false;
-        if (element.hidden) return false;
-        const style = window.getComputedStyle(element);
-        return style.display !== 'none' && style.visibility !== 'hidden';
     }
 
     function hasOpenModal() {
@@ -63,13 +52,6 @@
         return false;
     }
 
-    function getEventElement(event) {
-        if (event.target instanceof Element) return event.target;
-        if (typeof event.composedPath !== 'function') return null;
-        const path = event.composedPath();
-        return path.find((node) => node instanceof Element) || null;
-    }
-
     document.addEventListener('keydown', (event) => {
         if (!event?.key || isTypingTarget(event.target)) return;
         if (event.repeat || hasModifierKeys(event)) return;
@@ -78,7 +60,7 @@
         const selector = `[data-hotkey="${escapeCssValue(key)}"]`;
         const target = document.querySelector(selector);
 
-        if (!isVisible(target)) return;
+        if (!isElementVisible(target)) return;
 
         const cardId = target instanceof Element ? target.getAttribute('data-target-card') : '';
 
