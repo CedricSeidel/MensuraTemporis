@@ -103,6 +103,7 @@
 
 .modal-overlay.is-grid-modal .auth-form input,
 .modal-overlay.is-grid-modal .user-data-form input,
+.modal-overlay.is-grid-modal .user-data-form select,
 .modal-overlay.is-grid-modal .user-data-form textarea {
     width: 100%;
     max-width: none;
@@ -243,6 +244,7 @@
 
 .auth-form input,
 .user-data-form input,
+.user-data-form select,
 .user-data-form textarea {
     width: 100%;
     max-width: none;
@@ -366,6 +368,7 @@
 .modal-close:focus-visible,
 .auth-form input:focus-visible,
 .user-data-form input:focus-visible,
+.user-data-form select:focus-visible,
 .user-data-form textarea:focus-visible,
 .auth-form button:focus-visible,
 .user-data-form button:focus-visible,
@@ -609,6 +612,51 @@
     justify-self: stretch;
 }
 
+.user-preferences-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.user-preference-group {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+.user-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.user-toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 76%, var(--color-border) 24%);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.user-toggle-row input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    appearance: auto;
+    accent-color: color-mix(in srgb, var(--color-accent-blue) 78%, var(--color-text) 22%);
+}
+
 .user-avatar-choices {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -743,12 +791,15 @@
 
 
 .modal-overlay#userModal.is-grid-modal .user-modal {
+    --user-modal-scale: 0.8;
     height: 100%;
     grid-template-rows: auto 1fr;
     align-content: stretch;
     justify-items: stretch;
     text-align: left;
-    gap: clamp(10px, 1.2vw, 16px);
+    gap: clamp(6px, calc(12px * var(--user-modal-scale)), 12px);
+    padding: clamp(8px, calc(20px * var(--user-modal-scale)), 20px);
+    overflow: hidden;
 }
 
 .modal-overlay#userModal.is-grid-modal .user-modal > :not(.modal-close) {
@@ -760,17 +811,35 @@
 .modal-overlay#userModal.is-grid-modal .user-modal h3 {
     text-align: left;
     margin-bottom: 0;
+    font-size: clamp(1.06rem, calc(2.2rem * var(--user-modal-scale)), 2.2rem);
+    line-height: 1.08;
 }
 
 .modal-overlay#userModal.is-grid-modal .user-modal .modal-state {
     text-align: left;
+    padding: clamp(6px, calc(12px * var(--user-modal-scale)), 12px) clamp(8px, calc(14px * var(--user-modal-scale)), 14px);
+    font-size: clamp(0.68rem, calc(0.82rem * var(--user-modal-scale)), 0.82rem);
+    min-height: clamp(24px, calc(32px * var(--user-modal-scale)), 32px);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modal-overlay#userModal.is-grid-modal .user-modal .modal-state:empty {
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
+    border-color: transparent;
+    background: transparent;
 }
 
 .modal-overlay#userModal.is-grid-modal .user-modal-layout {
     height: 100%;
     min-height: 0;
-    grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 1fr);
-    gap: clamp(18px, 2vw, 30px);
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
+    gap: clamp(8px, calc(18px * var(--user-modal-scale)), 18px);
     align-items: stretch;
 }
 
@@ -778,19 +847,36 @@
 .modal-overlay#userModal.is-grid-modal .user-profile-stack {
     height: 100%;
     min-height: 0;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
+    overflow: hidden;
+}
+
+.modal-overlay#userModal.is-grid-modal .user-profile-stack > .user-meta {
+    order: 1;
+}
+
+.modal-overlay#userModal.is-grid-modal .user-profile-stack > .user-data-form {
+    order: 2;
+}
+
+.modal-overlay#userModal.is-grid-modal .user-profile-stack > .modal-state {
+    order: 3;
+    margin-top: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-meta {
     justify-items: stretch;
     text-align: left;
-    gap: var(--spacing-sm);
+    gap: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
     margin-bottom: 0;
+    padding: clamp(6px, calc(12px * var(--user-modal-scale)), 12px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-meta p {
     text-align: left;
     margin: 0;
+    gap: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-data-form {
@@ -798,16 +884,58 @@
     align-content: stretch;
     justify-items: stretch;
     text-align: left;
-    gap: var(--spacing-sm);
+    gap: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
     grid-template-rows: none;
+    padding: clamp(6px, calc(12px * var(--user-modal-scale)), 12px);
+    overflow: hidden;
 }
 
 .modal-overlay#userModal.is-grid-modal .user-data-form label {
     text-align: left;
+    margin-top: 0;
+    font-size: clamp(0.66rem, calc(0.78rem * var(--user-modal-scale)), 0.78rem);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-data-form input,
+.modal-overlay#userModal.is-grid-modal .user-data-form select,
+.modal-overlay#userModal.is-grid-modal .user-data-form textarea {
+    padding: clamp(6px, calc(11px * var(--user-modal-scale)), 11px);
+    font-size: clamp(0.82rem, calc(0.98rem * var(--user-modal-scale)), 0.98rem);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-avatar-choices {
+    gap: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
+}
+
+.modal-overlay#userModal.is-grid-modal .avatar-choice {
+    padding: clamp(5px, calc(8px * var(--user-modal-scale)), 8px) clamp(8px, calc(10px * var(--user-modal-scale)), 10px);
+    font-size: clamp(0.7rem, calc(0.84rem * var(--user-modal-scale)), 0.84rem);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-preferences-grid,
+.modal-overlay#userModal.is-grid-modal .user-toggle-grid {
+    gap: clamp(4px, calc(8px * var(--user-modal-scale)), 8px);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-preference-group {
+    gap: clamp(3px, calc(5px * var(--user-modal-scale)), 5px);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-toggle-row {
+    padding: clamp(4px, calc(7px * var(--user-modal-scale)), 7px) clamp(6px, calc(10px * var(--user-modal-scale)), 10px);
+    font-size: clamp(0.66rem, calc(0.76rem * var(--user-modal-scale)), 0.76rem);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-toggle-row input {
+    width: clamp(12px, calc(16px * var(--user-modal-scale)), 16px);
+    height: clamp(12px, calc(16px * var(--user-modal-scale)), 16px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-data-form button {
     justify-self: stretch;
+    margin-top: 1px;
+    padding: clamp(6px, calc(10px * var(--user-modal-scale)), 10px) clamp(8px, calc(16px * var(--user-modal-scale)), 16px);
+    font-size: clamp(0.74rem, calc(0.92rem * var(--user-modal-scale)), 0.92rem);
 }
 
 .user-meta span {

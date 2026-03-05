@@ -35,6 +35,12 @@
         userNameValue: document.getElementById('userNameValue'),
         userAvatarValue: document.getElementById('userAvatarValue'),
         userNameInput: document.getElementById('userNameInput'),
+        userTimezoneInput: document.getElementById('userTimezoneInput'),
+        userWeatherCityInput: document.getElementById('userWeatherCityInput'),
+        userTemperatureUnitSelect: document.getElementById('userTemperatureUnitSelect'),
+        userTimeFormatSelect: document.getElementById('userTimeFormatSelect'),
+        userFocusModeInput: document.getElementById('userFocusModeInput'),
+        userCompactModeInput: document.getElementById('userCompactModeInput'),
         userDataForm: document.getElementById('userDataForm'),
         userAvatarChoices: document.getElementById('userAvatarChoices'),
         userCharacterScene: document.getElementById('userCharacterScene'),
@@ -49,6 +55,19 @@
         users: 'mensura-auth-users-v1',
         session: 'mensura-auth-session-v1',
         profile: 'mensura-user-profile-card-v1',
+    };
+    const APP_STORAGE_KEYS = {
+        settings: 'mensura-settings-v2',
+        weather: 'mensura-weather-v2',
+        clock: 'mensura-clock-v2',
+    };
+    const DEFAULT_PREFERENCES = {
+        timezone: 'Europe/Berlin',
+        weatherCity: 'Kassel',
+        temperatureUnit: 'c',
+        mode24h: true,
+        focus: false,
+        compact: false,
     };
     const AVATAR_CHOICES = ['purple', 'orange', 'black', 'yellow'];
     const AVATAR_THEME_COLORS = {
@@ -127,6 +146,155 @@
 
     function normalizeUsername(value) {
         return (value || '').trim();
+    }
+
+    function isValidTimezone(value) {
+        if (!value || typeof value !== 'string') return false;
+        try {
+            new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function sanitizeTimezoneInput(value, fallback = DEFAULT_PREFERENCES.timezone) {
+        return isValidTimezone(value) ? value : fallback;
+    }
+
+    function sanitizeTemperatureUnit(value) {
+        return value === 'f' ? 'f' : 'c';
+    }
+
+    function readBoolean(value, fallback) {
+        return typeof value === 'boolean' ? value : fallback;
+    }
+
+    function readUserPreferences() {
+        const savedSettings = readStorage(APP_STORAGE_KEYS.settings, {});
+        const savedWeather = readStorage(APP_STORAGE_KEYS.weather, {});
+        const savedClock = readStorage(APP_STORAGE_KEYS.clock, {});
+        const profilePreferences = state.profile?.data && typeof state.profile.data === 'object'
+            ? state.profile.data.preferences
+            : null;
+        const profilePrefs = profilePreferences && typeof profilePreferences === 'object'
+            ? profilePreferences
+            : {};
+
+        const timezone = sanitizeTimezoneInput(
+            savedSettings.timezone || savedWeather.timezone || savedClock.timezone || profilePrefs.timezone,
+            DEFAULT_PREFERENCES.timezone
+        );
+        const weatherCity = String(
+            savedWeather.city || savedClock.city || profilePrefs.weatherCity || DEFAULT_PREFERENCES.weatherCity
+        ).trim()
+            || DEFAULT_PREFERENCES.weatherCity;
+
+        return {
+            timezone,
+            weatherCity,
+            temperatureUnit: sanitizeTemperatureUnit(savedWeather.unit || profilePrefs.temperatureUnit),
+            mode24h: readBoolean(savedSettings.mode24h, readBoolean(profilePrefs.mode24h, DEFAULT_PREFERENCES.mode24h)),
+            focus: readBoolean(savedSettings.focus, readBoolean(profilePrefs.focus, DEFAULT_PREFERENCES.focus)),
+            compact: readBoolean(savedSettings.compact, readBoolean(profilePrefs.compact, DEFAULT_PREFERENCES.compact)),
+        };
+    }
+
+    function applyBodyModeClasses(preferences) {
+        document.body.classList.toggle('app-focus', Boolean(preferences.focus));
+        document.body.classList.toggle('app-compact', Boolean(preferences.compact));
+    }
+
+    function writeUserPreferences(preferences) {
+        const savedSettings = readStorage(APP_STORAGE_KEYS.settings, {});
+        const savedWeather = readStorage(APP_STORAGE_KEYS.weather, {});
+        const savedClock = readStorage(APP_STORAGE_KEYS.clock, {});
+
+        writeStorage(APP_STORAGE_KEYS.settings, {
+            ...savedSettings,
+            mode24h: Boolean(preferences.mode24h),
+            focus: Boolean(preferences.focus),
+            compact: Boolean(preferences.compact),
+            timezone: preferences.timezone,
+        });
+
+        writeStorage(APP_STORAGE_KEYS.weather, {
+            ...savedWeather,
+            city: preferences.weatherCity,
+            timezone: preferences.timezone,
+            unit: sanitizeTemperatureUnit(preferences.temperatureUnit),
+        });
+
+        writeStorage(APP_STORAGE_KEYS.clock, {
+            ...savedClock,
+            city: preferences.weatherCity,
+            timezone: preferences.timezone,
+        });
+    }
+
+    function readPreferencesFromForm() {
+        const timezone = sanitizeTimezoneInput(
+            String(elements.userTimezoneInput?.value || '').trim(),
+            DEFAULT_PREFERENCES.timezone
+        );
+        const weatherCity = String(elements.userWeatherCityInput?.value || '').trim()
+            || DEFAULT_PREFERENCES.weatherCity;
+        const temperatureUnit = sanitizeTemperatureUnit(elements.userTemperatureUnitSelect?.value);
+        const mode24h = (elements.userTimeFormatSelect?.value || '24h') !== '12h';
+        const focus = Boolean(elements.userFocusModeInput?.checked);
+        const compact = Boolean(elements.userCompactModeInput?.checked);
+
+        return {
+            timezone,
+            weatherCity,
+            temperatureUnit,
+            mode24h,
+            focus,
+            compact,
+        };
+    }
+
+    function populatePreferenceForm(preferences) {
+        if (elements.userTimezoneInput) {
+            elements.userTimezoneInput.value = preferences.timezone;
+        }
+        if (elements.userWeatherCityInput) {
+            elements.userWeatherCityInput.value = preferences.weatherCity;
+        }
+        if (elements.userTemperatureUnitSelect) {
+            elements.userTemperatureUnitSelect.value = sanitizeTemperatureUnit(preferences.temperatureUnit);
+        }
+        if (elements.userTimeFormatSelect) {
+            elements.userTimeFormatSelect.value = preferences.mode24h ? '24h' : '12h';
+        }
+        if (elements.userFocusModeInput) {
+            elements.userFocusModeInput.checked = Boolean(preferences.focus);
+        }
+        if (elements.userCompactModeInput) {
+            elements.userCompactModeInput.checked = Boolean(preferences.compact);
+        }
+    }
+
+    function dispatchPreferencesUpdated(preferences) {
+        window.dispatchEvent(new CustomEvent('mensura:preferences-updated', {
+            detail: {
+                settings: {
+                    mode24h: Boolean(preferences.mode24h),
+                    focus: Boolean(preferences.focus),
+                    compact: Boolean(preferences.compact),
+                    timezone: preferences.timezone,
+                },
+                weather: {
+                    city: preferences.weatherCity,
+                    timezone: preferences.timezone,
+                    unit: sanitizeTemperatureUnit(preferences.temperatureUnit),
+                },
+                clock: {
+                    city: preferences.weatherCity,
+                    timezone: preferences.timezone,
+                },
+            },
+        }));
     }
 
     function sanitizeAvatarChoice(value) {
@@ -673,6 +841,7 @@
         modalCard.style.height = '';
         modalCard.style.opacity = '';
         modalCard.style.transition = '';
+        modalCard.style.removeProperty('--user-modal-scale');
     }
 
     function applyModalGridLayout(modalOverlay) {
@@ -702,6 +871,15 @@
         modalCard.style.width = `${targetWidth}px`;
         modalCard.style.height = `${targetHeight}px`;
         modalCard.style.opacity = '1';
+
+        if (modalOverlay.id === 'userModal') {
+            const widthScale = targetWidth / 1120;
+            const heightScale = targetHeight / 760;
+            const compactScale = Math.min(0.8, Math.max(0.56, Math.min(widthScale, heightScale)));
+            modalCard.style.setProperty('--user-modal-scale', compactScale.toFixed(3));
+        } else {
+            modalCard.style.removeProperty('--user-modal-scale');
+        }
 
         return {
             top: targetTop,
@@ -1003,6 +1181,7 @@
         elements.userNameValue.textContent = profile.username || '-';
         elements.userNameInput.value = profile.username || '';
         applySelectedUserAvatar(profile.avatar);
+        populatePreferenceForm(readUserPreferences());
         updateTooltips();
     }
 
@@ -1183,17 +1362,39 @@
             return;
         }
 
+        const rawTimezone = String(elements.userTimezoneInput?.value || '').trim();
+        if (rawTimezone && !isValidTimezone(rawTimezone)) {
+            setStateMessage(elements.userState, 'Timezone is invalid (example: Europe/Berlin)', 'error');
+            return;
+        }
+
+        const preferences = readPreferencesFromForm();
+
         setStateMessage(elements.userState, '');
         state.profile = {
             ...state.profile,
             username,
             avatar: sanitizeAvatarChoice(state.profile.avatar),
+            data: {
+                ...(state.profile.data && typeof state.profile.data === 'object' ? state.profile.data : {}),
+                preferences,
+            },
             updatedAt: new Date().toISOString(),
         };
 
+        writeUserPreferences(preferences);
+        applyBodyModeClasses(preferences);
+        dispatchPreferencesUpdated(preferences);
         saveProfile();
         updateUserPanel();
-        setStateMessage(elements.userState, 'Profile saved', 'success');
+        setStateMessage(elements.userState, 'Saved', 'success');
+
+        window.requestAnimationFrame(() => {
+            refreshOpenModalLayouts();
+            window.requestAnimationFrame(() => {
+                refreshOpenModalLayouts();
+            });
+        });
     }
 
     async function openLoginModal(origin = elements.fingerprintImage) {

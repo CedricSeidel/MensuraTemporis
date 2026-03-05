@@ -20,6 +20,51 @@ export function initCardContent() {
     const weatherRenderer = createWeatherRenderer(elements);
     const clockController = createClockController(elements, state);
 
+    function isValidTimezone(value) {
+        if (!value || typeof value !== 'string') return false;
+        try {
+            new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function applyRuntimePreferences(detail) {
+        if (!detail || typeof detail !== 'object') return;
+
+        const settings = detail.settings && typeof detail.settings === 'object' ? detail.settings : null;
+        const weather = detail.weather && typeof detail.weather === 'object' ? detail.weather : null;
+        const clock = detail.clock && typeof detail.clock === 'object' ? detail.clock : null;
+
+        if (settings) {
+            if (typeof settings.mode24h === 'boolean') state.settings.mode24h = settings.mode24h;
+            if (typeof settings.focus === 'boolean') state.settings.focus = settings.focus;
+            if (typeof settings.compact === 'boolean') state.settings.compact = settings.compact;
+            if (isValidTimezone(settings.timezone)) state.settings.timezone = settings.timezone;
+        }
+
+        if (weather) {
+            const weatherCity = String(weather.city || '').trim();
+            if (weatherCity) state.weather.city = weatherCity;
+            if (isValidTimezone(weather.timezone)) state.weather.timezone = weather.timezone;
+            if (weather.unit === 'f' || weather.unit === 'c') state.weather.unit = weather.unit;
+        }
+
+        if (clock) {
+            const clockCity = String(clock.city || '').trim();
+            if (clockCity) state.clock.city = clockCity;
+            if (isValidTimezone(clock.timezone)) state.clock.timezone = clock.timezone;
+        }
+
+        applyBodyModes(state);
+        renderCalendarCollapsed(elements, state);
+        renderEventsCollapsed(elements, state);
+        renderSettingsSummary(elements, state);
+        clockController.updateClock(true);
+        void weatherRenderer.renderWeatherCollapsed(state, { forceFetch: true });
+    }
+
     restoreState(state);
 
     applyBodyModes(state);
@@ -37,6 +82,10 @@ export function initCardContent() {
         if (!detected) return;
         clockController.updateClock(true);
         void weatherRenderer.renderWeatherCollapsed(state, { forceFetch: true });
+    });
+
+    window.addEventListener('mensura:preferences-updated', (event) => {
+        applyRuntimePreferences(event?.detail);
     });
 
     window.addEventListener('resize', clockController.resizeAnalogClockFace);

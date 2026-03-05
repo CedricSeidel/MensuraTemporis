@@ -8,21 +8,32 @@
     const MIN_DENSITY = 0.34;
     const CALENDAR_DAY_MIN_SIZE = 48;
     const CALENDAR_DAY_MAX_SIZE = 620;
-    const CALENDAR_HORIZONTAL_PADDING_RATIO = 0.08;
-    const CALENDAR_VERTICAL_RESERVED_PX = 12;
-    const CALENDAR_FIT_PADDING_EM = 0.12;
+    const CALENDAR_DAY_FROM_CARD_WIDTH = 0.88;
+    const CALENDAR_DAY_FROM_CARD_HEIGHT = 0.66;
+    const CALENDAR_META_RATIO = 0.12;
+    const CALENDAR_VERTICAL_RESERVED_PX = 16;
+    const CALENDAR_TEXT_SAMPLE = '88';
+    const CALENDAR_MEASURE_ITERATIONS = 12;
+    const CALENDAR_SAFE_WIDTH_PX = 10;
+    const CALENDAR_SAFE_HEIGHT_PX = 12;
+    const CALENDAR_DEFAULT_LINE_HEIGHT = 0.74;
 
+    let lastCalendarDaySize = -1;
+    let lastCalendarMetaSize = -1;
     let calendarMeasureNode = null;
-    let calendarResizeObserver = null;
-    let calendarMutationObserver = null;
-    let calendarRafId = 0;
 
     function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
     }
 
+    function parsePx(value, fallback = 0) {
+        const numeric = Number.parseFloat(value);
+        return Number.isFinite(numeric) ? numeric : fallback;
+    }
+
     function getCalendarMeasureNode() {
         if (calendarMeasureNode) return calendarMeasureNode;
+
         const node = document.createElement('span');
         node.setAttribute('aria-hidden', 'true');
         node.style.position = 'fixed';
@@ -40,45 +51,64 @@
     }
 
     function measureCalendarText(dayElement, text, fontSizePx) {
-        const measureNode = getCalendarMeasureNode();
         const style = window.getComputedStyle(dayElement);
-        measureNode.style.fontFamily = style.fontFamily;
-        measureNode.style.fontWeight = style.fontWeight;
-        measureNode.style.fontStyle = style.fontStyle;
-        measureNode.style.letterSpacing = style.letterSpacing;
-        measureNode.style.fontVariantNumeric = style.fontVariantNumeric;
-        measureNode.style.lineHeight = style.lineHeight;
-        measureNode.style.textTransform = style.textTransform;
-        measureNode.style.fontSize = `${fontSizePx}px`;
-        measureNode.textContent = text || '--';
-        const rect = measureNode.getBoundingClientRect();
-        return { width: rect.width, height: rect.height };
-    }
+        const measureNode = getCalendarMeasureNode();
+        const currentFontSize = parsePx(style.fontSize, 16);
 
-    function fitCalendarDaySize(dayElement, text, maxWidth, maxHeight) {
-        let low = CALENDAR_DAY_MIN_SIZE;
-        let high = CALENDAR_DAY_MAX_SIZE;
-        let best = CALENDAR_DAY_MIN_SIZE;
-
-        for (let index = 0; index < 14; index += 1) {
-            const size = (low + high) / 2;
-            const measured = measureCalendarText(dayElement, text, size);
-            const horizontalSafeSpace = size * CALENDAR_FIT_PADDING_EM;
-            const fitsWidth = measured.width + horizontalSafeSpace <= maxWidth;
-            const fitsHeight = measured.height <= maxHeight;
-
-            if (fitsWidth && fitsHeight) {
-                best = size;
-                low = size;
-            } else {
-                high = size;
+        let lineHeightRatio = CALENDAR_DEFAULT_LINE_HEIGHT;
+        const rawLineHeight = String(style.lineHeight || '').trim();
+        if (rawLineHeight.endsWith('px')) {
+            lineHeightRatio = parsePx(rawLineHeight, currentFontSize) / Math.max(currentFontSize, 1);
+        } else {
+            const parsedLineHeight = Number.parseFloat(rawLineHeight);
+            if (Number.isFinite(parsedLineHeight)) {
+                lineHeightRatio = parsedLineHeight;
             }
         }
 
-        return clamp(best, CALENDAR_DAY_MIN_SIZE, CALENDAR_DAY_MAX_SIZE);
+        const letterSpacingPx = parsePx(style.letterSpacing, 0);
+        const letterSpacingEm = letterSpacingPx / Math.max(currentFontSize, 1);
+
+        measureNode.style.fontFamily = style.fontFamily;
+        measureNode.style.fontWeight = style.fontWeight;
+        measureNode.style.fontStyle = style.fontStyle;
+        measureNode.style.fontVariantNumeric = style.fontVariantNumeric;
+        measureNode.style.textTransform = style.textTransform;
+        measureNode.style.lineHeight = String(lineHeightRatio);
+        measureNode.style.letterSpacing = `${letterSpacingEm}em`;
+        measureNode.style.fontSize = `${fontSizePx}px`;
+        measureNode.textContent = text;
+
+        const rect = measureNode.getBoundingClientRect();
+        return {
+            width: rect.width,
+            height: rect.height,
+        };
     }
 
-    function applyCalendarDaySize() {
+    function fitCalendarDaySize(dayElement, preferredSize, maxWidth, maxHeight) {
+        let low = CALENDAR_DAY_MIN_SIZE;
+        let high = clamp(preferredSize, CALENDAR_DAY_MIN_SIZE, CALENDAR_DAY_MAX_SIZE);
+        let best = low;
+
+        for (let index = 0; index < CALENDAR_MEASURE_ITERATIONS; index += 1) {
+            const current = (low + high) / 2;
+            const measured = measureCalendarText(dayElement, CALENDAR_TEXT_SAMPLE, current);
+            const fitsWidth = measured.width + CALENDAR_SAFE_WIDTH_PX <= maxWidth;
+            const fitsHeight = measured.height + CALENDAR_SAFE_HEIGHT_PX <= maxHeight;
+
+            if (fitsWidth && fitsHeight) {
+                best = current;
+                low = current;
+            } else {
+                high = current;
+            }
+        }
+
+        return clamp(Math.floor(best), CALENDAR_DAY_MIN_SIZE, CALENDAR_DAY_MAX_SIZE);
+    }
+
+    function applyCalendarDaySize(cardWidth, cardHeight) {
         const root = document.documentElement;
         if (!root) return;
 
@@ -86,64 +116,45 @@
         const dayElement = document.getElementById('calendarCurrentDay');
         if (!collapsed || !dayElement) return;
 
+        const safeCardWidth = Number.isFinite(cardWidth) ? cardWidth : BASE_CARD_WIDTH;
+        const safeCardHeight = Number.isFinite(cardHeight) ? cardHeight : BASE_CARD_HEIGHT;
+        const widthLimitedSize = safeCardWidth * CALENDAR_DAY_FROM_CARD_WIDTH;
+        const heightLimitedSize = safeCardHeight * CALENDAR_DAY_FROM_CARD_HEIGHT;
+        const preferredSize = clamp(
+            Math.round(Math.min(widthLimitedSize, heightLimitedSize)),
+            CALENDAR_DAY_MIN_SIZE,
+            CALENDAR_DAY_MAX_SIZE
+        );
+
+        const dayStyle = window.getComputedStyle(dayElement);
+        const dayPaddingX = parsePx(dayStyle.paddingLeft) + parsePx(dayStyle.paddingRight);
+        const dayPaddingY = parsePx(dayStyle.paddingTop) + parsePx(dayStyle.paddingBottom);
         const caption = collapsed.querySelector('.summary-caption');
-        const collapsedRect = collapsed.getBoundingClientRect();
         const captionHeight = caption ? caption.getBoundingClientRect().height : 0;
+        const collapsedStyle = window.getComputedStyle(collapsed);
+        const collapsedGap = parsePx(collapsedStyle.rowGap || collapsedStyle.gap, 0);
 
-        const horizontalPadding = Math.max(12, collapsedRect.width * CALENDAR_HORIZONTAL_PADDING_RATIO);
-        const maxWidth = Math.max(120, collapsedRect.width - (horizontalPadding * 2));
-        const maxHeight = Math.max(120, collapsedRect.height - captionHeight - CALENDAR_VERTICAL_RESERVED_PX);
-        const text = (dayElement.textContent || '--').trim() || '--';
+        const maxTextWidth = Math.max(40, collapsed.clientWidth - dayPaddingX - CALENDAR_SAFE_WIDTH_PX);
+        const maxTextHeight = Math.max(
+            40,
+            collapsed.clientHeight - captionHeight - collapsedGap - dayPaddingY - CALENDAR_VERTICAL_RESERVED_PX
+        );
+        const daySize = fitCalendarDaySize(dayElement, preferredSize, maxTextWidth, maxTextHeight);
 
-        const daySize = fitCalendarDaySize(dayElement, text, maxWidth, maxHeight);
-        const metaSize = clamp(daySize * 0.12, 12, 68);
+        const metaSize = clamp(
+            Math.round(daySize * CALENDAR_META_RATIO),
+            12,
+            68
+        );
 
-        root.style.setProperty('--calendar-day-size', `${daySize.toFixed(2)}px`);
-        root.style.setProperty('--calendar-meta-size', `${metaSize.toFixed(2)}px`);
-    }
-
-    function scheduleCalendarDaySizeUpdate() {
-        if (calendarRafId) return;
-        calendarRafId = window.requestAnimationFrame(() => {
-            calendarRafId = 0;
-            applyCalendarDaySize();
-        });
-    }
-
-    let hasCalendarResizeFallback = false;
-    let hasCalendarMutationFallback = false;
-
-    function initCalendarObservers() {
-        if ((calendarResizeObserver || hasCalendarResizeFallback) && (calendarMutationObserver || hasCalendarMutationFallback)) return;
-
-        const collapsed = document.querySelector('.container1 .calendar-collapsed');
-        const dayElement = document.getElementById('calendarCurrentDay');
-
-        if (!collapsed || !dayElement) return;
-
-        if (typeof ResizeObserver === 'function') {
-            calendarResizeObserver = new ResizeObserver(() => {
-                scheduleCalendarDaySizeUpdate();
-            });
-            calendarResizeObserver.observe(collapsed);
-        } else if (!hasCalendarResizeFallback) {
-            hasCalendarResizeFallback = true;
-            window.addEventListener('resize', scheduleCalendarDaySizeUpdate, { passive: true });
+        if (daySize === lastCalendarDaySize && metaSize === lastCalendarMetaSize) {
+            return;
         }
 
-        if (typeof MutationObserver === 'function') {
-            calendarMutationObserver = new MutationObserver(() => {
-                scheduleCalendarDaySizeUpdate();
-            });
-            calendarMutationObserver.observe(dayElement, {
-                childList: true,
-                characterData: true,
-                subtree: true,
-            });
-        } else if (!hasCalendarMutationFallback) {
-            hasCalendarMutationFallback = true;
-            window.setInterval(scheduleCalendarDaySizeUpdate, 1000);
-        }
+        lastCalendarDaySize = daySize;
+        lastCalendarMetaSize = metaSize;
+        root.style.setProperty('--calendar-day-size', `${daySize}px`);
+        root.style.setProperty('--calendar-meta-size', `${metaSize}px`);
     }
 
     function isBelowMinimum() {
@@ -187,7 +198,7 @@
         root.style.setProperty('--grid-columns', '3');
         root.style.setProperty('--grid-rows', '2');
         root.style.setProperty('--header-height', `${headerHeight}px`);
-        scheduleCalendarDaySizeUpdate();
+        applyCalendarDaySize(cardWidth, cardHeight);
     }
 
     function enforceMinimumSize() {
@@ -204,7 +215,6 @@
         if (rafId) return;
         rafId = window.requestAnimationFrame(() => {
             rafId = 0;
-            initCalendarObservers();
             applyLayoutTokens();
             enforceMinimumSize();
         });

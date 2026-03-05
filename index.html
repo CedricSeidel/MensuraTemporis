@@ -363,6 +363,42 @@
                             <button type="button" class="avatar-choice" data-avatar-choice="black">Black</button>
                             <button type="button" class="avatar-choice" data-avatar-choice="yellow">Yellow</button>
                         </div>
+
+                        <label for="userTimezoneInput">Timezone</label>
+                        <input id="userTimezoneInput" name="timezone" type="text" placeholder="Europe/Berlin" autocomplete="off">
+
+                        <label for="userWeatherCityInput">Weather city</label>
+                        <input id="userWeatherCityInput" name="weatherCity" type="text" placeholder="Kassel" autocomplete="off">
+
+                        <div class="user-preferences-grid">
+                            <div class="user-preference-group">
+                                <label for="userTemperatureUnitSelect">Temperature</label>
+                                <select id="userTemperatureUnitSelect" name="temperatureUnit">
+                                    <option value="c">Celsius (°C)</option>
+                                    <option value="f">Fahrenheit (°F)</option>
+                                </select>
+                            </div>
+
+                            <div class="user-preference-group">
+                                <label for="userTimeFormatSelect">Time format</label>
+                                <select id="userTimeFormatSelect" name="timeFormat">
+                                    <option value="24h">24-hour</option>
+                                    <option value="12h">12-hour</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="user-toggle-grid">
+                            <label class="user-toggle-row" for="userFocusModeInput">
+                                <input id="userFocusModeInput" name="focusMode" type="checkbox">
+                                <span>Focus mode</span>
+                            </label>
+                            <label class="user-toggle-row" for="userCompactModeInput">
+                                <input id="userCompactModeInput" name="compactMode" type="checkbox">
+                                <span>Compact mode</span>
+                            </label>
+                        </div>
+
                         <button type="submit">Save</button>
                     </form>
                 </div>

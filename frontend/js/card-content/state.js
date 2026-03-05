@@ -5,6 +5,11 @@ function readBoolean(value, fallback) {
     return typeof value === 'boolean' ? value : fallback;
 }
 
+function sanitizeCity(value, fallback = DEFAULT_CITY) {
+    const normalized = String(value || '').trim();
+    return normalized || fallback;
+}
+
 export function createInitialState() {
     return {
         settings: {
@@ -38,13 +43,15 @@ export function restoreState(state) {
     const savedWeather = readStorage(STORAGE_KEYS.weather, null);
     state.weather.city = DEFAULT_CITY;
     if (savedWeather) {
+        state.weather.city = sanitizeCity(savedWeather.city, state.weather.city);
         state.weather.timezone = sanitizeTimezone(savedWeather.timezone, state.weather.timezone);
         state.weather.unit = savedWeather.unit === 'f' ? 'f' : 'c';
     }
 
     const savedClock = readStorage(STORAGE_KEYS.clock, null);
-    state.clock.city = DEFAULT_CITY;
+    state.clock.city = state.weather.city;
     if (savedClock) {
+        state.clock.city = sanitizeCity(savedClock.city, state.weather.city);
         state.clock.timezone = sanitizeTimezone(savedClock.timezone, state.settings.timezone);
     } else {
         state.clock.timezone = state.settings.timezone;
