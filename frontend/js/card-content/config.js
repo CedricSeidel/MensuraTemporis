@@ -1,8 +1,9 @@
 export const DEFAULT_TIMEZONE = 'Europe/Berlin';
+export const DEFAULT_CITY = 'Kassel';
 
 export const NOTE_PREVIEW_MAX_CHARS = 80;
-export const NOTE_STATUS_IDLE = 'Status: inaktiv';
-export const NOTE_STATUS_ACTIVE = 'Status: aktiv';
+export const NOTE_STATUS_IDLE = 'Status: idle';
+export const NOTE_STATUS_ACTIVE = 'Status: active';
 
 export const STORAGE_KEYS = {
     settings: 'mensura-settings-v2',
@@ -23,12 +24,12 @@ export const EVENTS = [
 ];
 
 export const WEATHER_PROFILES = {
-    berlin: { label: 'Berlin', tempC: 7, wind: 14, humidity: 62, rain: 18, condition: 'bewölkt' },
-    hamburg: { label: 'Hamburg', tempC: 6, wind: 18, humidity: 68, rain: 32, condition: 'windig' },
-    munich: { label: 'Munich', tempC: 4, wind: 10, humidity: 54, rain: 8, condition: 'klar' },
-    london: { label: 'London', tempC: 9, wind: 20, humidity: 76, rain: 44, condition: 'niesel' },
-    tokyo: { label: 'Tokyo', tempC: 12, wind: 11, humidity: 58, rain: 14, condition: 'trocken' },
-    newyork: { label: 'New York', tempC: 3, wind: 17, humidity: 61, rain: 22, condition: 'kalt' },
+    berlin: { label: 'Berlin', tempC: 7, wind: 14, humidity: 62, rain: 18, condition: 'cloudy' },
+    hamburg: { label: 'Hamburg', tempC: 6, wind: 18, humidity: 68, rain: 32, condition: 'windy' },
+    munich: { label: 'Munich', tempC: 4, wind: 10, humidity: 54, rain: 8, condition: 'clear' },
+    london: { label: 'London', tempC: 9, wind: 20, humidity: 76, rain: 44, condition: 'drizzle' },
+    tokyo: { label: 'Tokyo', tempC: 12, wind: 11, humidity: 58, rain: 14, condition: 'dry' },
+    newyork: { label: 'New York', tempC: 3, wind: 17, humidity: 61, rain: 22, condition: 'cold' },
 };
 
 export const WEATHER_VIDEO_SOURCES = {};

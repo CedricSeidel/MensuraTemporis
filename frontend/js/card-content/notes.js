@@ -15,10 +15,10 @@ export function renderNoteSummary(elements, state) {
     const latestText = getLatestNoteText(notes);
 
     setText(elements.postitCount, `${noteCount} Post-its`);
-    setText(elements.noteCount, `${latestText.length} Zeichen`);
+    setText(elements.noteCount, `${latestText.length} characters`);
 
     if (!latestText) {
-        setText(elements.notePreview, 'Noch keine Notiz gespeichert.');
+        setText(elements.notePreview, 'No note saved yet.');
         setText(elements.noteUpdated, NOTE_STATUS_IDLE);
         return;
     }
@@ -27,7 +27,7 @@ export function renderNoteSummary(elements, state) {
         ? `${latestText.slice(0, NOTE_PREVIEW_MAX_CHARS)}...`
         : latestText;
 
-    const timestamp = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const timestamp = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     setText(elements.notePreview, preview);
     setText(elements.noteUpdated, `${NOTE_STATUS_ACTIVE} · ${timestamp}`);
 }

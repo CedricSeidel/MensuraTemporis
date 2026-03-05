@@ -5,7 +5,7 @@
 .widget-kicker {
     margin: 0;
     color: var(--color-text-light);
-    font-size: 0.82rem;
+    font-size: clamp(0.58rem, calc(0.82rem * var(--content-density)), 0.82rem);
     line-height: 1.34;
     text-transform: uppercase;
     letter-spacing: 0.062em;
@@ -17,24 +17,28 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: clamp(6px, calc(24px * var(--content-density)), 24px);
+    min-width: 0;
 }
 
 .widget-header h2 {
     margin: 0;
-    font-size: clamp(1.18rem, 1.42vw, 1.52rem);
+    font-size: clamp(0.84rem, calc(1.9rem * var(--content-density)), 1.9rem);
     line-height: 1.16;
     text-transform: none;
     letter-spacing: 0.01em;
     font-weight: var(--font-weight-semibold);
     color: var(--color-text);
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .widget-chip {
     border: 1px solid color-mix(in srgb, var(--color-border-light) 86%, var(--color-border) 14%);
     border-radius: 999px;
-    padding: 4px 10px;
-    font-size: 0.8rem;
+    padding: clamp(1px, calc(4px * var(--content-density)), 4px) clamp(6px, calc(10px * var(--content-density)), 10px);
+    font-size: clamp(0.56rem, calc(0.8rem * var(--content-density)), 0.8rem);
     line-height: 1.28;
     text-transform: none;
     letter-spacing: 0.032em;
@@ -53,6 +57,7 @@
     min-height: 0;
     height: 100%;
     min-width: 0;
+    overflow: clip;
 }
 
 .widget-collapsed {
@@ -61,8 +66,9 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    gap: clamp(16px, 1.8vh, 24px);
+    gap: clamp(6px, calc(20px * var(--content-density)), 24px);
     min-width: 0;
+    overflow: clip;
 }
 
 .widget-expanded {
@@ -72,7 +78,7 @@
 
 .summary-caption {
     margin: 0;
-    font-size: 0.86rem;
+    font-size: clamp(0.56rem, calc(0.86rem * var(--content-density)), 0.86rem);
     line-height: 1.32;
     letter-spacing: 0.058em;
     font-weight: var(--font-weight-semibold);
@@ -82,28 +88,31 @@
 
 .summary-hero {
     margin: 0;
-    font-size: clamp(2.2rem, 3.8vw, 4.3rem);
+    font-size: clamp(1rem, calc(5.4rem * var(--content-density)), 8rem);
     line-height: 0.96;
     letter-spacing: -0.022em;
     font-weight: var(--font-weight-bold);
     color: color-mix(in srgb, var(--color-text) 90%, var(--color-accent) 10%);
+    overflow-wrap: anywhere;
 }
 
 .summary-weather {
     margin: 0;
-    font-size: clamp(2.6rem, 4.2vw, 4.7rem);
+    font-size: clamp(1rem, calc(5.8rem * var(--content-density)), 8.8rem);
     line-height: 0.92;
     letter-spacing: -0.028em;
     font-weight: var(--font-weight-bold);
     color: color-mix(in srgb, var(--color-text) 88%, var(--color-accent) 12%);
+    overflow-wrap: anywhere;
 }
 
 .summary-sub {
     margin: 0;
-    font-size: clamp(0.96rem, 1.08vw, 1.12rem);
+    font-size: clamp(0.62rem, calc(1.12rem * var(--content-density)), 1.12rem);
     line-height: 1.46;
     letter-spacing: 0.007em;
     color: var(--color-text-muted);
+    overflow-wrap: anywhere;
 }
 
 .metric-line {
@@ -111,20 +120,30 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    gap: var(--spacing-md);
-    padding-top: 18px;
+    gap: clamp(4px, calc(16px * var(--content-density)), 16px);
+    padding-top: clamp(4px, calc(16px * var(--content-density)), 18px);
     border-top: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    font-size: 0.92rem;
+    font-size: clamp(0.56rem, calc(0.92rem * var(--content-density)), 0.92rem);
     line-height: 1.34;
     color: var(--color-text);
     text-shadow: none;
+    min-width: 0;
+    overflow: clip;
+}
+
+.metric-line span,
+.metric-line strong {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .metric-line strong {
     color: var(--color-text);
     font-weight: var(--font-weight-semibold);
-    font-size: 0.98rem;
+    font-size: clamp(0.6rem, calc(0.98rem * var(--content-density)), 0.98rem);
     letter-spacing: 0.012em;
+    text-align: right;
 }
 
 .container2 .summary-hero,
@@ -153,9 +172,10 @@
 
 .calendar-collapsed {
     justify-content: flex-end;
-    gap: clamp(12px, 1.6vh, 20px);
+    gap: clamp(5px, calc(16px * var(--content-density)), 20px);
     position: relative;
-    overflow: hidden;
+    overflow: clip;
+    min-width: 0;
 }
 
 .calendar-collapsed .summary-caption {
@@ -164,13 +184,18 @@
 }
 
 .container1 .calendar-collapsed .summary-caption {
-    margin-top: clamp(100px, 20vh, 120px);
+    margin-top: clamp(4px, calc(16px * var(--content-density)), 20px);
 }
 
 .calendar-day-number {
     margin: 0;
     margin-top: auto;
-    font-size: clamp(12rem, 20vw, 50rem);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-inline: clamp(8px, calc(18px * var(--app-density)), 30px);
+    text-align: left;
+    font-size: var(--calendar-day-size, clamp(3.2rem, calc(32rem * var(--app-density)), 32rem));
     line-height: 0.74;
     letter-spacing: -0.106em;
     font-weight: var(--font-weight-bold);
@@ -186,11 +211,11 @@
     margin: 0;
     position: absolute;
     left: 50%;
-    top: 85%;
-    transform: translate(-50%, -46%);
+    top: 82%;
+    transform: translate(-50%, -50%);
     width: 100%;
     text-align: center;
-    font-size: clamp(1.18rem, 2.2vw, 2.2rem);
+    font-size: var(--calendar-meta-size, clamp(0.62rem, calc(2.4rem * var(--app-density)), 3.6rem));
     color: color-mix(in srgb, var(--color-accent-blue) 88%, var(--color-text) 12%);
     text-transform: uppercase;
     letter-spacing: 0.048em;
@@ -278,7 +303,7 @@
     justify-content: center;
     padding: clamp(10px, 1vw, 14px);
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: clip;
 }
 
 .analog-clock-shell {
@@ -346,7 +371,7 @@
     box-shadow:
             inset 0 6px 12px rgba(0, 0, 0, 0.22),
             inset 0 2px 4px rgba(0, 0, 0, 0.16);
-    overflow: hidden;
+    overflow: clip;
     z-index: 2;
 }
 

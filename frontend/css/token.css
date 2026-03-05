@@ -116,6 +116,13 @@
 
     --max-width-content: 1600px;
     --nav-height: 56px;
+    --header-height: 72px;
+    --app-density: 1;
+    --content-density: 1;
+    --grid-columns: 3;
+    --grid-rows: 2;
+    --calendar-day-size: 280px;
+    --calendar-meta-size: 32px;
 }
 
 /* ============================

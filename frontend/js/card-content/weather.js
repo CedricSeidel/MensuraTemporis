@@ -1,7 +1,8 @@
 import {
+    DEFAULT_CITY,
     DEFAULT_TIMEZONE,
 } from './config.js';
-import { getDateInTimezone, sanitizeTimezone, setText, toZoneShort } from './core.js';
+import { getDateInTimezone, sanitizeTimezone, setText } from './core.js';
 
 const GEOCODING_ENDPOINT = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
@@ -12,34 +13,34 @@ const MIN_PRECIP_MM_FOR_RAIN_SCENE = 0.08;
 const MIN_SNOW_CM_FOR_SNOW_SCENE = 0.03;
 
 const WMO_CONDITION_LABELS = {
-    0: 'sonnig',
-    1: 'meist sonnig',
-    2: 'leicht bewölkt',
-    3: 'bewölkt',
-    45: 'nebelig',
-    48: 'raureif nebel',
-    51: 'leichter niesel',
-    53: 'niesel',
-    55: 'starker niesel',
-    56: 'gefrierender niesel',
-    57: 'starker gefrierender niesel',
-    61: 'leichter regen',
-    63: 'regen',
-    65: 'starker regen',
-    66: 'gefrierender regen',
-    67: 'starker gefrierender regen',
-    71: 'leichter schneefall',
-    73: 'schneefall',
-    75: 'starker schneefall',
-    77: 'schneegriesel',
-    80: 'leichte regenschauer',
-    81: 'regenschauer',
-    82: 'starke regenschauer',
-    85: 'leichte schneeschauer',
-    86: 'schneeschauer',
-    95: 'gewitter',
-    96: 'gewitter mit hagel',
-    99: 'starkes gewitter mit hagel',
+    0: 'sunny',
+    1: 'mostly sunny',
+    2: 'partly cloudy',
+    3: 'cloudy',
+    45: 'foggy',
+    48: 'rime fog',
+    51: 'light drizzle',
+    53: 'drizzle',
+    55: 'heavy drizzle',
+    56: 'freezing drizzle',
+    57: 'heavy freezing drizzle',
+    61: 'light rain',
+    63: 'rain',
+    65: 'heavy rain',
+    66: 'freezing rain',
+    67: 'heavy freezing rain',
+    71: 'light snow',
+    73: 'snow',
+    75: 'heavy snow',
+    77: 'snow grains',
+    80: 'light rain showers',
+    81: 'rain showers',
+    82: 'heavy rain showers',
+    85: 'light snow showers',
+    86: 'snow showers',
+    95: 'thunderstorm',
+    96: 'thunderstorm with hail',
+    99: 'severe thunderstorm with hail',
 };
 
 const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86]);
@@ -48,7 +49,46 @@ const FOG_CODES = new Set([45, 48]);
 
 function normalizeCity(cityInput) {
     const value = String(cityInput || '').trim();
-    return value || 'Kassel';
+    return value || DEFAULT_CITY;
+}
+
+function pushCandidate(list, value) {
+    const normalized = String(value || '').trim();
+    if (!normalized) return;
+    if (!list.includes(normalized)) {
+        list.push(normalized);
+    }
+}
+
+function buildGeocodeCandidates(cityInput) {
+    const city = normalizeCity(cityInput);
+    const candidates = [];
+
+    pushCandidate(candidates, city);
+    pushCandidate(candidates, city.replace(/\b\d{4,6}\b/g, ' ').replace(/\s+/g, ' ').trim());
+    pushCandidate(candidates, city.replace(/^(\d{4,6})\s+(.+)$/, '$2').trim());
+    pushCandidate(candidates, city.replace(/^(.+?)\s+\d{4,6}$/, '$1').trim());
+
+    return candidates;
+}
+
+function toCityShort(cityInput) {
+    const city = normalizeCity(cityInput);
+    const stripped = city.replace(/\b\d{4,6}\b/g, ' ').replace(/\s+/g, ' ').trim();
+
+    if (!stripped) return 'KS';
+    if (stripped.toLowerCase() === 'kassel') return 'KS';
+
+    const parts = stripped.split(/[\s-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+        return parts
+            .map((part) => part.charAt(0))
+            .join('')
+            .toUpperCase()
+            .slice(0, 3);
+    }
+
+    return stripped.slice(0, 3).toUpperCase();
 }
 
 function toUnit(tempCelsius, unit) {
@@ -68,7 +108,7 @@ function isNightByTimezone(timezone) {
 }
 
 function toConditionLabel(wmoCode) {
-    return WMO_CONDITION_LABELS[wmoCode] || 'wechselhaft';
+    return WMO_CONDITION_LABELS[wmoCode] || 'changeable';
 }
 
 function resolveScene(weatherData) {
@@ -116,14 +156,16 @@ export function createWeatherRenderer(elements) {
         const humidity = Math.round(Number(weather.humidity ?? 0));
         const precipitation = Number(weather.precipitation ?? 0);
         const snowfall = Number(weather.snowfall ?? 0);
+        const selectedCity = normalizeCity(state.weather.city);
+        const cityShort = toCityShort(selectedCity);
         const precipitationText = snowfall > MIN_SNOW_CM_FOR_SNOW_SCENE
-            ? `Schnee ${snowfall.toFixed(1)} cm`
-            : `Niederschlag ${precipitation.toFixed(1)} mm`;
+            ? `Snow ${snowfall.toFixed(1)} cm`
+            : `Precipitation ${precipitation.toFixed(1)} mm`;
 
-        setText(elements.weatherCity, weather.label);
+        setText(elements.weatherCity, selectedCity);
         setText(elements.weatherTemp, withUnit(toUnit(weather.tempC, unit), unit));
-        setText(elements.weatherMeta, `${weather.condition} / Wind ${wind} km/h / ${toZoneShort(weather.timezone)}`);
-        setText(elements.weatherHumidity, `Feuchte ${humidity}%`);
+        setText(elements.weatherMeta, `${weather.condition} / Wind ${wind} km/h / ${cityShort}`);
+        setText(elements.weatherHumidity, `Humidity ${humidity}%`);
         setText(elements.weatherRain, precipitationText);
 
         state.weather.timezone = weather.timezone;
@@ -133,27 +175,33 @@ export function createWeatherRenderer(elements) {
         const cityKey = city.toLowerCase();
         if (geocodeCache.has(cityKey)) return geocodeCache.get(cityKey);
 
-        const url = new URL(GEOCODING_ENDPOINT);
-        url.searchParams.set('name', city);
-        url.searchParams.set('count', '1');
-        url.searchParams.set('language', 'de');
-        url.searchParams.set('format', 'json');
+        const candidates = buildGeocodeCandidates(city);
+        for (let index = 0; index < candidates.length; index += 1) {
+            const candidate = candidates[index];
+            const url = new URL(GEOCODING_ENDPOINT);
+            url.searchParams.set('name', candidate);
+            url.searchParams.set('count', '1');
+            url.searchParams.set('language', 'en');
+            url.searchParams.set('format', 'json');
 
-        const data = await fetchJson(url);
-        const result = Array.isArray(data?.results) ? data.results[0] : null;
-        if (!result || typeof result.latitude !== 'number' || typeof result.longitude !== 'number') {
-            throw new Error('Kein Ort gefunden');
+            const data = await fetchJson(url);
+            const result = Array.isArray(data?.results) ? data.results[0] : null;
+            if (!result || typeof result.latitude !== 'number' || typeof result.longitude !== 'number') {
+                continue;
+            }
+
+            const geocode = {
+                name: result.name || candidate,
+                latitude: result.latitude,
+                longitude: result.longitude,
+                timezone: result.timezone || DEFAULT_TIMEZONE,
+            };
+
+            geocodeCache.set(cityKey, geocode);
+            return geocode;
         }
 
-        const geocode = {
-            name: result.name || city,
-            latitude: result.latitude,
-            longitude: result.longitude,
-            timezone: result.timezone || DEFAULT_TIMEZONE,
-        };
-
-        geocodeCache.set(cityKey, geocode);
-        return geocode;
+        throw new Error('Location not found');
     }
 
     async function fetchLiveWeather(cityInput, preferredTimezone, forceFetch = false) {
@@ -180,7 +228,7 @@ export function createWeatherRenderer(elements) {
         const data = await fetchJson(url);
         const current = data?.current;
         if (!current) {
-            throw new Error('Keine Wetterdaten');
+            throw new Error('No weather data');
         }
 
         const wmoCode = Number(current.weather_code ?? 3);
@@ -216,13 +264,13 @@ export function createWeatherRenderer(elements) {
     function renderWeatherUnavailable(state) {
         const unit = state.weather.unit === 'f' ? 'f' : 'c';
         const city = normalizeCity(state.weather.city);
-        const timezone = sanitizeTimezone(state.weather.timezone, DEFAULT_TIMEZONE);
+        const cityShort = toCityShort(city);
 
         setText(elements.weatherCity, city);
         setText(elements.weatherTemp, unit === 'f' ? '--°F' : '--°C');
-        setText(elements.weatherMeta, `wetterdaten nicht verfügbar / ${toZoneShort(timezone)}`);
-        setText(elements.weatherHumidity, 'Feuchte --%');
-        setText(elements.weatherRain, 'Niederschlag --.- mm');
+        setText(elements.weatherMeta, `weather data unavailable / ${cityShort}`);
+        setText(elements.weatherHumidity, 'Humidity --%');
+        setText(elements.weatherRain, 'Precipitation --.- mm');
     }
 
     async function renderWeatherCollapsed(state, { forceFetch = false } = {}) {

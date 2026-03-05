@@ -18,7 +18,7 @@ export function readStorage(key, fallback) {
 export function isValidTimezone(value) {
     if (!value || typeof value !== 'string') return false;
     try {
-        new Intl.DateTimeFormat('de-DE', { timeZone: value }).format(new Date());
+        new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
         return true;
     } catch {
         return false;
@@ -30,7 +30,7 @@ export function sanitizeTimezone(value, fallback = DEFAULT_TIMEZONE) {
 }
 
 export function formatDigitalClock(date, timeZone, use24h) {
-    const locale = use24h ? 'de-DE' : 'en-US';
+    const locale = use24h ? 'en-GB' : 'en-US';
     return new Intl.DateTimeFormat(locale, {
         timeZone,
         hour: '2-digit',

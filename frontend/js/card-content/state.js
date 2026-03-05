@@ -1,4 +1,4 @@
-import { DEFAULT_TIMEZONE, STORAGE_KEYS } from './config.js';
+import { DEFAULT_CITY, DEFAULT_TIMEZONE, STORAGE_KEYS } from './config.js';
 import { readStorage, sanitizeTimezone } from './core.js';
 
 function readBoolean(value, fallback) {
@@ -14,12 +14,12 @@ export function createInitialState() {
             timezone: DEFAULT_TIMEZONE,
         },
         weather: {
-            city: 'Kassel',
+            city: DEFAULT_CITY,
             timezone: DEFAULT_TIMEZONE,
             unit: 'c',
         },
         clock: {
-            city: 'Kassel',
+            city: DEFAULT_CITY,
             timezone: DEFAULT_TIMEZONE,
         },
         postits: [],
@@ -36,15 +36,15 @@ export function restoreState(state) {
     }
 
     const savedWeather = readStorage(STORAGE_KEYS.weather, null);
+    state.weather.city = DEFAULT_CITY;
     if (savedWeather) {
-        state.weather.city = String(savedWeather.city || state.weather.city).trim() || state.weather.city;
         state.weather.timezone = sanitizeTimezone(savedWeather.timezone, state.weather.timezone);
         state.weather.unit = savedWeather.unit === 'f' ? 'f' : 'c';
     }
 
     const savedClock = readStorage(STORAGE_KEYS.clock, null);
+    state.clock.city = DEFAULT_CITY;
     if (savedClock) {
-        state.clock.city = String(savedClock.city || state.clock.city).trim() || state.clock.city;
         state.clock.timezone = sanitizeTimezone(savedClock.timezone, state.settings.timezone);
     } else {
         state.clock.timezone = state.settings.timezone;

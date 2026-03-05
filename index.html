@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Mensura Temporis</title>
@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="frontend/css/app/responsive.css">
     <link rel="stylesheet" href="frontend/css/navbar.css">
     <link rel="stylesheet" href="frontend/css/modals.css">
+    <link rel="stylesheet" href="frontend/css/figures.css">
 
 </head>
 <body>
@@ -50,14 +51,14 @@
             </a>
         </div>
 
-        <!-- Profil/Login (Rechts) -->
+        <!-- Profile/Login (Right) -->
         <div class="navbar-profile">
             <div class="profile-container">
-                <img src="frontend/assets/img/profile-simple.svg" alt="Profilbild" class="profile-image" id="profileImage" role="button" tabindex="0" data-hotkey="p" aria-label="Profil öffnen">
-                <div class="profile-tooltip" id="profileTooltip">Profil</div>
+                <img src="frontend/assets/img/profile-simple.svg" alt="Profile image" class="profile-image" id="profileImage" role="button" tabindex="0" data-hotkey="p" aria-label="Open profile">
+                <div class="profile-tooltip" id="profileTooltip">Profile</div>
             </div>
             <div class="fingerprint-container">
-                <img src="frontend/assets/img/fingerabdruck.png" alt="Fingerabdruck" class="fingerprint-image" id="fingerprintImage" role="button" tabindex="0" data-hotkey="l" aria-label="Login oder Register öffnen">
+                <img src="frontend/assets/img/fingerabdruck.png" alt="Fingerprint" class="fingerprint-image" id="fingerprintImage" role="button" tabindex="0" data-hotkey="l" aria-label="Open login or register">
                 <div class="fingerprint-tooltip" id="fingerprintTooltip">Login</div>
             </div>
         </div>
@@ -65,7 +66,7 @@
 </header>
     <div class="grid">
         <div class="container1" id="container1">
-            <button type="button" class="container-close" data-container-close="container1" aria-label="Container schließen">×</button>
+            <button type="button" class="container-close" data-container-close="container1" aria-label="Close container">×</button>
             <p class="widget-kicker">[C] CALENDAR</p>
             <div class="widget-header">
                 <h2>Calendar</h2>
@@ -73,7 +74,7 @@
             </div>
             <div class="widget-content">
                 <div class="widget-collapsed calendar-collapsed">
-                    <p class="summary-caption">Heute</p>
+                    <p class="summary-caption">Today</p>
                     <p class="calendar-day-number" id="calendarCurrentDay">--</p>
                     <p class="calendar-day-meta" id="calendarCurrentMeta">---</p>
                 </div>
@@ -82,7 +83,7 @@
         </div>
 
         <div class="container2" id="container2">
-            <button type="button" class="container-close" data-container-close="container2" aria-label="Container schließen">×</button>
+            <button type="button" class="container-close" data-container-close="container2" aria-label="Close container">×</button>
             <p class="widget-kicker">[E] EVENTS</p>
             <div class="widget-header">
                 <h2>Upcoming Events</h2>
@@ -90,11 +91,11 @@
             </div>
             <div class="widget-content">
                 <div class="widget-collapsed">
-                    <p class="summary-caption">Nächster Termin</p>
+                    <p class="summary-caption">Next event</p>
                     <p class="summary-hero" id="eventsNextTitle">Team Sync</p>
-                    <p class="summary-sub" id="eventsNextTime">Heute · 15:00</p>
+                    <p class="summary-sub" id="eventsNextTime">Today · 15:00</p>
                     <div class="metric-line">
-                        <span id="eventsVisibleCounter">8 Events sichtbar</span>
+                        <span id="eventsVisibleCounter">8 events visible</span>
                         <strong id="eventsCriticalCount">3 Critical</strong>
                     </div>
                 </div>
@@ -103,7 +104,7 @@
         </div>
 
         <div class="container3" id="container3">
-            <button type="button" class="container-close" data-container-close="container3" aria-label="Container schließen">×</button>
+            <button type="button" class="container-close" data-container-close="container3" aria-label="Close container">×</button>
             <p class="widget-kicker">[W] WEATHER</p>
             <div class="widget-header">
                 <h2>Weather</h2>
@@ -113,10 +114,10 @@
                 <div class="widget-collapsed">
                     <p class="summary-caption" id="weatherCity">Kassel</p>
                     <p class="summary-weather" id="weatherTemp">--°C</p>
-                    <p class="summary-sub" id="weatherMeta">lade wetterdaten...</p>
+                    <p class="summary-sub" id="weatherMeta">loading weather data...</p>
                     <div class="metric-line">
-                        <span id="weatherHumidity">Feuchte --%</span>
-                        <strong id="weatherRain">Niederschlag --.- mm</strong>
+                        <span id="weatherHumidity">Humidity --%</span>
+                        <strong id="weatherRain">Precipitation --.- mm</strong>
                     </div>
                 </div>
                 <div class="widget-expanded" aria-hidden="true"></div>
@@ -124,7 +125,7 @@
         </div>
 
         <div class="container4" id="container4">
-            <button type="button" class="container-close" data-container-close="container4" aria-label="Container schließen">×</button>
+            <button type="button" class="container-close" data-container-close="container4" aria-label="Close container">×</button>
             <p class="widget-kicker">[N] QUICK NOTES</p>
             <div class="widget-header">
                 <h2>Quick Notes</h2>
@@ -132,11 +133,11 @@
             </div>
             <div class="widget-content">
                 <div class="widget-collapsed">
-                    <p class="summary-caption">Letzte Notiz</p>
-                    <p class="summary-hero" id="notePreview">Noch keine Notiz gespeichert.</p>
-                    <p class="summary-sub" id="noteUpdated">Status: inaktiv</p>
+                    <p class="summary-caption">Latest note</p>
+                    <p class="summary-hero" id="notePreview">No note saved yet.</p>
+                    <p class="summary-sub" id="noteUpdated">Status: idle</p>
                     <div class="metric-line">
-                        <span id="noteCount">0 Zeichen</span>
+                        <span id="noteCount">0 characters</span>
                         <strong id="postitCount">0 Post-its</strong>
                     </div>
                 </div>
@@ -145,7 +146,7 @@
         </div>
 
         <div class="container5" id="container5">
-            <button type="button" class="container-close" data-container-close="container5" aria-label="Container schließen">×</button>
+            <button type="button" class="container-close" data-container-close="container5" aria-label="Close container">×</button>
             <p class="widget-kicker">[A] ANALOG CLOCK</p>
             <div class="widget-header">
                 <h2>Analog Clock</h2>
@@ -155,7 +156,7 @@
                 <div class="widget-collapsed clock-collapsed">
                     <div class="analog-clock-shell" id="analogClockShell">
                         <p class="clock-meta-top" id="clockTopLine">--</p>
-                        <div class="analog-clock-face" id="analogClockFace" aria-label="Analoge Uhr">
+                        <div class="analog-clock-face" id="analogClockFace" aria-label="Analog clock">
                             <span class="clock-tick-ring" aria-hidden="true"></span>
                             <span class="clock-hand clock-hand-hour" id="clockHourHand"></span>
                             <span class="clock-hand clock-hand-minute" id="clockMinuteHand"></span>
@@ -170,7 +171,7 @@
         </div>
 
         <div class="container6" id="container6">
-            <button type="button" class="container-close" data-container-close="container6" aria-label="Container schließen">×</button>
+            <button type="button" class="container-close" data-container-close="container6" aria-label="Close container">×</button>
             <p class="widget-kicker">[S] SETTINGS</p>
             <div class="widget-header">
                 <h2>Settings</h2>
@@ -182,8 +183,8 @@
                     <p class="summary-hero" id="settingsSummary">24H ON / Focus OFF / Compact OFF</p>
                     <p class="summary-sub" id="settingsZoneText">Europe/Berlin</p>
                     <div class="metric-line">
-                        <span id="settingsModeCount">1 aktiv</span>
-                        <strong id="settingsHelpVisible">0 Help Einträge</strong>
+                        <span id="settingsModeCount">1 active</span>
+                        <strong id="settingsHelpVisible">0 help entries</strong>
                     </div>
                 </div>
                 <div class="widget-expanded" aria-hidden="true"></div>
@@ -193,7 +194,7 @@
 
     <div class="modal-overlay" id="loginModal" hidden>
         <div class="modal auth-modal auth-modal--bauhaus" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
-            <button type="button" class="modal-close" data-modal-close="loginModal" aria-label="Popup schließen">×</button>
+            <button type="button" class="modal-close" data-modal-close="loginModal" aria-label="Close popup">×</button>
             <h3 id="loginModalTitle">Login</h3>
 
             <div class="auth-modal-layout auth-modal-layout--login">
@@ -246,7 +247,7 @@
                         <form class="auth-form" id="loginForm" autocomplete="on">
                             <label for="loginUsername">Username</label>
                             <input id="loginUsername" name="username" type="text" minlength="3" required>
-                            <label for="loginPassword">Passwort</label>
+                            <label for="loginPassword">Password</label>
                             <div class="password-field">
                                 <input id="loginPassword" name="password" type="password" minlength="8" autocomplete="current-password" required>
                                 <button
@@ -255,15 +256,15 @@
                                     id="loginPasswordToggle"
                                     aria-controls="loginPassword"
                                     aria-pressed="false"
-                                    aria-label="Passwort anzeigen"
+                                    aria-label="Show password"
                                 >
-                                    Anzeigen
+                                    Show
                                 </button>
                             </div>
                             <button type="submit">Login</button>
                         </form>
 
-                        <button type="button" class="auth-switch" id="openRegisterModalButton">Noch keinen Account? Register</button>
+                        <button type="button" class="auth-switch" id="openRegisterModalButton">No account yet? Register</button>
                     </div>
 
                     <div class="auth-pane auth-pane--register" id="registerPane" hidden>
@@ -276,18 +277,18 @@
                                 <output class="username-check" id="registerUsernameCheck" aria-live="polite">Check</output>
                             </div>
                             <p class="field-hint" id="registerUsernameHint"></p>
-                            <label for="registerPassword">Passwort</label>
+                            <label for="registerPassword">Password</label>
                             <input id="registerPassword" name="password" type="password" minlength="8" required>
-                            <label for="registerPasswordConfirm">Passwort bestätigen</label>
+                            <label for="registerPasswordConfirm">Confirm password</label>
                             <input id="registerPasswordConfirm" name="passwordConfirm" type="password" minlength="8" required>
                             <button type="submit">Register</button>
                         </form>
 
-                        <button type="button" class="auth-switch" id="openLoginModalButton">Bereits Account? Login</button>
+                        <button type="button" class="auth-switch" id="openLoginModalButton">Already have an account? Login</button>
                     </div>
 
                     <div class="auth-logged-in" id="loggedInPanel" hidden>
-                        <p class="logged-in-text">Du bist eingeloggt als <strong id="loggedInUsername">-</strong>.</p>
+                        <p class="logged-in-text">You are logged in as <strong id="loggedInUsername">-</strong>.</p>
                         <button type="button" id="logoutButton">Logout</button>
                     </div>
                 </div>
@@ -297,8 +298,8 @@
 
     <div class="modal-overlay" id="userModal" hidden>
         <div class="modal user-modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
-            <button type="button" class="modal-close" data-modal-close="userModal" aria-label="Popup schließen">×</button>
-            <h3 id="userModalTitle">Benutzerprofil</h3>
+            <button type="button" class="modal-close" data-modal-close="userModal" aria-label="Close popup">×</button>
+            <h3 id="userModalTitle">User profile</h3>
 
             <div class="user-modal-layout">
                 <div class="auth-illustration auth-illustration--characters user-avatar-scene" id="userCharacterScene" data-selected-avatar="purple" aria-hidden="true">
@@ -355,14 +356,14 @@
                         <label for="userNameInput">Username</label>
                         <input id="userNameInput" name="displayName" type="text" minlength="2" required>
 
-                        <label>Profil-Figur</label>
+                        <label>Profile avatar</label>
                         <div class="user-avatar-choices" id="userAvatarChoices">
                             <button type="button" class="avatar-choice" data-avatar-choice="purple">Purple</button>
                             <button type="button" class="avatar-choice" data-avatar-choice="orange">Orange</button>
                             <button type="button" class="avatar-choice" data-avatar-choice="black">Black</button>
                             <button type="button" class="avatar-choice" data-avatar-choice="yellow">Yellow</button>
                         </div>
-                        <button type="submit">Speichern</button>
+                        <button type="submit">Save</button>
                     </form>
                 </div>
             </div>
@@ -371,8 +372,10 @@
 
 
 
+    <script src="frontend/js/windowMinSize.js"></script>
     <script type="module" src="frontend/js/cardExpansion.js"></script>
     <script type="module" src="frontend/js/cardContent.js"></script>
+    <script src="frontend/js/profileFigures.js"></script>
     <script src="frontend/js/profile.js"></script>
     <script src="frontend/js/hotkeys.js"></script>
 </body>

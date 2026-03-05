@@ -12,10 +12,10 @@
     width: 100%;
     position: relative;
     z-index: 999;
-    padding: var(--spacing-lg) clamp(18px, 2vw, 32px);
+    padding: clamp(8px, calc(24px * var(--app-density)), 24px) clamp(10px, calc(26px * var(--app-density)), 32px);
     background: transparent;
     pointer-events: none;
-    gap: var(--spacing-xl);
+    gap: clamp(8px, calc(20px * var(--app-density)), 32px);
 }
 
 /* ============================
@@ -25,7 +25,7 @@
 .navbar-logo {
     flex: 0 0 auto;
     border-radius: var(--radius-sm);
-    height: 38px;
+    height: clamp(26px, calc(38px * var(--app-density)), 38px);
     display: flex;
     align-items: center;
     pointer-events: auto;
@@ -36,7 +36,7 @@
     text-decoration: none;
     font-weight: var(--font-weight-semibold);
     transition: color var(--transition-fast);
-    font-size: var(--font-size-md);
+    font-size: clamp(0.74rem, calc(var(--font-size-md) * var(--app-density)), var(--font-size-md));
     line-height: var(--line-height-tight);
     font-family: var(--font-family-mono), monospace;
     text-transform: uppercase;
@@ -56,16 +56,16 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-lg);
+    gap: clamp(6px, calc(16px * var(--app-density)), 24px);
     flex: 1 0 auto;
     pointer-events: auto;
 }
 
 .nav-bar-links {
     position: relative;
-    padding: 10px var(--spacing-md);
+    padding: clamp(4px, calc(10px * var(--app-density)), 10px) clamp(6px, calc(16px * var(--app-density)), 16px);
     color: var(--color-text);
-    font-size: var(--font-size-sm);
+    font-size: clamp(0.62rem, calc(var(--font-size-sm) * var(--app-density)), var(--font-size-sm));
     line-height: var(--line-height-normal);
     letter-spacing: var(--letter-spacing-wide);
     font-family: var(--font-family-mono), monospace;
@@ -79,8 +79,8 @@
 
 .nav-button__hotkey {
     display: inline-block;
-    margin-right: var(--spacing-xs);
-    font-size: var(--font-size-xs);
+    margin-right: clamp(2px, calc(6px * var(--app-density)), 6px);
+    font-size: clamp(0.54rem, calc(var(--font-size-xs) * var(--app-density)), var(--font-size-xs));
     opacity: 0.6;
 }
 
@@ -117,7 +117,7 @@
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: clamp(6px, calc(12px * var(--app-density)), 16px);
     pointer-events: auto;
 }
 
@@ -162,13 +162,13 @@
 }
 
 .profile-image {
-    width: 40px;
-    height: 40px;
+    width: clamp(28px, calc(40px * var(--app-density)), 40px);
+    height: clamp(28px, calc(40px * var(--app-density)), 40px);
 }
 
 .fingerprint-image {
-    width: 32px;
-    height: 32px;
+    width: clamp(22px, calc(32px * var(--app-density)), 32px);
+    height: clamp(22px, calc(32px * var(--app-density)), 32px);
 }
 
 .profile-image:hover,

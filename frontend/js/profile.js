@@ -74,146 +74,24 @@
     const MODAL_CLOSE_MS = 600;
     const MODAL_CLOSE_EASE = 'cubic-bezier(0.0, 0.0, 0.2, 1)';
     const NAV_ACTIVE_CLASS = 'is-active';
-    const LOGIN_CHARACTER_ERROR_MS = 720;
-    const LOGIN_CHARACTER_SUCCESS_MS = 640;
-    const LOGIN_CHARACTER_PASSWORD_LOOK = {
-        x: 0.24,
-        y: 0.28,
-    };
     const REGISTER_USERNAME_MIN_LEN = 3;
-    const CHARACTER_SCENE_BASE_EDGE = 500;
-    const CHARACTER_SCENE_SCALE_MIN = 0.72;
-    const CHARACTER_SCENE_SCALE_MAX = 1.35;
 
     const authUi = {
         mode: 'login',
         usernameCheckRequestId: 0,
         registerUsernameFocused: false,
-        usernameTakenReactionTimerId: 0,
     };
 
-    const loginCharacter = {
-        scene: elements.loginCharacterScene,
-        cluster: elements.loginCharacterFigure,
-        chars: [],
-        hasFigure: false,
-        motionScale: 1,
-        rafId: 0,
-        pointer: {
-            x: window.innerWidth * 0.5,
-            y: window.innerHeight * 0.5,
-            inside: false,
-        },
-        reactionTimerId: 0,
-        blinkTimerId: 0,
-        isPasswordMode: false,
-        isReactionLocked: false,
-    };
-
-    const userCharacter = {
-        scene: elements.userCharacterScene,
-        cluster: elements.userCharacterFigure,
-        chars: [],
-        hasFigure: false,
-        motionScale: 1,
-        rafId: 0,
-        pointer: {
-            x: window.innerWidth * 0.5,
-            y: window.innerHeight * 0.5,
-            inside: false,
-        },
-        blinkTimerId: 0,
-    };
-
-    if (loginCharacter.scene) {
-        const characters = Array.from(loginCharacter.scene.querySelectorAll('.character'));
-        loginCharacter.chars = characters.map((character) => {
-            const toNumber = (value, fallback = 0) => {
-                const number = Number.parseFloat(value);
-                return Number.isFinite(number) ? number : fallback;
-            };
-
-            return {
-                el: character,
-                body: character.querySelector('.body'),
-                trackers: Array.from(character.querySelectorAll('.tracker')),
-                cfg: {
-                    move: toNumber(character.dataset.move),
-                    rotate: toNumber(character.dataset.rotate),
-                    skew: toNumber(character.dataset.skew),
-                    lift: toNumber(character.dataset.lift),
-                    pupil: toNumber(character.dataset.pupil, 1.8),
-                },
-                state: {
-                    tx: 0,
-                    ty: 0,
-                    rot: 0,
-                    skew: 0,
-                },
-            };
-        });
-    }
-
-    loginCharacter.hasFigure = Boolean(
-        loginCharacter.scene &&
-        loginCharacter.cluster &&
-        loginCharacter.chars.length
-    );
-
-    if (userCharacter.scene) {
-        const characters = Array.from(userCharacter.scene.querySelectorAll('.character'));
-        userCharacter.chars = characters.map((character) => {
-            const toNumber = (value, fallback = 0) => {
-                const number = Number.parseFloat(value);
-                return Number.isFinite(number) ? number : fallback;
-            };
-
-            return {
-                el: character,
-                body: character.querySelector('.body'),
-                trackers: Array.from(character.querySelectorAll('.tracker')),
-                cfg: {
-                    move: toNumber(character.dataset.move),
-                    rotate: toNumber(character.dataset.rotate),
-                    skew: toNumber(character.dataset.skew),
-                    lift: toNumber(character.dataset.lift),
-                    pupil: toNumber(character.dataset.pupil, 1.8),
-                },
-                state: {
-                    tx: 0,
-                    ty: 0,
-                    rot: 0,
-                    skew: 0,
-                },
-            };
-        });
-    }
-
-    userCharacter.hasFigure = Boolean(
-        userCharacter.scene &&
-        userCharacter.cluster &&
-        userCharacter.chars.length
-    );
-
-    const characterSceneResizeObserver = typeof window.ResizeObserver === 'function'
-        ? new window.ResizeObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.target === loginCharacter.scene) {
-                    syncCharacterSceneScale(loginCharacter);
-                    return;
-                }
-
-                if (entry.target === userCharacter.scene) {
-                    syncCharacterSceneScale(userCharacter);
-                }
-            });
+    const profileFigures = typeof window.createProfileFiguresController === 'function'
+        ? window.createProfileFiguresController({
+            loginScene: elements.loginCharacterScene,
+            loginCluster: elements.loginCharacterFigure,
+            userScene: elements.userCharacterScene,
+            userCluster: elements.userCharacterFigure,
+            isLoginModalOpen: () => isModalOpen(elements.loginModal),
+            isUserModalOpen: () => isModalOpen(elements.userModal),
         })
         : null;
-
-    if (characterSceneResizeObserver) {
-        if (loginCharacter.scene) characterSceneResizeObserver.observe(loginCharacter.scene);
-        if (userCharacter.scene) characterSceneResizeObserver.observe(userCharacter.scene);
-    }
 
     function createHttpError(message, status = 400) {
         const error = new Error(message);
@@ -258,7 +136,7 @@
     function createDefaultProfile() {
         const now = new Date().toISOString();
         return {
-            username: 'Gast',
+            username: 'Guest',
             avatar: 'purple',
             data: {},
             createdAt: now,
@@ -365,46 +243,29 @@
 
         if (!elements.registerUsernameCheck) return;
         let label = 'Check';
-        if (type === 'pending') label = 'Pruefe';
+        if (type === 'pending') label = 'Checking';
         if (type === 'success') label = 'OK';
-        if (type === 'error') label = 'Belegt';
-        if (type === 'short') label = 'Kurz';
+        if (type === 'error') label = 'Taken';
+        if (type === 'short') label = 'Short';
 
         elements.registerUsernameCheck.textContent = label;
         elements.registerUsernameCheck.className = `username-check${type ? ` is-${type}` : ''}`;
     }
 
-    function clearRegisterUsernameTakenReactionTimer() {
-        if (!authUi.usernameTakenReactionTimerId) return;
-        window.clearTimeout(authUi.usernameTakenReactionTimerId);
-        authUi.usernameTakenReactionTimerId = 0;
-    }
-
     function clearRegisterUsernameTakenReaction() {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        clearRegisterUsernameTakenReactionTimer();
-        loginCharacter.scene.classList.remove('is-register-username-taken');
+        profileFigures?.clearRegisterUsernameTakenReaction();
     }
 
     function triggerRegisterUsernameTakenReaction() {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        clearRegisterUsernameTakenReactionTimer();
-        loginCharacter.scene.classList.remove('is-register-username-taken');
-        loginCharacter.scene.offsetWidth;
-        loginCharacter.scene.classList.add('is-register-username-taken');
-        authUi.usernameTakenReactionTimerId = window.setTimeout(() => {
-            loginCharacter.scene?.classList.remove('is-register-username-taken');
-            authUi.usernameTakenReactionTimerId = 0;
-        }, 520);
+        profileFigures?.triggerRegisterUsernameTakenReaction();
     }
 
     function setLoginCharacterNodState(isActive) {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
         const shouldShow = Boolean(isActive)
             && authUi.mode === 'register'
             && !isLoggedIn()
             && authUi.registerUsernameFocused;
-        loginCharacter.scene.classList.toggle('is-register-username-ok', shouldShow);
+        profileFigures?.setRegisterUsernameOkState(shouldShow);
     }
 
     function applyAuthCardVisibility() {
@@ -455,13 +316,13 @@
         const requestId = authUi.usernameCheckRequestId;
 
         if (username.length < REGISTER_USERNAME_MIN_LEN) {
-            setRegisterUsernameHint(username ? `Mindestens ${REGISTER_USERNAME_MIN_LEN} Zeichen` : '');
+            setRegisterUsernameHint(username ? `At least ${REGISTER_USERNAME_MIN_LEN} characters` : '');
             setLoginCharacterNodState(false);
             clearRegisterUsernameTakenReaction();
             return;
         }
 
-        setRegisterUsernameHint('Pruefe Username...');
+        setRegisterUsernameHint('Checking username...');
         setLoginCharacterNodState(false);
         clearRegisterUsernameTakenReaction();
 
@@ -472,13 +333,13 @@
         if (latestValue !== username) return;
 
         if (available) {
-            setRegisterUsernameHint('Username ist verfuegbar', 'success');
+            setRegisterUsernameHint('Username is available', 'success');
             setLoginCharacterNodState(true);
             clearRegisterUsernameTakenReaction();
             return;
         }
 
-        setRegisterUsernameHint('Username bereits vergeben', 'error');
+        setRegisterUsernameHint('Username is already taken', 'error');
         setLoginCharacterNodState(false);
         triggerRegisterUsernameTakenReaction();
     }
@@ -522,7 +383,7 @@
             const user = findLocalUser(users, username);
 
             if (!user || user.password !== password) {
-                throw createHttpError('Ungültige Zugangsdaten', 401);
+                throw createHttpError('Invalid credentials', 401);
             }
 
             setLocalSession(user.username);
@@ -534,15 +395,15 @@
             const password = body?.password || '';
 
             if (username.length < 3) {
-                throw createHttpError('Username muss mindestens 3 Zeichen haben', 400);
+                throw createHttpError('Username must be at least 3 characters', 400);
             }
 
             if (password.length < 8) {
-                throw createHttpError('Passwort muss mindestens 8 Zeichen haben', 400);
+                throw createHttpError('Password must be at least 8 characters', 400);
             }
 
             if (findLocalUser(users, username)) {
-                throw createHttpError('Username bereits vergeben', 409);
+                throw createHttpError('Username is already taken', 409);
             }
 
             const newUser = {
@@ -567,7 +428,7 @@
         if (path === '/api/me/data' && upperMethod === 'PUT') {
             const currentUser = getSessionUser(users);
             if (!currentUser) {
-                throw createHttpError('Bitte zuerst einloggen', 401);
+                throw createHttpError('Please log in first', 401);
             }
 
             currentUser.data = body?.data && typeof body.data === 'object' ? body.data : {};
@@ -577,7 +438,7 @@
             return { user: toPublicUser(currentUser) };
         }
 
-        throw createHttpError('Aktion nicht verfügbar', 404);
+        throw createHttpError('Action not available', 404);
     }
 
     function setStateMessage(target, text, type = '') {
@@ -586,218 +447,23 @@
         target.className = `modal-state${type ? ` is-${type}` : ''}`;
     }
 
-    function getErrorMessage(error, fallback = 'Unbekannter Fehler') {
+    function getErrorMessage(error, fallback = 'Unknown error') {
         if (error instanceof Error && error.message) {
             return error.message;
         }
         return fallback;
     }
 
-    function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
-
-    function lerp(start, end, amount) {
-        return start + ((end - start) * amount);
-    }
-
-    function getCharacterSceneScale(scene) {
-        if (!scene) return 1;
-        const rect = scene.getBoundingClientRect();
-        if (!rect.width || !rect.height) return 1;
-        const sceneEdge = Math.min(rect.width, rect.height);
-        const rawScale = sceneEdge / CHARACTER_SCENE_BASE_EDGE;
-        return clamp(rawScale, CHARACTER_SCENE_SCALE_MIN, CHARACTER_SCENE_SCALE_MAX);
-    }
-
-    function syncCharacterSceneScale(characterState) {
-        if (!characterState?.scene) return 1;
-        const scale = getCharacterSceneScale(characterState.scene);
-        characterState.motionScale = scale;
-        characterState.scene.style.setProperty('--character-scene-scale', scale.toFixed(4));
-        return scale;
-    }
-
-    function clearLoginCharacterRaf() {
-        if (!loginCharacter.rafId) return;
-        window.cancelAnimationFrame(loginCharacter.rafId);
-        loginCharacter.rafId = 0;
-    }
-
-    function clearLoginCharacterBlinkTimer() {
-        if (!loginCharacter.blinkTimerId) return;
-        window.clearTimeout(loginCharacter.blinkTimerId);
-        loginCharacter.blinkTimerId = 0;
-    }
-
-    function clearLoginCharacterReactionTimer() {
-        if (!loginCharacter.reactionTimerId) return;
-        window.clearTimeout(loginCharacter.reactionTimerId);
-        loginCharacter.reactionTimerId = 0;
-    }
-
-    function setLoginCharacterConcernedState() {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        const concerned = loginCharacter.isPasswordMode;
-        loginCharacter.scene.classList.toggle('concerned', concerned);
+    function syncFigureSceneScales() {
+        profileFigures?.syncScales();
     }
 
     function centerLoginCharacterPointer() {
-        if (!loginCharacter.scene) return;
-        const rect = loginCharacter.scene.getBoundingClientRect();
-        if (!rect.width || !rect.height) {
-            loginCharacter.pointer.x = window.innerWidth * 0.5;
-            loginCharacter.pointer.y = window.innerHeight * 0.5;
-            loginCharacter.pointer.inside = false;
-            return;
-        }
-
-        loginCharacter.pointer.x = rect.left + (rect.width * 0.5);
-        loginCharacter.pointer.y = rect.top + (rect.height * 0.5);
-        loginCharacter.pointer.inside = false;
-    }
-
-    function clearLoginCharacterReactionClasses() {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        loginCharacter.scene.classList.remove('is-error', 'is-success', 'is-shaking');
-    }
-
-    function getLoginCharacterPointerTarget() {
-        const sceneRect = loginCharacter.scene?.getBoundingClientRect();
-        if (!sceneRect || !sceneRect.width || !sceneRect.height) {
-            return {
-                x: loginCharacter.pointer.x,
-                y: loginCharacter.pointer.y,
-            };
-        }
-
-        if (loginCharacter.isPasswordMode) {
-            return {
-                x: sceneRect.left + (sceneRect.width * LOGIN_CHARACTER_PASSWORD_LOOK.x),
-                y: sceneRect.top + (sceneRect.height * LOGIN_CHARACTER_PASSWORD_LOOK.y),
-            };
-        }
-
-        if (loginCharacter.isReactionLocked) {
-            return {
-                x: sceneRect.left + (sceneRect.width * 0.5),
-                y: sceneRect.top + (sceneRect.height * 0.42),
-            };
-        }
-
-        if (loginCharacter.pointer.inside) {
-            return {
-                x: loginCharacter.pointer.x,
-                y: loginCharacter.pointer.y,
-            };
-        }
-
-        return {
-            x: sceneRect.left + (sceneRect.width * 0.5),
-            y: sceneRect.top + (sceneRect.height * 0.48),
-        };
-    }
-
-    function updateLoginCharacterTrackers(character, pointerTarget) {
-        const motionScale = loginCharacter.motionScale || 1;
-        character.trackers.forEach((tracker) => {
-            const rect = tracker.getBoundingClientRect();
-            const centerX = rect.left + (rect.width * 0.5);
-            const centerY = rect.top + (rect.height * 0.5);
-
-            const dx = pointerTarget.x - centerX;
-            const dy = pointerTarget.y - centerY;
-            const distance = Math.hypot(dx, dy) || 1;
-            const maxMove = tracker.classList.contains('white')
-                ? character.cfg.pupil * motionScale
-                : Math.min(character.cfg.pupil, 1.8) * motionScale;
-            const reach = Math.min(maxMove, distance * 0.12);
-
-            tracker.style.setProperty('--px', `${(dx / distance) * reach}px`);
-            tracker.style.setProperty('--py', `${(dy / distance) * reach}px`);
-        });
-    }
-
-    function updateLoginCharacterBodies(time, pointerTarget) {
-        const sceneRect = loginCharacter.scene?.getBoundingClientRect();
-        if (!sceneRect || !sceneRect.width || !sceneRect.height) return;
-        const motionScale = loginCharacter.motionScale || 1;
-
-        const centerX = sceneRect.left + (sceneRect.width * 0.5);
-        const centerY = sceneRect.top + (sceneRect.height * 0.55);
-
-        const normalizedX = clamp((pointerTarget.x - centerX) / (sceneRect.width * 0.5), -1, 1);
-        const normalizedY = clamp((pointerTarget.y - centerY) / (sceneRect.height * 0.5), -1, 1);
-
-        loginCharacter.chars.forEach((character, index) => {
-            const wobble = Math.sin((time * 0.0018) + (index * 0.9)) * 0.25;
-
-            const targetTx = normalizedX * character.cfg.move * motionScale;
-            const targetTy = ((-Math.abs(normalizedY) * character.cfg.lift) + (loginCharacter.isPasswordMode ? 3 : 0)) * motionScale;
-            const targetRot = (normalizedX * character.cfg.rotate) + wobble;
-            const targetSkew = normalizedX * character.cfg.skew;
-
-            character.state.tx = lerp(character.state.tx, targetTx, 0.14);
-            character.state.ty = lerp(character.state.ty, targetTy, 0.14);
-            character.state.rot = lerp(character.state.rot, targetRot, 0.14);
-            character.state.skew = lerp(character.state.skew, targetSkew, 0.14);
-
-            character.el.style.transform = `translate3d(${character.state.tx}px, ${character.state.ty}px, 0) rotate(${character.state.rot}deg)`;
-
-            if (character.body) {
-                const squash = loginCharacter.isPasswordMode ? 0.965 : 1;
-                character.body.style.transform = `skewX(${character.state.skew}deg) scaleY(${squash})`;
-            }
-        });
-    }
-
-    function renderLoginCharacterFrame(time) {
-        loginCharacter.rafId = 0;
-        if (!loginCharacter.hasFigure) return;
-        if (!isModalOpen(elements.loginModal)) return;
-
-        const pointerTarget = getLoginCharacterPointerTarget();
-        updateLoginCharacterBodies(time, pointerTarget);
-        loginCharacter.chars.forEach((character) => updateLoginCharacterTrackers(character, pointerTarget));
-
-        loginCharacter.rafId = window.requestAnimationFrame(renderLoginCharacterFrame);
+        profileFigures?.centerLoginPointer();
     }
 
     function startLoginCharacterAnimation() {
-        if (!loginCharacter.hasFigure) return;
-        if (!isModalOpen(elements.loginModal)) return;
-
-        if (!loginCharacter.rafId) {
-            loginCharacter.rafId = window.requestAnimationFrame(renderLoginCharacterFrame);
-        }
-
-        if (!loginCharacter.blinkTimerId) {
-            loginCharacter.blinkTimerId = window.setTimeout(runLoginCharacterBlinkSequence, 900);
-        }
-    }
-
-    function runLoginCharacterBlinkSequence() {
-        loginCharacter.blinkTimerId = 0;
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        if (!isModalOpen(elements.loginModal)) return;
-
-        const order = ['purple', 'black', 'yellow', 'orange'];
-        const nodes = order
-            .map((name) => loginCharacter.scene.querySelector(`.character.${name}`))
-            .filter((node) => node instanceof Element);
-
-        nodes.forEach((node, index) => {
-            window.setTimeout(() => node.classList.add('blink'), index * 45);
-        });
-
-        window.setTimeout(() => {
-            nodes.forEach((node, index) => {
-                window.setTimeout(() => node.classList.remove('blink'), index * 35);
-            });
-        }, 120);
-
-        const nextBlinkInMs = 1800 + (Math.random() * 2400);
-        loginCharacter.blinkTimerId = window.setTimeout(runLoginCharacterBlinkSequence, nextBlinkInMs);
+        profileFigures?.startLoginAnimation();
     }
 
     function setLoginPasswordVisibility(isVisible, options = {}) {
@@ -807,10 +473,10 @@
 
         elements.loginPassword.type = visible ? 'text' : 'password';
         elements.loginPasswordToggle?.setAttribute('aria-pressed', String(visible));
-        elements.loginPasswordToggle?.setAttribute('aria-label', visible ? 'Passwort verbergen' : 'Passwort anzeigen');
+        elements.loginPasswordToggle?.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
 
         if (elements.loginPasswordToggle) {
-            elements.loginPasswordToggle.textContent = visible ? 'Verbergen' : 'Anzeigen';
+            elements.loginPasswordToggle.textContent = visible ? 'Hide' : 'Show';
         }
 
         setLoginCharacterPasswordMode(visible);
@@ -828,270 +494,43 @@
     }
 
     function setLoginCharacterPasswordMode(isActive) {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        loginCharacter.isPasswordMode = Boolean(isActive);
-        loginCharacter.scene.classList.toggle('is-password-mode', loginCharacter.isPasswordMode);
-        setLoginCharacterConcernedState();
-        startLoginCharacterAnimation();
-    }
-
-    function finishLoginCharacterReaction() {
-        if (!loginCharacter.hasFigure) return;
-        clearLoginCharacterReactionTimer();
-        clearLoginCharacterReactionClasses();
-        loginCharacter.isReactionLocked = false;
-        setLoginCharacterConcernedState();
-        startLoginCharacterAnimation();
+        profileFigures?.setLoginPasswordMode(isActive);
     }
 
     function triggerLoginCharacterReaction(type) {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-
-        clearLoginCharacterReactionTimer();
-        clearLoginCharacterReactionClasses();
-        loginCharacter.isReactionLocked = true;
-        setLoginCharacterConcernedState();
-
-        if (type === 'error') {
-            loginCharacter.scene.classList.add('is-error', 'is-shaking');
-            loginCharacter.reactionTimerId = window.setTimeout(finishLoginCharacterReaction, LOGIN_CHARACTER_ERROR_MS);
-            startLoginCharacterAnimation();
-            return;
-        }
-
-        if (type === 'success') {
-            loginCharacter.isPasswordMode = false;
-            loginCharacter.scene.classList.remove('is-password-mode');
-            loginCharacter.scene.classList.add('is-success');
-            setLoginCharacterConcernedState();
-            loginCharacter.reactionTimerId = window.setTimeout(finishLoginCharacterReaction, LOGIN_CHARACTER_SUCCESS_MS);
-            startLoginCharacterAnimation();
-        }
+        profileFigures?.triggerLoginReaction(type);
     }
 
     function resetLoginCharacterState() {
-        if (!loginCharacter.hasFigure || !loginCharacter.scene) return;
-        clearLoginCharacterRaf();
-        clearLoginCharacterReactionTimer();
-        clearLoginCharacterBlinkTimer();
-        clearLoginCharacterReactionClasses();
-        loginCharacter.isPasswordMode = false;
-        loginCharacter.isReactionLocked = false;
-        loginCharacter.scene.classList.remove('is-password-mode', 'concerned', 'is-register-username-ok', 'is-register-username-taken');
-        centerLoginCharacterPointer();
-
-        loginCharacter.chars.forEach((character) => {
-            character.state.tx = 0;
-            character.state.ty = 0;
-            character.state.rot = 0;
-            character.state.skew = 0;
-            character.el.style.transform = '';
-            if (character.body) {
-                character.body.style.transform = '';
-            }
-            character.trackers.forEach((tracker) => {
-                tracker.style.setProperty('--px', '0px');
-                tracker.style.setProperty('--py', '0px');
-                tracker.classList.remove('blink');
-            });
-        });
+        profileFigures?.resetLoginState();
     }
 
     function handleLoginModalPointerMove(event) {
-        if (!loginCharacter.hasFigure) return;
-        if (event.pointerType === 'touch') return;
-        loginCharacter.pointer.x = event.clientX;
-        loginCharacter.pointer.y = event.clientY;
-        loginCharacter.pointer.inside = true;
-        startLoginCharacterAnimation();
+        profileFigures?.handleLoginPointerMove(event);
     }
 
     function handleLoginModalPointerLeave() {
-        if (!loginCharacter.hasFigure) return;
-        if (loginCharacter.isPasswordMode) return;
-        centerLoginCharacterPointer();
+        profileFigures?.handleLoginPointerLeave();
     }
 
     function centerUserCharacterPointer() {
-        if (!userCharacter.scene) return;
-        const rect = userCharacter.scene.getBoundingClientRect();
-        if (!rect.width || !rect.height) {
-            userCharacter.pointer.x = window.innerWidth * 0.5;
-            userCharacter.pointer.y = window.innerHeight * 0.5;
-            userCharacter.pointer.inside = false;
-            return;
-        }
-
-        userCharacter.pointer.x = rect.left + (rect.width * 0.5);
-        userCharacter.pointer.y = rect.top + (rect.height * 0.5);
-        userCharacter.pointer.inside = false;
-    }
-
-    function getUserCharacterPointerTarget() {
-        const sceneRect = userCharacter.scene?.getBoundingClientRect();
-        if (!sceneRect || !sceneRect.width || !sceneRect.height) {
-            return {
-                x: userCharacter.pointer.x,
-                y: userCharacter.pointer.y,
-            };
-        }
-
-        if (userCharacter.pointer.inside) {
-            return {
-                x: userCharacter.pointer.x,
-                y: userCharacter.pointer.y,
-            };
-        }
-
-        return {
-            x: sceneRect.left + (sceneRect.width * 0.5),
-            y: sceneRect.top + (sceneRect.height * 0.48),
-        };
-    }
-
-    function updateUserCharacterTrackers(character, pointerTarget) {
-        const motionScale = userCharacter.motionScale || 1;
-        character.trackers.forEach((tracker) => {
-            const rect = tracker.getBoundingClientRect();
-            const centerX = rect.left + (rect.width * 0.5);
-            const centerY = rect.top + (rect.height * 0.5);
-
-            const dx = pointerTarget.x - centerX;
-            const dy = pointerTarget.y - centerY;
-            const distance = Math.hypot(dx, dy) || 1;
-            const maxMove = tracker.classList.contains('white')
-                ? character.cfg.pupil * motionScale
-                : Math.min(character.cfg.pupil, 1.8) * motionScale;
-            const reach = Math.min(maxMove, distance * 0.12);
-
-            tracker.style.setProperty('--px', `${(dx / distance) * reach}px`);
-            tracker.style.setProperty('--py', `${(dy / distance) * reach}px`);
-        });
-    }
-
-    function updateUserCharacterBodies(time, pointerTarget) {
-        const sceneRect = userCharacter.scene?.getBoundingClientRect();
-        if (!sceneRect || !sceneRect.width || !sceneRect.height) return;
-        const motionScale = userCharacter.motionScale || 1;
-
-        const centerX = sceneRect.left + (sceneRect.width * 0.5);
-        const centerY = sceneRect.top + (sceneRect.height * 0.55);
-
-        const normalizedX = clamp((pointerTarget.x - centerX) / (sceneRect.width * 0.5), -1, 1);
-        const normalizedY = clamp((pointerTarget.y - centerY) / (sceneRect.height * 0.5), -1, 1);
-
-        userCharacter.chars.forEach((character, index) => {
-            const wobble = Math.sin((time * 0.0018) + (index * 0.9)) * 0.25;
-
-            const targetTx = normalizedX * character.cfg.move * motionScale;
-            const targetTy = -Math.abs(normalizedY) * character.cfg.lift * motionScale;
-            const targetRot = (normalizedX * character.cfg.rotate) + wobble;
-            const targetSkew = normalizedX * character.cfg.skew;
-
-            character.state.tx = lerp(character.state.tx, targetTx, 0.14);
-            character.state.ty = lerp(character.state.ty, targetTy, 0.14);
-            character.state.rot = lerp(character.state.rot, targetRot, 0.14);
-            character.state.skew = lerp(character.state.skew, targetSkew, 0.14);
-
-            character.el.style.transform = `translate3d(${character.state.tx}px, ${character.state.ty}px, 0) rotate(${character.state.rot}deg)`;
-
-            if (character.body) {
-                character.body.style.transform = `skewX(${character.state.skew}deg)`;
-            }
-        });
-    }
-
-    function renderUserCharacterFrame(time) {
-        userCharacter.rafId = 0;
-        if (!userCharacter.hasFigure) return;
-        if (!isModalOpen(elements.userModal)) return;
-
-        const pointerTarget = getUserCharacterPointerTarget();
-        updateUserCharacterBodies(time, pointerTarget);
-        userCharacter.chars.forEach((character) => updateUserCharacterTrackers(character, pointerTarget));
-
-        userCharacter.rafId = window.requestAnimationFrame(renderUserCharacterFrame);
+        profileFigures?.centerUserPointer();
     }
 
     function startUserCharacterAnimation() {
-        if (!userCharacter.hasFigure) return;
-        if (!isModalOpen(elements.userModal)) return;
-
-        if (!userCharacter.rafId) {
-            userCharacter.rafId = window.requestAnimationFrame(renderUserCharacterFrame);
-        }
-
-        if (!userCharacter.blinkTimerId) {
-            userCharacter.blinkTimerId = window.setTimeout(runUserCharacterBlinkSequence, 900);
-        }
-    }
-
-    function runUserCharacterBlinkSequence() {
-        userCharacter.blinkTimerId = 0;
-        if (!userCharacter.hasFigure || !userCharacter.scene) return;
-        if (!isModalOpen(elements.userModal)) return;
-
-        const order = ['purple', 'black', 'yellow', 'orange'];
-        const nodes = order
-            .map((name) => userCharacter.scene.querySelector(`.character.${name}`))
-            .filter((node) => node instanceof Element);
-
-        nodes.forEach((node, index) => {
-            window.setTimeout(() => node.classList.add('blink'), index * 45);
-        });
-
-        window.setTimeout(() => {
-            nodes.forEach((node, index) => {
-                window.setTimeout(() => node.classList.remove('blink'), index * 35);
-            });
-        }, 120);
-
-        const nextBlinkInMs = 1800 + (Math.random() * 2400);
-        userCharacter.blinkTimerId = window.setTimeout(runUserCharacterBlinkSequence, nextBlinkInMs);
+        profileFigures?.startUserAnimation();
     }
 
     function resetUserCharacterState() {
-        if (!userCharacter.hasFigure || !userCharacter.scene) return;
-
-        if (userCharacter.rafId) {
-            window.cancelAnimationFrame(userCharacter.rafId);
-            userCharacter.rafId = 0;
-        }
-        if (userCharacter.blinkTimerId) {
-            window.clearTimeout(userCharacter.blinkTimerId);
-            userCharacter.blinkTimerId = 0;
-        }
-
-        centerUserCharacterPointer();
-        userCharacter.chars.forEach((character) => {
-            character.state.tx = 0;
-            character.state.ty = 0;
-            character.state.rot = 0;
-            character.state.skew = 0;
-            character.el.style.transform = '';
-            if (character.body) {
-                character.body.style.transform = '';
-            }
-            character.trackers.forEach((tracker) => {
-                tracker.style.setProperty('--px', '0px');
-                tracker.style.setProperty('--py', '0px');
-                tracker.classList.remove('blink');
-            });
-        });
+        profileFigures?.resetUserState();
     }
 
     function handleUserModalPointerMove(event) {
-        if (!userCharacter.hasFigure) return;
-        if (event.pointerType === 'touch') return;
-        userCharacter.pointer.x = event.clientX;
-        userCharacter.pointer.y = event.clientY;
-        userCharacter.pointer.inside = true;
-        startUserCharacterAnimation();
+        profileFigures?.handleUserPointerMove(event);
     }
 
     function handleUserModalPointerLeave() {
-        if (!userCharacter.hasFigure) return;
-        centerUserCharacterPointer();
+        profileFigures?.handleUserPointerLeave();
     }
 
     function anyModalOpen() {
@@ -1320,12 +759,7 @@
             if (!modalOverlay.hidden) {
                 modalCard.style.transition = '';
             }
-            if (modalOverlay === elements.loginModal) {
-                syncCharacterSceneScale(loginCharacter);
-            }
-            if (modalOverlay === elements.userModal) {
-                syncCharacterSceneScale(userCharacter);
-            }
+            syncFigureSceneScales();
             delete modalOverlay._openAnimationTimeoutId;
         }, MODAL_EXPAND_MS);
     }
@@ -1441,8 +875,7 @@
             if (!modal || modal.hidden) return;
             applyModalGridLayout(modal);
         });
-        syncCharacterSceneScale(loginCharacter);
-        syncCharacterSceneScale(userCharacter);
+        syncFigureSceneScales();
     }
 
     function openModal(modal, origin, options = {}) {
@@ -1465,12 +898,7 @@
                 modalCard.style.opacity = '1';
             }
         }
-        if (modal === elements.loginModal) {
-            syncCharacterSceneScale(loginCharacter);
-        }
-        if (modal === elements.userModal) {
-            syncCharacterSceneScale(userCharacter);
-        }
+        syncFigureSceneScales();
         document.body.classList.add('modal-open');
         return Promise.resolve(true);
     }
@@ -1534,9 +962,9 @@
 
     function updateTooltips() {
         const loggedIn = isLoggedIn();
-        const profileName = normalizeUsername(state.profile?.username) || (loggedIn ? state.user?.username : '') || 'Gast';
+        const profileName = normalizeUsername(state.profile?.username) || (loggedIn ? state.user?.username : '') || 'Guest';
         if (elements.profileTooltip) {
-            elements.profileTooltip.textContent = `Profil: ${profileName}`;
+            elements.profileTooltip.textContent = `Profile: ${profileName}`;
         }
         if (elements.fingerprintTooltip) {
             elements.fingerprintTooltip.textContent = loggedIn ? 'Account' : 'Login';
@@ -1580,7 +1008,7 @@
 
     function handleUserNameInput() {
         if (!elements.userNameInput || !elements.userNameValue) return;
-        const value = normalizeUsername(elements.userNameInput.value) || 'Gast';
+        const value = normalizeUsername(elements.userNameInput.value) || 'Guest';
         elements.userNameValue.textContent = value;
         if (state.profile) {
             state.profile.username = value;
@@ -1624,7 +1052,7 @@
         const currentProfileName = normalizeUsername(state.profile.username);
         if (!authName) return;
 
-        if (!currentProfileName || currentProfileName === 'Gast') {
+        if (!currentProfileName || currentProfileName === 'Guest') {
             state.profile.username = authName;
             state.profile.updatedAt = new Date().toISOString();
             saveProfile();
@@ -1675,7 +1103,7 @@
             state.user = payload.user;
             syncProfileUsernameFromAuth();
             syncUi();
-            setStateMessage(elements.loginState, 'Login erfolgreich', 'success');
+            setStateMessage(elements.loginState, 'Login successful', 'success');
             triggerLoginCharacterReaction('success');
             await new Promise((resolve) => window.setTimeout(resolve, 220));
             setLoginPasswordVisibility(false);
@@ -1699,15 +1127,15 @@
         const passwordConfirm = form.passwordConfirm.value;
 
         if (password !== passwordConfirm) {
-            setStateMessage(elements.registerState, 'Passwörter stimmen nicht überein', 'error');
+            setStateMessage(elements.registerState, 'Passwords do not match', 'error');
             return;
         }
 
         const usernameAvailable = await checkRegisterUsernameAvailability(username);
         if (usernameAvailable === false) {
-            setRegisterUsernameHint('Username bereits vergeben', 'error');
+            setRegisterUsernameHint('Username is already taken', 'error');
             setLoginCharacterNodState(false);
-            setStateMessage(elements.registerState, 'Username bereits vergeben', 'error');
+            setStateMessage(elements.registerState, 'Username is already taken', 'error');
             return;
         }
 
@@ -1721,7 +1149,7 @@
             resetRegisterAvailabilityUi();
             setAuthMode('login');
             syncUi();
-            setStateMessage(elements.registerState, 'Registrierung erfolgreich', 'success');
+            setStateMessage(elements.registerState, 'Registration successful', 'success');
             await closeModal(elements.loginModal);
             form.reset();
         } catch (error) {
@@ -1737,7 +1165,7 @@
             await apiRequest('/api/logout', { method: 'POST' });
             state.user = null;
             syncUi();
-            setStateMessage(elements.loginState, 'Logout erfolgreich', 'success');
+            setStateMessage(elements.loginState, 'Logout successful', 'success');
             closeModal(elements.loginModal);
             closeModal(elements.userModal);
         } catch (error) {
@@ -1751,7 +1179,7 @@
 
         const username = normalizeUsername(elements.userNameInput?.value);
         if (username.length < 2) {
-            setStateMessage(elements.userState, 'Username muss mindestens 2 Zeichen haben', 'error');
+            setStateMessage(elements.userState, 'Username must be at least 2 characters', 'error');
             return;
         }
 
@@ -1765,7 +1193,7 @@
 
         saveProfile();
         updateUserPanel();
-        setStateMessage(elements.userState, 'Profil gespeichert', 'success');
+        setStateMessage(elements.userState, 'Profile saved', 'success');
     }
 
     async function openLoginModal(origin = elements.fingerprintImage) {
@@ -1799,7 +1227,7 @@
         const originRect = resolveOriginRect(origin);
         if (isLoggedIn()) {
             await openLoginModal(originRect);
-            setStateMessage(elements.loginState, 'Du bist bereits eingeloggt.', 'success');
+            setStateMessage(elements.loginState, 'You are already logged in.', 'success');
             return;
         }
 

@@ -1,0 +1,569 @@
+/* Figure styles extracted from modals.css */
+.user-avatar-scene {
+    --scene-bg: color-mix(in srgb, var(--color-background) 92%, var(--color-background-alt) 8%);
+    min-height: clamp(230px, 34vh, 380px);
+    border-color: color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
+}
+
+.user-avatar-scene .character {
+    cursor: pointer;
+}
+
+.user-avatar-scene[data-selected-avatar] .character {
+    opacity: 0.44;
+    filter: saturate(0.58);
+}
+
+.user-avatar-scene[data-selected-avatar="purple"] .character.purple,
+.user-avatar-scene[data-selected-avatar="orange"] .character.orange,
+.user-avatar-scene[data-selected-avatar="black"] .character.black,
+.user-avatar-scene[data-selected-avatar="yellow"] .character.yellow {
+    opacity: 1;
+    filter: none;
+}
+
+.auth-illustration--characters {
+    --scene-bg: color-mix(in srgb, var(--color-background) 92%, var(--color-background-alt) 8%);
+    --ink: #242535;
+    --purple-a: #9f37ff;
+    --purple-b: #6c00ff;
+    --black-a: #171821;
+    --black-b: #242844;
+    --orange-a: #ffb23f;
+    --orange-b: #ff7d1f;
+    --yellow-a: #ffe74b;
+    --yellow-b: #f4d600;
+    --character-scene-scale: 1;
+    --feature-white-size: calc(22px * var(--character-scene-scale));
+    --feature-dot-size: calc(12px * var(--character-scene-scale));
+    --feature-iris-white-size: calc(10px * var(--character-scene-scale));
+    --feature-iris-dot-size: calc(12px * var(--character-scene-scale));
+    --feature-mouth-line-height: calc(8px * var(--character-scene-scale));
+    --feature-mouth-smile-width: calc(28px * var(--character-scene-scale));
+    --feature-mouth-smile-height: calc(14px * var(--character-scene-scale));
+    --feature-mouth-smile-radius: calc(16px * var(--character-scene-scale));
+    --feature-mouth-smile-border: calc(4px * var(--character-scene-scale));
+    --feature-blink-height: calc(4px * var(--character-scene-scale));
+    --feature-blink-offset: calc(9px * var(--character-scene-scale));
+    --feature-password-blink-height: calc(5px * var(--character-scene-scale));
+    --feature-password-blink-offset: calc(8px * var(--character-scene-scale));
+    --feature-password-dot-width: calc(14px * var(--character-scene-scale));
+    --feature-password-dot-height: calc(4px * var(--character-scene-scale));
+    --feature-password-dot-offset: calc(5px * var(--character-scene-scale));
+    --feature-error-orange-width: calc(24px * var(--character-scene-scale));
+    --feature-error-orange-height: calc(11px * var(--character-scene-scale));
+    --feature-error-orange-radius: calc(12px * var(--character-scene-scale));
+    --feature-error-purple-width: calc(18px * var(--character-scene-scale));
+    --feature-error-purple-height: calc(8px * var(--character-scene-scale));
+    --feature-error-purple-radius: calc(10px * var(--character-scene-scale));
+    --feature-error-border: calc(3px * var(--character-scene-scale));
+    --feature-nod-offset: calc(3px * var(--character-scene-scale));
+    --feature-float-lift: calc(3px * var(--character-scene-scale));
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 5 / 4;
+    align-self: start;
+    min-height: clamp(230px, 34vh, 360px);
+    border-radius: clamp(16px, 1.3vw, 22px);
+    overflow: hidden;
+    background: var(--scene-bg);
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 82%, var(--color-border) 18%);
+    box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.56),
+            0 12px 20px rgba(24, 24, 24, 0.09);
+    isolation: isolate;
+    user-select: none;
+    touch-action: none;
+}
+
+.auth-illustration--characters::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+            radial-gradient(140% 88% at 12% 8%, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0) 58%),
+            radial-gradient(96% 72% at 88% 92%, rgba(0, 0, 0, 0.045) 0%, rgba(0, 0, 0, 0) 56%),
+            radial-gradient(118% 92% at 52% 44%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 72%);
+    opacity: 0.65;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.auth-illustration--characters::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    mix-blend-mode: multiply;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.auth-illustration--characters .floor-shadow {
+    display: none;
+}
+
+.auth-illustration--characters .ground {
+    position: absolute;
+    left: 19%;
+    width: 58%;
+    bottom: 14.8%;
+    height: 0.95%;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-border) 82%, var(--color-border-light) 18%);
+    box-shadow: none;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.auth-illustration--characters .cluster {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    animation: login-character-floaty 3.2s ease-in-out infinite;
+}
+
+#userCharacterFigure,
+#loginCharacterFigure {
+    border-radius: inherit;
+}
+
+#userCharacterFigure::after,
+#loginCharacterFigure::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+            inset 0 6px 12px rgba(0, 0, 0, 0.22),
+            inset 0 2px 4px rgba(0, 0, 0, 0.16);
+    pointer-events: none;
+    z-index: 8;
+}
+
+.auth-illustration--characters .character {
+    position: absolute;
+    transform-origin: 50% 100%;
+    will-change: transform;
+}
+
+.auth-illustration--characters.is-register-username-ok .character .tracker,
+.auth-illustration--characters.is-register-username-ok .character .mouth {
+    animation: login-character-nod-features 1.05s ease-in-out infinite;
+}
+
+.auth-illustration--characters.is-register-username-ok .purple .tracker,
+.auth-illustration--characters.is-register-username-ok .purple .mouth {
+    animation-delay: 0ms;
+}
+
+.auth-illustration--characters.is-register-username-ok .orange .tracker,
+.auth-illustration--characters.is-register-username-ok .orange .mouth {
+    animation-delay: 80ms;
+}
+
+.auth-illustration--characters.is-register-username-ok .black .tracker,
+.auth-illustration--characters.is-register-username-ok .black .mouth {
+    animation-delay: 40ms;
+}
+
+.auth-illustration--characters.is-register-username-ok .yellow .tracker,
+.auth-illustration--characters.is-register-username-ok .yellow .mouth {
+    animation-delay: 120ms;
+}
+
+.auth-illustration--characters.is-register-username-taken .character .face {
+    transform-origin: 50% 70%;
+    animation: login-character-head-shake 0.46s ease-in-out 1;
+}
+
+.auth-illustration--characters.is-register-username-taken .purple .face {
+    animation-delay: 0ms;
+}
+
+.auth-illustration--characters.is-register-username-taken .orange .face {
+    animation-delay: 24ms;
+}
+
+.auth-illustration--characters.is-register-username-taken .black .face {
+    animation-delay: 40ms;
+}
+
+.auth-illustration--characters.is-register-username-taken .yellow .face {
+    animation-delay: 56ms;
+}
+
+@keyframes login-character-nod-features {
+    0%,
+    12%,
+    100% {
+        margin-top: 0;
+    }
+    24% {
+        margin-top: var(--feature-nod-offset);
+    }
+    36% {
+        margin-top: 0;
+    }
+    54% {
+        margin-top: var(--feature-nod-offset);
+    }
+    66% {
+        margin-top: 0;
+    }
+}
+
+.auth-illustration--characters .body {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 100%;
+    will-change: transform;
+    filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.08));
+}
+
+.auth-illustration--characters .face {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.auth-illustration--characters .tracker {
+    position: absolute;
+    --px: 0px;
+    --py: 0px;
+}
+
+.auth-illustration--characters .tracker.white {
+    width: var(--feature-white-size);
+    height: var(--feature-white-size);
+    border-radius: 50%;
+    background: #ffffff;
+    overflow: hidden;
+    transition: height 0.12s ease, transform 0.12s ease;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.auth-illustration--characters .tracker.dot {
+    width: var(--feature-dot-size);
+    height: var(--feature-dot-size);
+}
+
+.auth-illustration--characters .tracker .iris {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: translate(var(--px), var(--py));
+    transition: opacity 0.08s ease;
+}
+
+.auth-illustration--characters .tracker.white .iris {
+    width: var(--feature-iris-white-size);
+    height: var(--feature-iris-white-size);
+    margin-left: calc(var(--feature-iris-white-size) * -0.5);
+    margin-top: calc(var(--feature-iris-white-size) * -0.5);
+}
+
+.auth-illustration--characters .tracker.dot .iris {
+    width: var(--feature-iris-dot-size);
+    height: var(--feature-iris-dot-size);
+    margin-left: calc(var(--feature-iris-dot-size) * -0.5);
+    margin-top: calc(var(--feature-iris-dot-size) * -0.5);
+}
+
+.auth-illustration--characters .mouth {
+    position: absolute;
+    color: var(--ink);
+    transition: all 0.14s ease;
+    transform-origin: 50% 50%;
+}
+
+.auth-illustration--characters .mouth.line {
+    height: var(--feature-mouth-line-height);
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.auth-illustration--characters .mouth.smile {
+    width: var(--feature-mouth-smile-width);
+    height: var(--feature-mouth-smile-height);
+    border: var(--feature-mouth-smile-border) solid currentColor;
+    border-top: 0;
+    border-radius: 0 0 var(--feature-mouth-smile-radius) var(--feature-mouth-smile-radius);
+    background: transparent;
+}
+
+.auth-illustration--characters .blink .tracker.white {
+    height: var(--feature-blink-height);
+    transform: translateY(var(--feature-blink-offset));
+    border-radius: 999px;
+}
+
+.auth-illustration--characters .blink .tracker.white .iris {
+    opacity: 0;
+}
+
+.auth-illustration--characters .purple {
+    width: 18%;
+    height: 53%;
+    left: 35%;
+    bottom: 15.4%;
+    z-index: 2;
+}
+
+.auth-illustration--characters .purple .body {
+    background: linear-gradient(180deg, var(--purple-a) 0%, var(--purple-b) 100%);
+    border-radius: 2px;
+}
+
+.auth-illustration--characters .purple .face {
+    inset: 12% 16% auto 16%;
+    height: 14%;
+}
+
+.auth-illustration--characters .purple .tracker.left {
+    left: 8%;
+    top: 6%;
+}
+
+.auth-illustration--characters .purple .tracker.right {
+    right: 8%;
+    top: 0%;
+}
+
+.auth-illustration--characters .purple .mouth {
+    left: 40%;
+    top: 50%;
+    width: 24%;
+}
+
+.auth-illustration--characters .black {
+    width: 10.5%;
+    height: 36%;
+    left: 49%;
+    bottom: 15.4%;
+    z-index: 4;
+}
+
+.auth-illustration--characters .black .body {
+    background: linear-gradient(90deg, var(--black-a) 0%, var(--black-b) 100%);
+    border-radius: 1px;
+}
+
+.auth-illustration--characters .black .face {
+    inset: 8% 14% auto 14%;
+    height: 14%;
+}
+
+.auth-illustration--characters .black .tracker.left {
+    left: 8%;
+    top: 0%;
+}
+
+.auth-illustration--characters .black .tracker.right {
+    right: 8%;
+    top: 4%;
+}
+
+.auth-illustration--characters .orange {
+    width: 31%;
+    height: 24%;
+    left: 18%;
+    bottom: 15.1%;
+    z-index: 3;
+}
+
+.auth-illustration--characters .orange .body {
+    background: linear-gradient(180deg, var(--orange-a) 0%, var(--orange-b) 100%);
+    border-radius: 999px 999px 0 0;
+}
+
+.auth-illustration--characters .orange .face {
+    inset: 30% 24% auto 24%;
+    height: 28%;
+}
+
+.auth-illustration--characters .orange .tracker.left {
+    left: 24%;
+    top: 8%;
+}
+
+.auth-illustration--characters .orange .tracker.right {
+    right: 24%;
+    top: 20%;
+}
+
+.auth-illustration--characters .orange .mouth {
+    left: 35%;
+    top: 60%;
+}
+
+.auth-illustration--characters .yellow {
+    width: 13%;
+    height: 35%;
+    left: 57.2%;
+    bottom: 15.35%;
+    z-index: 3;
+}
+
+.auth-illustration--characters .yellow .body {
+    background: linear-gradient(180deg, var(--yellow-a) 0%, var(--yellow-b) 100%);
+    border-radius: 999px 999px 0 0;
+}
+
+.auth-illustration--characters .yellow .face {
+    inset: 20% 18% auto 18%;
+    height: 24%;
+}
+
+.auth-illustration--characters .yellow .tracker.left {
+    left: 26%;
+    top: 8%;
+}
+
+.auth-illustration--characters .yellow .tracker.right {
+    right: 24%;
+    top: 14%;
+}
+
+.auth-illustration--characters .yellow .mouth {
+    left: 14%;
+    top: 60%;
+    width: 62%;
+}
+
+.auth-illustration--characters.is-password-mode .tracker.white {
+    height: var(--feature-password-blink-height);
+    transform: translateY(var(--feature-password-blink-offset));
+}
+
+.auth-illustration--characters.is-password-mode .tracker.white .iris {
+    opacity: 0;
+}
+
+.auth-illustration--characters.is-password-mode .orange .tracker.dot,
+.auth-illustration--characters.is-password-mode .yellow .tracker.dot {
+    width: var(--feature-password-dot-width);
+    height: var(--feature-password-dot-height);
+    border-radius: 999px;
+    background: var(--ink);
+    transform: translateY(var(--feature-password-dot-offset));
+}
+
+.auth-illustration--characters.is-password-mode .orange .tracker.dot .iris,
+.auth-illustration--characters.is-password-mode .yellow .tracker.dot .iris {
+    opacity: 0;
+}
+
+.auth-illustration--characters.is-error .ground {
+    background: color-mix(in srgb, var(--color-border) 82%, var(--color-border-light) 18%);
+}
+
+.auth-illustration--characters.is-error .orange .mouth {
+    width: var(--feature-error-orange-width);
+    height: var(--feature-error-orange-height);
+    border: var(--feature-error-border) solid currentColor;
+    border-bottom: 0;
+    border-radius: var(--feature-error-orange-radius) var(--feature-error-orange-radius) 0 0;
+    background: transparent;
+    left: 42%;
+    top: 42%;
+}
+
+.auth-illustration--characters.is-error .purple .mouth {
+    width: var(--feature-error-purple-width);
+    height: var(--feature-error-purple-height);
+    border-top: var(--feature-error-border) solid currentColor;
+    border-radius: var(--feature-error-purple-radius) var(--feature-error-purple-radius) 0 0;
+    background: transparent;
+    left: 43%;
+    top: 56%;
+}
+
+.auth-illustration--characters.is-error .yellow .mouth {
+    top: 63%;
+    transform: rotate(-6deg);
+}
+
+.auth-illustration--characters.is-success .ground {
+    background: color-mix(in srgb, var(--color-border) 82%, var(--color-border-light) 18%);
+}
+
+.auth-illustration--characters.is-success .character .body {
+    filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.08));
+}
+
+.auth-illustration--characters.is-shaking .character .face {
+    transform-origin: 50% 70%;
+    animation: login-character-head-shake 0.46s ease-in-out 1;
+}
+
+.auth-illustration--characters.is-shaking .purple .face {
+    animation-delay: 0ms;
+}
+
+.auth-illustration--characters.is-shaking .orange .face {
+    animation-delay: 24ms;
+}
+
+.auth-illustration--characters.is-shaking .black .face {
+    animation-delay: 40ms;
+}
+
+.auth-illustration--characters.is-shaking .yellow .face {
+    animation-delay: 56ms;
+}
+
+@keyframes login-character-floaty {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(calc(var(--feature-float-lift) * -1));
+    }
+}
+
+@keyframes login-character-head-shake {
+    0% {
+        transform: rotate(0deg);
+    }
+    18% {
+        transform: rotate(-12deg);
+    }
+    34% {
+        transform: rotate(11deg);
+    }
+    50% {
+        transform: rotate(-9deg);
+    }
+    66% {
+        transform: rotate(7deg);
+    }
+    82% {
+        transform: rotate(-4deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.modal-overlay.is-grid-modal .auth-modal-layout--login .auth-illustration--characters {
+    min-height: clamp(260px, 34vh, 390px);
+}
+
+.modal-overlay#loginModal.is-grid-modal .auth-modal-layout--login .auth-illustration--characters {
+    height: auto;
+    min-height: clamp(320px, 52vh, 620px);
+}
+
+.modal-overlay#userModal.is-grid-modal .user-avatar-scene {
+    height: auto;
+    min-height: clamp(320px, 52vh, 620px);
+}

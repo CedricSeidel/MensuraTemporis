@@ -32,9 +32,9 @@ export function renderEventsCollapsed(elements, state) {
 
     const nextToday = eventsWithMinutes.find((event) => event.minutes >= nowMinutes);
     const nextEvent = nextToday || eventsWithMinutes[0];
-    const label = nextToday ? 'Heute' : 'Morgen';
+    const label = nextToday ? 'Today' : 'Tomorrow';
 
-    setText(elements.eventsVisibleCounter, `${eventsWithMinutes.length} Events sichtbar`);
+    setText(elements.eventsVisibleCounter, `${eventsWithMinutes.length} events visible`);
     setText(elements.eventsCriticalCount, `${criticalEventCount} Critical`);
     setText(elements.eventsNextTitle, nextEvent ? nextEvent.title : '-');
     setText(

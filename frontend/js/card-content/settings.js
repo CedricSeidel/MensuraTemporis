@@ -13,6 +13,6 @@ export function renderSettingsSummary(elements, state) {
         `${state.settings.mode24h ? '24H ON' : '24H OFF'} / ${state.settings.focus ? 'Focus ON' : 'Focus OFF'} / ${state.settings.compact ? 'Compact ON' : 'Compact OFF'}`
     );
     setText(elements.settingsZoneText, state.settings.timezone);
-    setText(elements.settingsModeCount, `${activeCount} aktiv`);
-    setText(elements.settingsHelpVisible, '0 Help Einträge');
+    setText(elements.settingsModeCount, `${activeCount} active`);
+    setText(elements.settingsHelpVisible, '0 help entries');
 }
