@@ -841,7 +841,6 @@
         modalCard.style.height = '';
         modalCard.style.opacity = '';
         modalCard.style.transition = '';
-        modalCard.style.removeProperty('--user-modal-scale');
     }
 
     function applyModalGridLayout(modalOverlay) {
@@ -871,15 +870,6 @@
         modalCard.style.width = `${targetWidth}px`;
         modalCard.style.height = `${targetHeight}px`;
         modalCard.style.opacity = '1';
-
-        if (modalOverlay.id === 'userModal') {
-            const widthScale = targetWidth / 1120;
-            const heightScale = targetHeight / 760;
-            const compactScale = Math.min(0.8, Math.max(0.56, Math.min(widthScale, heightScale)));
-            modalCard.style.setProperty('--user-modal-scale', compactScale.toFixed(3));
-        } else {
-            modalCard.style.removeProperty('--user-modal-scale');
-        }
 
         return {
             top: targetTop,

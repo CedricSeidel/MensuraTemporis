@@ -565,7 +565,7 @@
 
 .modal-overlay#userModal.is-grid-modal .user-avatar-scene {
     height: auto;
-    aspect-ratio: 16 / 11;
-    min-height: clamp(120px, calc(300px * var(--user-modal-scale, 1)), 340px);
+    aspect-ratio: 5 / 4;
+    min-height: clamp(320px, 52vh, 620px);
     max-height: 100%;
 }
