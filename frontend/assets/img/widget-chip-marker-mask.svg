@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 190" aria-hidden="true">
+    <g fill="#000">
+        <path opacity="0.52" d="M84 24L390 18L388 30L390 44L386 62L78 68L80 52L78 36Z"/>
+        <path opacity="0.65" transform="rotate(2 220 80)" d="M8 58L412 50L410 66L412 84L406 102L6 110L8 92L6 74Z"/>
+        <path opacity="0.86" transform="rotate(-2 200 118)" d="M34 94L372 84L370 100L372 122L366 142L30 150L32 130L30 110Z"/>
+    </g>
+</svg>
