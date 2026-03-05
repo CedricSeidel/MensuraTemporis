@@ -694,7 +694,37 @@
     --orange-b: #ff7d1f;
     --yellow-a: #ffe74b;
     --yellow-b: #f4d600;
+    --character-scene-scale: 1;
+    --feature-white-size: calc(22px * var(--character-scene-scale));
+    --feature-dot-size: calc(12px * var(--character-scene-scale));
+    --feature-iris-white-size: calc(10px * var(--character-scene-scale));
+    --feature-iris-dot-size: calc(12px * var(--character-scene-scale));
+    --feature-mouth-line-height: calc(8px * var(--character-scene-scale));
+    --feature-mouth-smile-width: calc(28px * var(--character-scene-scale));
+    --feature-mouth-smile-height: calc(14px * var(--character-scene-scale));
+    --feature-mouth-smile-radius: calc(16px * var(--character-scene-scale));
+    --feature-mouth-smile-border: calc(4px * var(--character-scene-scale));
+    --feature-blink-height: calc(4px * var(--character-scene-scale));
+    --feature-blink-offset: calc(9px * var(--character-scene-scale));
+    --feature-password-blink-height: calc(5px * var(--character-scene-scale));
+    --feature-password-blink-offset: calc(8px * var(--character-scene-scale));
+    --feature-password-dot-width: calc(14px * var(--character-scene-scale));
+    --feature-password-dot-height: calc(4px * var(--character-scene-scale));
+    --feature-password-dot-offset: calc(5px * var(--character-scene-scale));
+    --feature-error-orange-width: calc(24px * var(--character-scene-scale));
+    --feature-error-orange-height: calc(11px * var(--character-scene-scale));
+    --feature-error-orange-radius: calc(12px * var(--character-scene-scale));
+    --feature-error-purple-width: calc(18px * var(--character-scene-scale));
+    --feature-error-purple-height: calc(8px * var(--character-scene-scale));
+    --feature-error-purple-radius: calc(10px * var(--character-scene-scale));
+    --feature-error-border: calc(3px * var(--character-scene-scale));
+    --feature-nod-offset: calc(3px * var(--character-scene-scale));
+    --feature-float-lift: calc(3px * var(--character-scene-scale));
     position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 5 / 4;
+    align-self: start;
     min-height: clamp(230px, 34vh, 360px);
     border-radius: clamp(16px, 1.3vw, 22px);
     overflow: hidden;
@@ -836,13 +866,13 @@
         margin-top: 0;
     }
     24% {
-        margin-top: 3px;
+        margin-top: var(--feature-nod-offset);
     }
     36% {
         margin-top: 0;
     }
     54% {
-        margin-top: 3px;
+        margin-top: var(--feature-nod-offset);
     }
     66% {
         margin-top: 0;
@@ -870,8 +900,8 @@
 }
 
 .auth-illustration--characters .tracker.white {
-    width: 22px;
-    height: 22px;
+    width: var(--feature-white-size);
+    height: var(--feature-white-size);
     border-radius: 50%;
     background: #ffffff;
     overflow: hidden;
@@ -880,8 +910,8 @@
 }
 
 .auth-illustration--characters .tracker.dot {
-    width: 12px;
-    height: 12px;
+    width: var(--feature-dot-size);
+    height: var(--feature-dot-size);
 }
 
 .auth-illustration--characters .tracker .iris {
@@ -895,17 +925,17 @@
 }
 
 .auth-illustration--characters .tracker.white .iris {
-    width: 10px;
-    height: 10px;
-    margin-left: -5px;
-    margin-top: -5px;
+    width: var(--feature-iris-white-size);
+    height: var(--feature-iris-white-size);
+    margin-left: calc(var(--feature-iris-white-size) * -0.5);
+    margin-top: calc(var(--feature-iris-white-size) * -0.5);
 }
 
 .auth-illustration--characters .tracker.dot .iris {
-    width: 12px;
-    height: 12px;
-    margin-left: -6px;
-    margin-top: -6px;
+    width: var(--feature-iris-dot-size);
+    height: var(--feature-iris-dot-size);
+    margin-left: calc(var(--feature-iris-dot-size) * -0.5);
+    margin-top: calc(var(--feature-iris-dot-size) * -0.5);
 }
 
 .auth-illustration--characters .mouth {
@@ -916,23 +946,23 @@
 }
 
 .auth-illustration--characters .mouth.line {
-    height: 8px;
+    height: var(--feature-mouth-line-height);
     border-radius: 999px;
     background: currentColor;
 }
 
 .auth-illustration--characters .mouth.smile {
-    width: 28px;
-    height: 14px;
-    border: 4px solid currentColor;
+    width: var(--feature-mouth-smile-width);
+    height: var(--feature-mouth-smile-height);
+    border: var(--feature-mouth-smile-border) solid currentColor;
     border-top: 0;
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 var(--feature-mouth-smile-radius) var(--feature-mouth-smile-radius);
     background: transparent;
 }
 
 .auth-illustration--characters .blink .tracker.white {
-    height: 4px;
-    transform: translateY(9px);
+    height: var(--feature-blink-height);
+    transform: translateY(var(--feature-blink-offset));
     border-radius: 999px;
 }
 
@@ -1031,8 +1061,8 @@
 }
 
 .auth-illustration--characters .orange .mouth {
-    left: 39%;
-    top: 28%;
+    left: 35%;
+    top: 60%;
 }
 
 .auth-illustration--characters .yellow {
@@ -1070,8 +1100,8 @@
 }
 
 .auth-illustration--characters.is-password-mode .tracker.white {
-    height: 5px;
-    transform: translateY(8px);
+    height: var(--feature-password-blink-height);
+    transform: translateY(var(--feature-password-blink-offset));
 }
 
 .auth-illustration--characters.is-password-mode .tracker.white .iris {
@@ -1080,11 +1110,11 @@
 
 .auth-illustration--characters.is-password-mode .orange .tracker.dot,
 .auth-illustration--characters.is-password-mode .yellow .tracker.dot {
-    width: 14px;
-    height: 4px;
+    width: var(--feature-password-dot-width);
+    height: var(--feature-password-dot-height);
     border-radius: 999px;
     background: var(--ink);
-    transform: translateY(5px);
+    transform: translateY(var(--feature-password-dot-offset));
 }
 
 .auth-illustration--characters.is-password-mode .orange .tracker.dot .iris,
@@ -1097,21 +1127,21 @@
 }
 
 .auth-illustration--characters.is-error .orange .mouth {
-    width: 24px;
-    height: 11px;
-    border: 3px solid currentColor;
+    width: var(--feature-error-orange-width);
+    height: var(--feature-error-orange-height);
+    border: var(--feature-error-border) solid currentColor;
     border-bottom: 0;
-    border-radius: 12px 12px 0 0;
+    border-radius: var(--feature-error-orange-radius) var(--feature-error-orange-radius) 0 0;
     background: transparent;
     left: 42%;
     top: 42%;
 }
 
 .auth-illustration--characters.is-error .purple .mouth {
-    width: 18px;
-    height: 8px;
-    border-top: 3px solid currentColor;
-    border-radius: 10px 10px 0 0;
+    width: var(--feature-error-purple-width);
+    height: var(--feature-error-purple-height);
+    border-top: var(--feature-error-border) solid currentColor;
+    border-radius: var(--feature-error-purple-radius) var(--feature-error-purple-radius) 0 0;
     background: transparent;
     left: 43%;
     top: 56%;
@@ -1154,10 +1184,10 @@
 @keyframes login-character-floaty {
     0%,
     100% {
-        transform: translateY(0px);
+        transform: translateY(0);
     }
     50% {
-        transform: translateY(-3px);
+        transform: translateY(calc(var(--feature-float-lift) * -1));
     }
 }
 
@@ -1265,7 +1295,7 @@
 }
 
 .modal-overlay#loginModal.is-grid-modal .auth-modal-layout--login .auth-illustration--characters {
-    height: 100%;
+    height: auto;
     min-height: clamp(320px, 52vh, 620px);
 }
 
@@ -1302,7 +1332,7 @@
 }
 
 .modal-overlay#userModal.is-grid-modal .user-avatar-scene {
-    height: 100%;
+    height: auto;
     min-height: clamp(320px, 52vh, 620px);
 }
 

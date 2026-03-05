@@ -81,6 +81,9 @@
         y: 0.28,
     };
     const REGISTER_USERNAME_MIN_LEN = 3;
+    const CHARACTER_SCENE_BASE_EDGE = 500;
+    const CHARACTER_SCENE_SCALE_MIN = 0.72;
+    const CHARACTER_SCENE_SCALE_MAX = 1.35;
 
     const authUi = {
         mode: 'login',
@@ -94,6 +97,7 @@
         cluster: elements.loginCharacterFigure,
         chars: [],
         hasFigure: false,
+        motionScale: 1,
         rafId: 0,
         pointer: {
             x: window.innerWidth * 0.5,
@@ -111,6 +115,7 @@
         cluster: elements.userCharacterFigure,
         chars: [],
         hasFigure: false,
+        motionScale: 1,
         rafId: 0,
         pointer: {
             x: window.innerWidth * 0.5,
@@ -189,6 +194,26 @@
         userCharacter.cluster &&
         userCharacter.chars.length
     );
+
+    const characterSceneResizeObserver = typeof window.ResizeObserver === 'function'
+        ? new window.ResizeObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.target === loginCharacter.scene) {
+                    syncCharacterSceneScale(loginCharacter);
+                    return;
+                }
+
+                if (entry.target === userCharacter.scene) {
+                    syncCharacterSceneScale(userCharacter);
+                }
+            });
+        })
+        : null;
+
+    if (characterSceneResizeObserver) {
+        if (loginCharacter.scene) characterSceneResizeObserver.observe(loginCharacter.scene);
+        if (userCharacter.scene) characterSceneResizeObserver.observe(userCharacter.scene);
+    }
 
     function createHttpError(message, status = 400) {
         const error = new Error(message);
@@ -576,6 +601,23 @@
         return start + ((end - start) * amount);
     }
 
+    function getCharacterSceneScale(scene) {
+        if (!scene) return 1;
+        const rect = scene.getBoundingClientRect();
+        if (!rect.width || !rect.height) return 1;
+        const sceneEdge = Math.min(rect.width, rect.height);
+        const rawScale = sceneEdge / CHARACTER_SCENE_BASE_EDGE;
+        return clamp(rawScale, CHARACTER_SCENE_SCALE_MIN, CHARACTER_SCENE_SCALE_MAX);
+    }
+
+    function syncCharacterSceneScale(characterState) {
+        if (!characterState?.scene) return 1;
+        const scale = getCharacterSceneScale(characterState.scene);
+        characterState.motionScale = scale;
+        characterState.scene.style.setProperty('--character-scene-scale', scale.toFixed(4));
+        return scale;
+    }
+
     function clearLoginCharacterRaf() {
         if (!loginCharacter.rafId) return;
         window.cancelAnimationFrame(loginCharacter.rafId);
@@ -657,6 +699,7 @@
     }
 
     function updateLoginCharacterTrackers(character, pointerTarget) {
+        const motionScale = loginCharacter.motionScale || 1;
         character.trackers.forEach((tracker) => {
             const rect = tracker.getBoundingClientRect();
             const centerX = rect.left + (rect.width * 0.5);
@@ -666,8 +709,8 @@
             const dy = pointerTarget.y - centerY;
             const distance = Math.hypot(dx, dy) || 1;
             const maxMove = tracker.classList.contains('white')
-                ? character.cfg.pupil
-                : Math.min(character.cfg.pupil, 1.8);
+                ? character.cfg.pupil * motionScale
+                : Math.min(character.cfg.pupil, 1.8) * motionScale;
             const reach = Math.min(maxMove, distance * 0.12);
 
             tracker.style.setProperty('--px', `${(dx / distance) * reach}px`);
@@ -678,6 +721,7 @@
     function updateLoginCharacterBodies(time, pointerTarget) {
         const sceneRect = loginCharacter.scene?.getBoundingClientRect();
         if (!sceneRect || !sceneRect.width || !sceneRect.height) return;
+        const motionScale = loginCharacter.motionScale || 1;
 
         const centerX = sceneRect.left + (sceneRect.width * 0.5);
         const centerY = sceneRect.top + (sceneRect.height * 0.55);
@@ -688,8 +732,8 @@
         loginCharacter.chars.forEach((character, index) => {
             const wobble = Math.sin((time * 0.0018) + (index * 0.9)) * 0.25;
 
-            const targetTx = normalizedX * character.cfg.move;
-            const targetTy = (-Math.abs(normalizedY) * character.cfg.lift) + (loginCharacter.isPasswordMode ? 3 : 0);
+            const targetTx = normalizedX * character.cfg.move * motionScale;
+            const targetTy = ((-Math.abs(normalizedY) * character.cfg.lift) + (loginCharacter.isPasswordMode ? 3 : 0)) * motionScale;
             const targetRot = (normalizedX * character.cfg.rotate) + wobble;
             const targetSkew = normalizedX * character.cfg.skew;
 
@@ -906,6 +950,7 @@
     }
 
     function updateUserCharacterTrackers(character, pointerTarget) {
+        const motionScale = userCharacter.motionScale || 1;
         character.trackers.forEach((tracker) => {
             const rect = tracker.getBoundingClientRect();
             const centerX = rect.left + (rect.width * 0.5);
@@ -915,8 +960,8 @@
             const dy = pointerTarget.y - centerY;
             const distance = Math.hypot(dx, dy) || 1;
             const maxMove = tracker.classList.contains('white')
-                ? character.cfg.pupil
-                : Math.min(character.cfg.pupil, 1.8);
+                ? character.cfg.pupil * motionScale
+                : Math.min(character.cfg.pupil, 1.8) * motionScale;
             const reach = Math.min(maxMove, distance * 0.12);
 
             tracker.style.setProperty('--px', `${(dx / distance) * reach}px`);
@@ -927,6 +972,7 @@
     function updateUserCharacterBodies(time, pointerTarget) {
         const sceneRect = userCharacter.scene?.getBoundingClientRect();
         if (!sceneRect || !sceneRect.width || !sceneRect.height) return;
+        const motionScale = userCharacter.motionScale || 1;
 
         const centerX = sceneRect.left + (sceneRect.width * 0.5);
         const centerY = sceneRect.top + (sceneRect.height * 0.55);
@@ -937,8 +983,8 @@
         userCharacter.chars.forEach((character, index) => {
             const wobble = Math.sin((time * 0.0018) + (index * 0.9)) * 0.25;
 
-            const targetTx = normalizedX * character.cfg.move;
-            const targetTy = -Math.abs(normalizedY) * character.cfg.lift;
+            const targetTx = normalizedX * character.cfg.move * motionScale;
+            const targetTy = -Math.abs(normalizedY) * character.cfg.lift * motionScale;
             const targetRot = (normalizedX * character.cfg.rotate) + wobble;
             const targetSkew = normalizedX * character.cfg.skew;
 
@@ -1274,6 +1320,12 @@
             if (!modalOverlay.hidden) {
                 modalCard.style.transition = '';
             }
+            if (modalOverlay === elements.loginModal) {
+                syncCharacterSceneScale(loginCharacter);
+            }
+            if (modalOverlay === elements.userModal) {
+                syncCharacterSceneScale(userCharacter);
+            }
             delete modalOverlay._openAnimationTimeoutId;
         }, MODAL_EXPAND_MS);
     }
@@ -1389,6 +1441,8 @@
             if (!modal || modal.hidden) return;
             applyModalGridLayout(modal);
         });
+        syncCharacterSceneScale(loginCharacter);
+        syncCharacterSceneScale(userCharacter);
     }
 
     function openModal(modal, origin, options = {}) {
@@ -1410,6 +1464,12 @@
                 modalCard.style.transition = '';
                 modalCard.style.opacity = '1';
             }
+        }
+        if (modal === elements.loginModal) {
+            syncCharacterSceneScale(loginCharacter);
+        }
+        if (modal === elements.userModal) {
+            syncCharacterSceneScale(userCharacter);
         }
         document.body.classList.add('modal-open');
         return Promise.resolve(true);
