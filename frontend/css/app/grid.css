@@ -4,9 +4,13 @@
 
 .grid {
     position: fixed;
-    inset: 0;
-    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: min(100vw, var(--max-width-content));
+    max-width: var(--max-width-content);
     height: 100dvh;
+    margin-inline: auto;
     display: grid;
     grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
     grid-template-rows: repeat(var(--grid-rows), minmax(0, 1fr));

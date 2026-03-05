@@ -1,8 +1,8 @@
 (function enforceWindowMinimumSize() {
-    const MIN_WINDOW_WIDTH = 1508;
-    const MIN_WINDOW_HEIGHT = 932;
-    const BASE_LAYOUT_WIDTH = 1508;
-    const BASE_LAYOUT_HEIGHT = 932;
+    const MIN_WINDOW_WIDTH = 1500;
+    const MIN_WINDOW_HEIGHT = 930;
+    const BASE_LAYOUT_WIDTH = 1500;
+    const BASE_LAYOUT_HEIGHT = 930;
     const BASE_CARD_WIDTH = 476;
     const BASE_CARD_HEIGHT = 404;
     const MIN_DENSITY = 0.34;
@@ -156,7 +156,11 @@
 
         const viewportWidth = Math.max(320, window.innerWidth || 0);
         const viewportHeight = Math.max(320, window.innerHeight || 0);
-        const densityFromWidth = viewportWidth / BASE_LAYOUT_WIDTH;
+        const rootStyles = window.getComputedStyle(root);
+        const maxContentWidthToken = Number.parseFloat(rootStyles.getPropertyValue('--max-width-content'));
+        const maxContentWidth = Number.isFinite(maxContentWidthToken) ? maxContentWidthToken : 2400;
+        const effectiveLayoutWidth = Math.min(viewportWidth, maxContentWidth);
+        const densityFromWidth = effectiveLayoutWidth / BASE_LAYOUT_WIDTH;
         const densityFromHeight = viewportHeight / BASE_LAYOUT_HEIGHT;
         const density = clamp(Math.min(densityFromWidth, densityFromHeight), MIN_DENSITY, 1);
 
@@ -171,7 +175,7 @@
         const gridPad = clamp(20 * density, 10, 24);
         const gridTopInset = clamp(12 * density, 8, 14);
         const topPadding = headerHeight + gridTopInset;
-        const availableWidth = Math.max(280, viewportWidth - (gridPad * 2) - (gridGap * (columns - 1)));
+        const availableWidth = Math.max(280, effectiveLayoutWidth - (gridPad * 2) - (gridGap * (columns - 1)));
         const availableHeight = Math.max(220, viewportHeight - topPadding - gridPad - (gridGap * (rows - 1)));
         const cardWidth = availableWidth / columns;
         const cardHeight = availableHeight / rows;
