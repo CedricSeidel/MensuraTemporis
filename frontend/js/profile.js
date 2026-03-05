@@ -84,8 +84,8 @@
             accentBlue: '#4d5976',
         },
         yellow: {
-            accent: '#ffeaa3',
-            accentBlue: '#c5a200',
+            accent: '#fff08e',
+            accentBlue: '#f0cb00',
         },
     };
     const MODAL_EXPAND_MS = 600;

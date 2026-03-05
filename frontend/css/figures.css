@@ -31,8 +31,8 @@
     --black-b: #242844;
     --orange-a: #ffb23f;
     --orange-b: #ff7d1f;
-    --yellow-a: #ffe74b;
-    --yellow-b: #f4d600;
+    --yellow-a: #fff15e;
+    --yellow-b: #ffd400;
     --character-scene-scale: 1;
     --feature-white-size: calc(22px * var(--character-scene-scale));
     --feature-dot-size: calc(12px * var(--character-scene-scale));
