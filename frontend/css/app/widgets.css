@@ -5,7 +5,7 @@
 .widget-kicker {
     margin: 0;
     color: var(--color-text-light);
-    font-size: clamp(0.58rem, calc(0.82rem * var(--content-density)), 0.82rem);
+    font-size: clamp(0.5rem, calc(0.7rem * var(--content-density)), 0.7rem);
     line-height: 1.34;
     text-transform: uppercase;
     letter-spacing: 0.062em;
@@ -17,7 +17,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: clamp(6px, calc(24px * var(--content-density)), 24px);
+    gap: clamp(6px, calc(228px * var(--content-density)), 28px);
     min-width: 0;
 }
 
@@ -83,9 +83,9 @@
     filter: saturate(1.14);
 }
 
-.container1 .widget-chip { --chip-tilt: -6.2deg; }
+.container1 .widget-chip { --chip-tilt: -7.2deg; }
 .container2 .widget-chip { --chip-tilt: -5.1deg; }
-.container3 .widget-chip { --chip-tilt: -4.4deg; }
+.container3 .widget-chip { --chip-tilt: -3.4deg; }
 .container4 .widget-chip { --chip-tilt: -5.8deg; }
 .container5 .widget-chip { --chip-tilt: -4.9deg; }
 .container6 .widget-chip { --chip-tilt: -4.2deg; }
@@ -125,7 +125,7 @@
 
 .summary-hero {
     margin: 0;
-    font-size: clamp(1rem, calc(5.4rem * var(--content-density)), 8rem);
+    font-size: clamp(1rem, calc(4rem * var(--content-density)), 7rem);
     line-height: 0.96;
     letter-spacing: -0.022em;
     font-weight: var(--font-weight-bold);
@@ -178,7 +178,7 @@
 .metric-line strong {
     color: var(--color-text);
     font-weight: var(--font-weight-semibold);
-    font-size: clamp(0.6rem, calc(0.98rem * var(--content-density)), 0.98rem);
+    font-size: clamp(0.5rem, calc(1rem * var(--content-density)), 1rem);
     letter-spacing: 0.012em;
     text-align: right;
 }
