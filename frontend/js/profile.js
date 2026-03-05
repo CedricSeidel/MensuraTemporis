@@ -39,8 +39,6 @@
         userWeatherCityInput: document.getElementById('userWeatherCityInput'),
         userTemperatureUnitSelect: document.getElementById('userTemperatureUnitSelect'),
         userTimeFormatSelect: document.getElementById('userTimeFormatSelect'),
-        userFocusModeInput: document.getElementById('userFocusModeInput'),
-        userCompactModeInput: document.getElementById('userCompactModeInput'),
         userDataForm: document.getElementById('userDataForm'),
         userAvatarChoices: document.getElementById('userAvatarChoices'),
         userCharacterScene: document.getElementById('userCharacterScene'),
@@ -66,8 +64,6 @@
         weatherCity: 'Kassel',
         temperatureUnit: 'c',
         mode24h: true,
-        focus: false,
-        compact: false,
     };
     const AVATAR_CHOICES = ['purple', 'orange', 'black', 'yellow'];
     const AVATAR_THEME_COLORS = {
@@ -199,26 +195,29 @@
             weatherCity,
             temperatureUnit: sanitizeTemperatureUnit(savedWeather.unit || profilePrefs.temperatureUnit),
             mode24h: readBoolean(savedSettings.mode24h, readBoolean(profilePrefs.mode24h, DEFAULT_PREFERENCES.mode24h)),
-            focus: readBoolean(savedSettings.focus, readBoolean(profilePrefs.focus, DEFAULT_PREFERENCES.focus)),
-            compact: readBoolean(savedSettings.compact, readBoolean(profilePrefs.compact, DEFAULT_PREFERENCES.compact)),
         };
     }
 
-    function applyBodyModeClasses(preferences) {
-        document.body.classList.toggle('app-focus', Boolean(preferences.focus));
-        document.body.classList.toggle('app-compact', Boolean(preferences.compact));
+    function applyBodyModeClasses() {
+        document.body.classList.add('app-focus');
+        document.body.classList.add('app-compact');
     }
 
     function writeUserPreferences(preferences) {
         const savedSettings = readStorage(APP_STORAGE_KEYS.settings, {});
+        const settingsWithoutModeToggles = savedSettings && typeof savedSettings === 'object'
+            ? Object.fromEntries(
+                Object.entries(savedSettings).filter(([key]) => key !== 'focus' && key !== 'compact')
+            )
+            : {};
         const savedWeather = readStorage(APP_STORAGE_KEYS.weather, {});
         const savedClock = readStorage(APP_STORAGE_KEYS.clock, {});
 
         writeStorage(APP_STORAGE_KEYS.settings, {
-            ...savedSettings,
+            ...settingsWithoutModeToggles,
             mode24h: Boolean(preferences.mode24h),
-            focus: Boolean(preferences.focus),
-            compact: Boolean(preferences.compact),
+            focus: true,
+            compact: true,
             timezone: preferences.timezone,
         });
 
@@ -245,16 +244,12 @@
             || DEFAULT_PREFERENCES.weatherCity;
         const temperatureUnit = sanitizeTemperatureUnit(elements.userTemperatureUnitSelect?.value);
         const mode24h = (elements.userTimeFormatSelect?.value || '24h') !== '12h';
-        const focus = Boolean(elements.userFocusModeInput?.checked);
-        const compact = Boolean(elements.userCompactModeInput?.checked);
 
         return {
             timezone,
             weatherCity,
             temperatureUnit,
             mode24h,
-            focus,
-            compact,
         };
     }
 
@@ -271,12 +266,6 @@
         if (elements.userTimeFormatSelect) {
             elements.userTimeFormatSelect.value = preferences.mode24h ? '24h' : '12h';
         }
-        if (elements.userFocusModeInput) {
-            elements.userFocusModeInput.checked = Boolean(preferences.focus);
-        }
-        if (elements.userCompactModeInput) {
-            elements.userCompactModeInput.checked = Boolean(preferences.compact);
-        }
     }
 
     function dispatchPreferencesUpdated(preferences) {
@@ -284,8 +273,8 @@
             detail: {
                 settings: {
                     mode24h: Boolean(preferences.mode24h),
-                    focus: Boolean(preferences.focus),
-                    compact: Boolean(preferences.compact),
+                    focus: true,
+                    compact: true,
                     timezone: preferences.timezone,
                 },
                 weather: {
@@ -1441,7 +1430,7 @@
         };
 
         writeUserPreferences(preferences);
-        applyBodyModeClasses(preferences);
+        applyBodyModeClasses();
         dispatchPreferencesUpdated(preferences);
         saveProfile();
         updateUserPanel();
@@ -1632,6 +1621,7 @@
 
     state.profile = loadProfile();
     applyAvatarTheme(state.profile?.avatar);
+    applyBodyModeClasses();
     attachEvents();
     refreshSession();
 })();

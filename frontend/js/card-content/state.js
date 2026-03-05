@@ -14,8 +14,8 @@ export function createInitialState() {
     return {
         settings: {
             mode24h: true,
-            focus: false,
-            compact: false,
+            focus: true,
+            compact: true,
             timezone: DEFAULT_TIMEZONE,
         },
         weather: {
@@ -35,10 +35,10 @@ export function restoreState(state) {
     const savedSettings = readStorage(STORAGE_KEYS.settings, null);
     if (savedSettings) {
         state.settings.mode24h = readBoolean(savedSettings.mode24h, state.settings.mode24h);
-        state.settings.focus = readBoolean(savedSettings.focus, state.settings.focus);
-        state.settings.compact = readBoolean(savedSettings.compact, state.settings.compact);
         state.settings.timezone = sanitizeTimezone(savedSettings.timezone, state.settings.timezone);
     }
+    state.settings.focus = true;
+    state.settings.compact = true;
 
     const savedWeather = readStorage(STORAGE_KEYS.weather, null);
     state.weather.city = DEFAULT_CITY;

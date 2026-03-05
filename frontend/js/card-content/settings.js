@@ -1,16 +1,18 @@
 import { setText } from './core.js';
 
 export function applyBodyModes(state) {
-    document.body.classList.toggle('app-focus', state.settings.focus);
-    document.body.classList.toggle('app-compact', state.settings.compact);
+    state.settings.focus = true;
+    state.settings.compact = true;
+    document.body.classList.add('app-focus');
+    document.body.classList.add('app-compact');
 }
 
 export function renderSettingsSummary(elements, state) {
-    const activeCount = [state.settings.mode24h, state.settings.focus, state.settings.compact].filter(Boolean).length;
+    const activeCount = [state.settings.mode24h, true, true].filter(Boolean).length;
 
     setText(
         elements.settingsSummary,
-        `${state.settings.mode24h ? '24H ON' : '24H OFF'} / ${state.settings.focus ? 'Focus ON' : 'Focus OFF'} / ${state.settings.compact ? 'Compact ON' : 'Compact OFF'}`
+        `${state.settings.mode24h ? '24H ON' : '24H OFF'} / Focus ON / Compact ON`
     );
     setText(elements.settingsZoneText, state.settings.timezone);
     setText(elements.settingsModeCount, `${activeCount} active`);

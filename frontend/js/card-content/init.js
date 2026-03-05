@@ -39,10 +39,11 @@ export function initCardContent() {
 
         if (settings) {
             if (typeof settings.mode24h === 'boolean') state.settings.mode24h = settings.mode24h;
-            if (typeof settings.focus === 'boolean') state.settings.focus = settings.focus;
-            if (typeof settings.compact === 'boolean') state.settings.compact = settings.compact;
             if (isValidTimezone(settings.timezone)) state.settings.timezone = settings.timezone;
         }
+
+        state.settings.focus = true;
+        state.settings.compact = true;
 
         if (weather) {
             const weatherCity = String(weather.city || '').trim();
