@@ -57,6 +57,11 @@
     overflow: visible;
 }
 
+.widget-chip__label {
+    position: relative;
+    z-index: 1;
+}
+
 .widget-chip::before {
     content: "";
     position: absolute;
@@ -563,4 +568,38 @@
 .tech-row span,
 .tech-row strong {
     overflow-wrap: anywhere;
+}
+
+/* Black avatar theme: keep dynamic text readable via blend inversion. */
+:root[data-avatar-theme="black"] .widget-chip {
+    --chip-marker-color: #000;
+    color: #fff;
+}
+
+:root[data-avatar-theme="black"] .widget-chip .widget-chip__label {
+    mix-blend-mode: difference;
+}
+
+:root[data-avatar-theme="black"] .summary-hero,
+:root[data-avatar-theme="black"] .summary-weather,
+:root[data-avatar-theme="black"] .calendar-day-number,
+:root[data-avatar-theme="black"] .calendar-day-meta,
+:root[data-avatar-theme="black"] #eventsNextTime,
+:root[data-avatar-theme="black"] #eventsVisibleCounter,
+:root[data-avatar-theme="black"] #eventsCriticalCount,
+:root[data-avatar-theme="black"] #weatherCity,
+:root[data-avatar-theme="black"] #weatherMeta,
+:root[data-avatar-theme="black"] #weatherHumidity,
+:root[data-avatar-theme="black"] #weatherRain,
+:root[data-avatar-theme="black"] #noteUpdated,
+:root[data-avatar-theme="black"] #noteCount,
+:root[data-avatar-theme="black"] #postitCount,
+:root[data-avatar-theme="black"] #clockTopLine,
+:root[data-avatar-theme="black"] #clockBottomLine,
+:root[data-avatar-theme="black"] #settingsZoneText,
+:root[data-avatar-theme="black"] #settingsModeCount,
+:root[data-avatar-theme="black"] #settingsHelpVisible {
+    color: #000;
+    mix-blend-mode: difference;
+    filter: invert(1);
 }
