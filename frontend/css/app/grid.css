@@ -113,6 +113,14 @@
 .container5 { --card-tint: #8a98ab; }
 .container6 { --card-tint: #8098a2; }
 
+/* Keep each card locked to its cell so nothing reflows when one card is fixed/expanded. */
+.container1 { grid-column: 1; grid-row: 1; }
+.container2 { grid-column: 2; grid-row: 1; }
+.container3 { grid-column: 3; grid-row: 1; }
+.container4 { grid-column: 1; grid-row: 2; }
+.container5 { grid-column: 2; grid-row: 2; }
+.container6 { grid-column: 3; grid-row: 2; }
+
 /* Alle Cards: gleiche Border wie Login/User-Modal */
 .container1,
 .container2,
