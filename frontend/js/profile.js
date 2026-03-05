@@ -94,12 +94,16 @@
     const MODAL_CLOSE_EASE = 'cubic-bezier(0.0, 0.0, 0.2, 1)';
     const NAV_ACTIVE_CLASS = 'is-active';
     const REGISTER_USERNAME_MIN_LEN = 3;
+    const USER_SAVE_TOAST_MS = 1800;
+    const USER_SAVE_TOAST_FADE_MS = 180;
 
     const authUi = {
         mode: 'login',
         usernameCheckRequestId: 0,
         registerUsernameFocused: false,
     };
+    let userSaveToastHideTimeoutId = 0;
+    let userSaveToastFadeTimeoutId = 0;
 
     const profileFigures = typeof window.createProfileFiguresController === 'function'
         ? window.createProfileFiguresController({
@@ -622,6 +626,67 @@
         return fallback;
     }
 
+    function clearUserSaveToastTimers() {
+        if (userSaveToastHideTimeoutId) {
+            window.clearTimeout(userSaveToastHideTimeoutId);
+            userSaveToastHideTimeoutId = 0;
+        }
+        if (userSaveToastFadeTimeoutId) {
+            window.clearTimeout(userSaveToastFadeTimeoutId);
+            userSaveToastFadeTimeoutId = 0;
+        }
+    }
+
+    function ensureUserSaveToastElement() {
+        let toast = document.body.querySelector('.user-save-toast');
+        if (toast instanceof HTMLElement) return toast;
+
+        toast = document.createElement('div');
+        toast.className = 'user-save-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        toast.hidden = true;
+        document.body.appendChild(toast);
+        return toast;
+    }
+
+    function hideUserSaveToast({ immediate = false } = {}) {
+        const toast = ensureUserSaveToastElement();
+        if (!(toast instanceof HTMLElement)) return;
+
+        clearUserSaveToastTimers();
+
+        if (immediate) {
+            toast.hidden = true;
+            toast.classList.remove('is-visible', 'is-success', 'is-error');
+            return;
+        }
+
+        toast.classList.remove('is-visible');
+        userSaveToastFadeTimeoutId = window.setTimeout(() => {
+            toast.hidden = true;
+            userSaveToastFadeTimeoutId = 0;
+        }, USER_SAVE_TOAST_FADE_MS);
+    }
+
+    function showUserSaveToast(message, type = 'success') {
+        const toast = ensureUserSaveToastElement();
+        if (!(toast instanceof HTMLElement)) return;
+
+        clearUserSaveToastTimers();
+        toast.textContent = message;
+        toast.hidden = false;
+        toast.classList.remove('is-success', 'is-error', 'is-visible');
+        toast.classList.add(type === 'error' ? 'is-error' : 'is-success');
+        window.requestAnimationFrame(() => {
+            toast.classList.add('is-visible');
+        });
+
+        userSaveToastHideTimeoutId = window.setTimeout(() => {
+            hideUserSaveToast();
+        }, USER_SAVE_TOAST_MS);
+    }
+
     function syncFigureSceneScales() {
         profileFigures?.syncScales();
     }
@@ -1091,6 +1156,7 @@
                     resetLoginCharacterState();
                 }
                 if (modal === elements.userModal) {
+                    hideUserSaveToast({ immediate: true });
                     resetUserCharacterState();
                 }
                 return closed;
@@ -1106,6 +1172,7 @@
             resetLoginCharacterState();
         }
         if (modal === elements.userModal) {
+            hideUserSaveToast({ immediate: true });
             resetUserCharacterState();
         }
         if (!anyModalOpen() && !preserveExpandedState) {
@@ -1344,6 +1411,7 @@
 
     async function handleSaveUserData(event) {
         event.preventDefault();
+        hideUserSaveToast({ immediate: true });
         if (!state.profile) state.profile = createDefaultProfile();
 
         const username = normalizeUsername(elements.userNameInput?.value);
@@ -1377,7 +1445,7 @@
         dispatchPreferencesUpdated(preferences);
         saveProfile();
         updateUserPanel();
-        setStateMessage(elements.userState, 'Saved', 'success');
+        showUserSaveToast('Saved', 'success');
 
         window.requestAnimationFrame(() => {
             refreshOpenModalLayouts();
@@ -1450,6 +1518,7 @@
         const shouldAnimateOpen = !switchingFromModal && !switchingFromExpandedCard;
 
         await closeModal(elements.loginModal, { animate: false, preserveExpandedState: switchingFromModal });
+        hideUserSaveToast({ immediate: true });
         setStateMessage(elements.userState, '');
         updateUserPanel();
         await openModal(elements.userModal, originRect, { animate: shouldAnimateOpen });

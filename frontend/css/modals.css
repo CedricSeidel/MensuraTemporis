@@ -564,6 +564,50 @@
     border-color: color-mix(in srgb, var(--color-green) 30%, var(--color-border-light) 70%);
 }
 
+.user-save-toast {
+    position: fixed;
+    top: 4px;
+    left: 50%;
+    z-index: 2200;
+    width: max-content;
+    min-width: 120px;
+    max-width: 220px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.01);
+    color: var(--color-text);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: none;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(0.98);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.user-save-toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+}
+
+.user-save-toast.is-success {
+    color: var(--color-text);
+}
+
+.user-save-toast.is-error {
+    color: var(--color-red);
+}
+
 .user-modal .user-meta,
 .user-modal .user-data-form {
     border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
