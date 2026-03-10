@@ -54,7 +54,7 @@
     overflow: clip;
     border: 1px solid color-mix(in srgb, var(--color-border-light) 82%, var(--color-border) 18%);
     border-radius: clamp(16px, 1.4vw, 24px);
-    background: var(--color-card-bg);
+    background: color-mix(in srgb, var(--color-card-bg) 22%, transparent);
     backdrop-filter: blur(8px) saturate(105%) brightness(105%);
     -webkit-backdrop-filter: blur(8px) saturate(105%) brightness(105%);
     cursor: pointer;

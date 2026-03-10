@@ -6,7 +6,7 @@
 .card--closing {
     overflow: hidden;
     border-radius: clamp(16px, 1.4vw, 24px);
-    background: var(--color-card-bg);
+    background: color-mix(in srgb, var(--color-card-bg) 22%, transparent);
     backdrop-filter: blur(10px) saturate(105%) brightness(105%);
     -webkit-backdrop-filter: blur(10px) saturate(105%) brightness(105%);
 }
