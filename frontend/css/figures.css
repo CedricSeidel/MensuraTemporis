@@ -1,7 +1,7 @@
 /* Figure styles extracted from modals.css */
 .user-avatar-scene {
     --scene-bg: color-mix(in srgb, var(--color-background) 92%, var(--color-background-alt) 8%);
-    min-height: clamp(230px, 34vh, 380px);
+    min-height: var(--modal-illustration-height, clamp(230px, 34vh, 380px));
     border-color: color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
 }
 
@@ -64,8 +64,8 @@
     height: auto;
     aspect-ratio: 5 / 4;
     align-self: start;
-    min-height: clamp(230px, 34vh, 360px);
-    border-radius: clamp(16px, 1.3vw, 22px);
+    min-height: var(--modal-illustration-height, clamp(230px, 34vh, 360px));
+    border-radius: calc(var(--modal-radius-md, 18px) + (var(--modal-scale-unit, 0px) * 0.08));
     overflow: hidden;
     background: var(--scene-bg);
     border: 1px solid color-mix(in srgb, var(--color-border-light) 82%, var(--color-border) 18%);
@@ -106,6 +106,11 @@
 
 .auth-illustration--characters .floor-shadow {
     display: none;
+}
+
+.auth-modal-layout--login .auth-illustration--characters {
+    align-self: stretch;
+    height: 100%;
 }
 
 .auth-illustration--characters .ground {
@@ -555,17 +560,20 @@
 }
 
 .modal-overlay.is-grid-modal .auth-modal-layout--login .auth-illustration--characters {
-    min-height: clamp(260px, 34vh, 390px);
+    align-self: stretch;
+    height: 100%;
+    min-height: calc(250px + (var(--modal-scale-unit, 0px) * 14));
 }
 
 .modal-overlay#loginModal.is-grid-modal .auth-modal-layout--login .auth-illustration--characters {
-    height: auto;
-    min-height: clamp(320px, 52vh, 620px);
+    align-self: stretch;
+    height: 100%;
+    min-height: calc(300px + (var(--modal-scale-unit, 0px) * 18));
 }
 
 .modal-overlay#userModal.is-grid-modal .user-avatar-scene {
-    height: auto;
-    aspect-ratio: 5 / 4;
-    min-height: clamp(320px, 52vh, 620px);
+    align-self: stretch;
+    height: 100%;
+    min-height: calc(300px + (var(--modal-scale-unit, 0px) * 18));
     max-height: 100%;
 }

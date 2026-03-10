@@ -344,51 +344,53 @@
                 </div>
 
                 <div class="user-profile-stack">
-                    <div class="modal-state" id="userState"></div>
+                    <div class="user-profile-panel">
+                        <div class="modal-state" id="userState"></div>
 
-                    <div class="user-meta">
-                        <p><span>Username:</span> <strong id="userNameValue">-</strong></p>
-                        <p><span>Avatar:</span> <strong id="userAvatarValue">-</strong></p>
+                        <div class="user-meta">
+                            <p><span>Username:</span> <strong id="userNameValue">-</strong></p>
+                            <p><span>Avatar:</span> <strong id="userAvatarValue">-</strong></p>
+                        </div>
+
+                        <form class="user-data-form" id="userDataForm">
+                            <label for="userNameInput">Username</label>
+                            <input id="userNameInput" name="displayName" type="text" minlength="2" required>
+
+                            <label>Profile avatar</label>
+                            <div class="user-avatar-choices" id="userAvatarChoices">
+                                <button type="button" class="avatar-choice" data-avatar-choice="purple">Purple</button>
+                                <button type="button" class="avatar-choice" data-avatar-choice="orange">Orange</button>
+                                <button type="button" class="avatar-choice" data-avatar-choice="black">Black</button>
+                                <button type="button" class="avatar-choice" data-avatar-choice="yellow">Yellow</button>
+                            </div>
+
+                            <label for="userTimezoneInput">Timezone</label>
+                            <input id="userTimezoneInput" name="timezone" type="text" placeholder="Europe/Berlin" autocomplete="off">
+
+                            <label for="userWeatherCityInput">Weather city</label>
+                            <input id="userWeatherCityInput" name="weatherCity" type="text" placeholder="Kassel" autocomplete="off">
+
+                            <div class="user-preferences-grid">
+                                <div class="user-preference-group">
+                                    <label for="userTemperatureUnitSelect">Temperature</label>
+                                    <select id="userTemperatureUnitSelect" name="temperatureUnit">
+                                        <option value="c">Celsius (°C)</option>
+                                        <option value="f">Fahrenheit (°F)</option>
+                                    </select>
+                                </div>
+
+                                <div class="user-preference-group">
+                                    <label for="userTimeFormatSelect">Time format</label>
+                                    <select id="userTimeFormatSelect" name="timeFormat">
+                                        <option value="24h">24-hour</option>
+                                        <option value="12h">12-hour</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit">Save</button>
+                        </form>
                     </div>
-
-                    <form class="user-data-form" id="userDataForm">
-                        <label for="userNameInput">Username</label>
-                        <input id="userNameInput" name="displayName" type="text" minlength="2" required>
-
-                        <label>Profile avatar</label>
-                        <div class="user-avatar-choices" id="userAvatarChoices">
-                            <button type="button" class="avatar-choice" data-avatar-choice="purple">Purple</button>
-                            <button type="button" class="avatar-choice" data-avatar-choice="orange">Orange</button>
-                            <button type="button" class="avatar-choice" data-avatar-choice="black">Black</button>
-                            <button type="button" class="avatar-choice" data-avatar-choice="yellow">Yellow</button>
-                        </div>
-
-                        <label for="userTimezoneInput">Timezone</label>
-                        <input id="userTimezoneInput" name="timezone" type="text" placeholder="Europe/Berlin" autocomplete="off">
-
-                        <label for="userWeatherCityInput">Weather city</label>
-                        <input id="userWeatherCityInput" name="weatherCity" type="text" placeholder="Kassel" autocomplete="off">
-
-                        <div class="user-preferences-grid">
-                            <div class="user-preference-group">
-                                <label for="userTemperatureUnitSelect">Temperature</label>
-                                <select id="userTemperatureUnitSelect" name="temperatureUnit">
-                                    <option value="c">Celsius (°C)</option>
-                                    <option value="f">Fahrenheit (°F)</option>
-                                </select>
-                            </div>
-
-                            <div class="user-preference-group">
-                                <label for="userTimeFormatSelect">Time format</label>
-                                <select id="userTimeFormatSelect" name="timeFormat">
-                                    <option value="24h">24-hour</option>
-                                    <option value="12h">12-hour</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <button type="submit">Save</button>
-                    </form>
                 </div>
             </div>
         </div>

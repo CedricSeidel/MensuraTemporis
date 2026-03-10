@@ -22,14 +22,29 @@
 .modal {
     position: relative;
     width: min(560px, 100%);
+    container-type: inline-size;
+    --modal-scale-unit: clamp(0px, 0.68cqi, 10px);
+    --modal-space-xs: calc(6px + (var(--modal-scale-unit) * 0.25));
+    --modal-space-sm: calc(10px + (var(--modal-scale-unit) * 0.45));
+    --modal-space-md: calc(14px + (var(--modal-scale-unit) * 0.72));
+    --modal-space-lg: calc(20px + (var(--modal-scale-unit) * 1.05));
+    --modal-space-xl: calc(26px + (var(--modal-scale-unit) * 1.35));
+    --modal-control-padding-y: calc(10px + (var(--modal-scale-unit) * 0.55));
+    --modal-control-padding-x: calc(12px + (var(--modal-scale-unit) * 0.72));
+    --modal-radius-sm: calc(12px + (var(--modal-scale-unit) * 0.22));
+    --modal-radius-md: calc(16px + (var(--modal-scale-unit) * 0.34));
+    --modal-label-size: calc(0.68rem + (var(--modal-scale-unit) * 0.013));
+    --modal-text-size: calc(0.88rem + (var(--modal-scale-unit) * 0.014));
+    --modal-title-size: calc(1.32rem + (var(--modal-scale-unit) * 0.11));
+    --modal-illustration-height: calc(220px + (var(--modal-scale-unit) * 13));
     border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md);
+    border-radius: var(--modal-radius-md);
     color: var(--color-text);
     background: var(--color-card-bg);
     box-shadow: none;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    padding: var(--spacing-2xl);
+    padding: var(--modal-space-xl);
 }
 
 .modal-overlay.is-grid-modal {
@@ -53,8 +68,8 @@
     max-width: none;
     max-height: none;
     height: auto;
-    border-radius: clamp(16px, 1.4vw, 24px);
-    padding: clamp(18px, 2vw, 32px);
+    border-radius: var(--modal-radius-md);
+    padding: var(--modal-space-xl);
     overflow: auto;
     box-sizing: border-box;
     background: var(--color-card-bg);
@@ -66,7 +81,7 @@
     align-content: center;
     justify-items: center;
     text-align: center;
-    gap: var(--spacing-lg);
+    gap: var(--modal-space-lg);
     pointer-events: auto;
 }
 
@@ -77,13 +92,13 @@
 
 .modal-overlay.is-grid-modal .modal h3 {
     margin: 0;
-    font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+    font-size: var(--modal-title-size);
     text-align: center;
 }
 
 .modal-overlay.is-grid-modal .modal-state {
     margin-bottom: 0;
-    font-size: var(--font-size-sm);
+    font-size: var(--modal-label-size);
     text-align: center;
 }
 
@@ -93,7 +108,7 @@
 .modal-overlay.is-grid-modal .user-meta {
     justify-items: center;
     text-align: center;
-    gap: var(--spacing-lg);
+    gap: var(--modal-space-md);
 }
 
 .modal-overlay.is-grid-modal .auth-form label,
@@ -108,26 +123,26 @@
     width: 100%;
     max-width: none;
     min-width: 0;
-    font-size: var(--font-size-md);
-    padding: clamp(14px, 1.4vw, 20px);
+    font-size: var(--modal-text-size);
+    padding: var(--modal-control-padding-y) var(--modal-control-padding-x);
 }
 
 .modal-overlay.is-grid-modal .auth-form button,
 .modal-overlay.is-grid-modal .user-data-form button,
 .modal-overlay.is-grid-modal .auth-logged-in button {
     justify-self: center;
-    font-size: var(--font-size-md);
-    padding: var(--spacing-md) var(--spacing-2xl);
+    font-size: var(--modal-text-size);
+    padding: var(--modal-space-sm) var(--modal-space-lg);
 }
 
 .modal-overlay.is-grid-modal .auth-switch {
-    margin-top: var(--spacing-md);
-    font-size: var(--font-size-sm);
+    margin-top: var(--modal-space-sm);
+    font-size: var(--modal-label-size);
     text-align: center;
 }
 
 .modal-overlay.is-grid-modal .user-meta p {
-    margin: 0 0 var(--spacing-md) 0;
+    margin: 0 0 var(--modal-space-sm) 0;
     text-align: center;
 }
 
@@ -137,8 +152,8 @@
 }
 
 .modal h3 {
-    margin: 0 0 var(--spacing-xl) 0;
-    font-size: var(--font-size-lg);
+    margin: 0 0 var(--modal-space-lg) 0;
+    font-size: var(--modal-title-size);
     letter-spacing: var(--letter-spacing-wide);
     line-height: var(--line-height-tight);
 }
@@ -154,22 +169,22 @@
 .modal-intro {
     margin: 0;
     color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
+    font-size: var(--modal-text-size);
     line-height: var(--line-height-relaxed);
 }
 
 .modal-close {
     position: absolute;
-    top: var(--spacing-sm);
-    right: var(--spacing-sm);
+    top: var(--modal-space-sm);
+    right: var(--modal-space-sm);
     border: 1px solid var(--color-border-light);
     background: transparent;
     color: var(--color-text);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xl);
+    border-radius: var(--modal-radius-sm);
+    font-size: calc(1.1rem + (var(--modal-scale-unit) * 0.045));
     line-height: 1;
-    width: 32px;
-    height: 32px;
+    width: calc(30px + (var(--modal-scale-unit) * 0.45));
+    height: calc(30px + (var(--modal-scale-unit) * 0.45));
     cursor: pointer;
 }
 
@@ -201,9 +216,9 @@
 
 .modal-state {
     min-height: 1.6em;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--modal-space-sm);
     color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
+    font-size: var(--modal-label-size);
     line-height: var(--line-height-normal);
 }
 
@@ -218,7 +233,7 @@
 .field-hint {
     margin: 0;
     color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
+    font-size: var(--modal-label-size);
 }
 
 .field-hint.is-error {
@@ -232,12 +247,12 @@
 .auth-form,
 .user-data-form {
     display: grid;
-    gap: var(--spacing-md);
+    gap: var(--modal-space-md);
 }
 
 .auth-form label,
 .user-data-form label {
-    font-size: var(--font-size-xs);
+    font-size: var(--modal-label-size);
     letter-spacing: var(--letter-spacing-wide);
     text-transform: uppercase;
 }
@@ -253,29 +268,29 @@
     border: 1px solid var(--color-border-light);
     background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
     color: var(--color-text);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-md);
+    border-radius: var(--modal-radius-sm);
+    padding: var(--modal-control-padding-y) var(--modal-control-padding-x);
     font-family: var(--font-family-mono), monospace;
-    font-size: var(--font-size-sm);
+    font-size: var(--modal-text-size);
     line-height: var(--line-height-normal);
 }
 
 .password-field {
     display: flex;
     align-items: stretch;
-    gap: 8px;
+    gap: var(--modal-space-xs);
 }
 
 .username-field {
     display: flex;
     align-items: stretch;
-    gap: 8px;
+    gap: var(--modal-space-xs);
 }
 
 .password-field input {
     flex: 1 1 auto;
     min-width: 0;
-    padding-right: var(--spacing-md);
+    padding-right: var(--modal-control-padding-x);
 }
 
 .username-field input {
@@ -288,12 +303,12 @@
     align-items: center;
     justify-content: center;
     border: 1px solid color-mix(in srgb, var(--color-border-light) 78%, var(--color-border) 22%);
-    border-radius: calc(var(--radius-sm) - 2px);
+    border-radius: calc(var(--modal-radius-sm) - 2px);
     background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
     color: var(--color-text-muted);
-    padding: 0 12px;
-    min-width: 86px;
-    font-size: 0.68rem;
+    padding: 0 calc(11px + (var(--modal-scale-unit) * 0.28));
+    min-width: calc(82px + (var(--modal-scale-unit) * 0.9));
+    font-size: calc(0.64rem + (var(--modal-scale-unit) * 0.01));
     line-height: 1;
     text-transform: uppercase;
     letter-spacing: var(--letter-spacing-wide);
@@ -322,13 +337,13 @@
     align-items: center;
     justify-content: center;
     border: 1px solid color-mix(in srgb, var(--color-border-light) 78%, var(--color-border) 22%);
-    border-radius: calc(var(--radius-sm) - 2px);
+    border-radius: calc(var(--modal-radius-sm) - 2px);
     background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
     color: var(--color-text-muted);
-    padding: 0 12px;
-    min-width: 86px;
+    padding: 0 calc(11px + (var(--modal-scale-unit) * 0.28));
+    min-width: calc(82px + (var(--modal-scale-unit) * 0.9));
     justify-self: auto;
-    font-size: 0.68rem;
+    font-size: calc(0.64rem + (var(--modal-scale-unit) * 0.01));
     line-height: 1;
     text-transform: uppercase;
     letter-spacing: var(--letter-spacing-wide);
@@ -347,10 +362,10 @@
     border: 1px solid var(--color-border);
     background: transparent;
     color: var(--color-text);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-sm) var(--spacing-xl);
+    border-radius: var(--modal-radius-sm);
+    padding: var(--modal-space-sm) var(--modal-space-lg);
     cursor: pointer;
-    font-size: var(--font-size-sm);
+    font-size: var(--modal-text-size);
     line-height: var(--line-height-normal);
     letter-spacing: var(--letter-spacing-wide);
     text-transform: uppercase;
@@ -380,23 +395,24 @@
 
 .auth-logged-in {
     display: grid;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-lg);
+    gap: var(--modal-space-sm);
+    margin-top: var(--modal-space-lg);
 }
 
 .logged-in-text {
     margin: 0;
+    font-size: var(--modal-text-size);
 }
 
 .auth-switch {
-    margin-top: var(--spacing-lg);
+    margin-top: var(--modal-space-lg);
     border: none;
     background: transparent;
     color: var(--color-text-muted);
     text-decoration: underline;
     cursor: pointer;
     padding: 0;
-    font-size: var(--font-size-xs);
+    font-size: var(--modal-label-size);
     letter-spacing: var(--letter-spacing-wide);
 }
 
@@ -409,7 +425,7 @@
     width: min(620px, 100%);
     display: grid;
     align-content: start;
-    gap: var(--spacing-md);
+    gap: var(--modal-space-md);
 }
 
 .auth-modal h3 {
@@ -423,9 +439,9 @@
 .auth-modal .modal-state {
     margin: 0;
     min-height: 0;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--modal-space-sm) var(--modal-space-md);
     border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    border-radius: var(--radius-sm);
+    border-radius: var(--modal-radius-sm);
     background: color-mix(in srgb, var(--color-surface) 90%, transparent 10%);
 }
 
@@ -445,10 +461,10 @@
 
 .auth-modal .auth-form {
     border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    border-radius: var(--radius-sm);
+    border-radius: var(--modal-radius-sm);
     background: color-mix(in srgb, var(--color-background) 95%, var(--color-background-alt) 5%);
-    padding: var(--spacing-md);
-    gap: var(--spacing-sm);
+    padding: var(--modal-space-md);
+    gap: var(--modal-space-sm);
 }
 
 .auth-modal .auth-form label {
@@ -475,15 +491,15 @@
 .auth-modal .auth-logged-in {
     margin-top: 0;
     border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-md);
+    border-radius: var(--modal-radius-sm);
+    padding: var(--modal-space-md);
     background: color-mix(in srgb, var(--color-background) 95%, var(--color-background-alt) 5%);
 }
 
 .auth-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-sm);
+    gap: var(--modal-space-sm);
 }
 
 .auth-actions button {
@@ -497,9 +513,9 @@
     text-align: left;
     text-decoration: none;
     border: 1px solid color-mix(in srgb, var(--color-border-light) 80%, var(--color-border) 20%);
-    border-radius: var(--radius-sm);
+    border-radius: var(--modal-radius-sm);
     background: color-mix(in srgb, var(--color-surface) 90%, transparent 10%);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--modal-space-sm) var(--modal-space-md);
     transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
@@ -510,11 +526,11 @@
 
 .auth-modal-layout {
     display: grid;
-    gap: var(--spacing-lg);
+    gap: var(--modal-space-lg);
 }
 
 .auth-modal-layout--login {
-    grid-template-columns: minmax(280px, 0.9fr) minmax(340px, 1.1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
 }
 
@@ -522,20 +538,38 @@
     width: min(860px, 100%);
     display: grid;
     align-content: start;
-    gap: var(--spacing-md);
+    gap: var(--modal-space-md);
 }
 
 .user-modal-layout {
     display: grid;
-    grid-template-columns: minmax(280px, 0.95fr) minmax(360px, 1.05fr);
-    gap: clamp(12px, 1.6vw, 22px);
+    width: min(100%, 1120px);
+    margin-inline: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--modal-space-lg) + (var(--modal-scale-unit) * 0.2));
     align-items: stretch;
 }
 
 .user-profile-stack {
     display: grid;
+    min-height: 0;
+    height: 100%;
+    align-content: stretch;
+    justify-items: stretch;
+}
+
+.user-profile-panel {
+    display: grid;
+    height: 100%;
+    box-sizing: border-box;
+    min-height: 0;
     align-content: start;
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-lg) + (var(--modal-scale-unit) * 0.08));
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 78%, var(--color-border) 22%);
+    border-radius: calc(var(--modal-radius-md) + 2px);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+    padding: calc(var(--modal-space-lg) + (var(--modal-scale-unit) * 0.08));
 }
 
 .user-modal .modal-state {
@@ -544,10 +578,11 @@
     width: 100%;
     box-sizing: border-box;
     overflow-wrap: anywhere;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--color-surface) 90%, transparent 10%);
+    padding: 0 0 var(--modal-space-sm) 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border-light) 74%, var(--color-border) 26%);
+    border-radius: 0;
+    background: transparent;
 }
 
 .user-modal .modal-state:empty {
@@ -555,13 +590,13 @@
 }
 
 .user-modal .modal-state.is-error {
-    background: color-mix(in srgb, var(--color-error-bg) 70%, transparent 30%);
-    border-color: color-mix(in srgb, var(--color-red) 32%, var(--color-border-light) 68%);
+    background: transparent;
+    border-color: color-mix(in srgb, var(--color-red) 38%, var(--color-border-light) 62%);
 }
 
 .user-modal .modal-state.is-success {
-    background: color-mix(in srgb, var(--color-success-bg) 70%, transparent 30%);
-    border-color: color-mix(in srgb, var(--color-green) 30%, var(--color-border-light) 70%);
+    background: transparent;
+    border-color: color-mix(in srgb, var(--color-green) 36%, var(--color-border-light) 64%);
 }
 
 .user-save-toast {
@@ -663,79 +698,93 @@
     text-decoration: underline;
 }
 
-.user-modal .user-meta,
-.user-modal .user-data-form {
-    border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--color-background) 95%, var(--color-background-alt) 5%);
-    padding: var(--spacing-md);
-    margin: 0;
-}
-
 .user-modal .user-meta {
     display: grid;
-    gap: var(--spacing-sm);
+    gap: var(--modal-space-md);
+    margin: 0;
+    padding-bottom: calc(var(--modal-space-lg) - 2px);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border-light) 74%, var(--color-border) 26%);
 }
 
 .user-modal .user-meta p {
     margin: 0;
     display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: baseline;
-    gap: var(--spacing-sm);
-    padding: 2px 0;
+    grid-template-columns: minmax(108px, auto) 1fr;
+    align-items: end;
+    gap: calc(var(--modal-space-md) - 2px);
+    padding: 0;
 }
 
 .user-modal .user-meta p + p {
-    border-top: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);
-    padding-top: var(--spacing-sm);
+    border-top: 1px solid color-mix(in srgb, var(--color-border-light) 78%, var(--color-border) 22%);
+    padding-top: var(--modal-space-md);
 }
 
 .user-modal .user-meta strong {
     justify-self: end;
+    font-size: calc(var(--modal-text-size) + 0.08rem);
+    font-weight: var(--font-weight-semibold);
     color: color-mix(in srgb, var(--color-text) 88%, var(--color-accent) 12%);
 }
 
 .user-modal .user-data-form {
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-md) + 2px);
     align-content: start;
+    margin: 0;
 }
 
 .user-modal .user-data-form label {
-    margin-top: 2px;
+    margin: 0;
+    color: color-mix(in srgb, var(--color-text-muted) 90%, var(--color-text) 10%);
+}
+
+.user-modal .user-data-form label:not(:first-child) {
+    margin-top: calc(var(--modal-space-sm) + 2px);
+}
+
+.user-modal .user-data-form input,
+.user-modal .user-data-form select,
+.user-modal .user-data-form textarea {
+    border-color: color-mix(in srgb, var(--color-border-light) 68%, var(--color-border) 32%);
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: calc(var(--modal-radius-sm) - 6px);
+    min-height: calc(42px + (var(--modal-scale-unit) * 0.22));
+    box-shadow: none;
 }
 
 .user-modal .user-data-form button {
-    margin-top: 4px;
+    margin-top: calc(var(--modal-space-md) - 2px);
     width: 100%;
     justify-self: stretch;
+    border-radius: calc(var(--modal-radius-sm) - 4px);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .user-preferences-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-md) - 2px);
 }
 
 .user-preference-group {
     display: grid;
-    gap: 6px;
+    gap: 8px;
     align-content: start;
 }
 
 .user-avatar-choices {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-sm) + 4px);
 }
 
 .avatar-choice {
     border: 1px solid color-mix(in srgb, var(--color-border-light) 72%, var(--color-border) 28%);
-    background: color-mix(in srgb, var(--color-surface) 90%, transparent 10%);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--color-text);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-sm);
+    border-radius: calc(var(--modal-radius-sm) - 6px);
+    padding: var(--modal-space-sm) var(--modal-space-md);
+    font-size: calc(var(--modal-label-size) + 0.02rem);
     font-weight: var(--font-weight-normal);
     text-transform: uppercase;
     letter-spacing: var(--letter-spacing-wide);
@@ -743,9 +792,27 @@
     transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
 }
 
+.avatar-choice[data-avatar-choice="purple"] {
+    --avatar-choice-accent-bg: linear-gradient(180deg, #9f37ff 0%, #6c00ff 100%);
+    --avatar-choice-accent-border: #6c00ff;
+    --avatar-choice-accent-text: var(--color-text-inverted);
+}
+
+.avatar-choice[data-avatar-choice="orange"] {
+    --avatar-choice-accent-bg: linear-gradient(180deg, #ffb23f 0%, #ff7d1f 100%);
+    --avatar-choice-accent-border: #ff7d1f;
+    --avatar-choice-accent-text: #201f1d;
+}
+
+.avatar-choice[data-avatar-choice="yellow"] {
+    --avatar-choice-accent-bg: linear-gradient(180deg, #fff15e 0%, #ffd400 100%);
+    --avatar-choice-accent-border: #d5b100;
+    --avatar-choice-accent-text: #201f1d;
+}
+
 .avatar-choice:hover {
     border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-light) 58%);
-    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface) 90%);
+    background: rgba(255, 255, 255, 0.16);
     transform: translateY(-1px);
 }
 
@@ -756,6 +823,27 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+.avatar-choice[data-avatar-choice="purple"].is-active,
+.avatar-choice[data-avatar-choice="orange"].is-active,
+.avatar-choice[data-avatar-choice="yellow"].is-active {
+    border-color: var(--avatar-choice-accent-border);
+    background: var(--avatar-choice-accent-bg);
+    color: var(--avatar-choice-accent-text);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 4px 10px rgba(32, 31, 29, 0.1);
+}
+
+.avatar-choice.is-active:hover {
+    transform: translateY(-1px);
+}
+
+.avatar-choice[data-avatar-choice="purple"].is-active:hover,
+.avatar-choice[data-avatar-choice="orange"].is-active:hover,
+.avatar-choice[data-avatar-choice="yellow"].is-active:hover {
+    filter: saturate(1.03) brightness(1.01);
+}
+
 .avatar-choice:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-accent) 62%, white 38%);
     outline-offset: 2px;
@@ -763,14 +851,30 @@
 
 .auth-content-stack {
     display: grid;
-    align-content: start;
-    gap: var(--spacing-sm);
+    min-height: 0;
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    align-content: stretch;
+    gap: var(--modal-space-sm);
 }
 
 .auth-pane {
     display: grid;
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+    box-sizing: border-box;
     align-content: start;
-    gap: var(--spacing-sm);
+    gap: var(--modal-space-sm);
+}
+
+.auth-logged-in {
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+    box-sizing: border-box;
+    align-content: start;
 }
 
 .auth-pane[hidden],
@@ -783,7 +887,7 @@
     align-content: start;
     justify-items: stretch;
     text-align: left;
-    gap: clamp(10px, 1.2vw, 16px);
+    gap: var(--modal-space-sm);
 }
 
 .modal-overlay.is-grid-modal .auth-modal > :not(.modal-close) {
@@ -805,7 +909,7 @@
 .modal-overlay.is-grid-modal .auth-modal .auth-logged-in {
     justify-items: stretch;
     text-align: left;
-    gap: var(--spacing-sm);
+    gap: var(--modal-space-sm);
 }
 
 .modal-overlay.is-grid-modal .auth-modal .auth-form button,
@@ -815,13 +919,13 @@
 
 .modal-overlay.is-grid-modal .auth-modal .auth-form .password-toggle {
     justify-self: auto;
-    font-size: 0.68rem;
-    padding-inline: 12px;
+    font-size: calc(0.64rem + (var(--modal-scale-unit) * 0.01));
+    padding-inline: calc(11px + (var(--modal-scale-unit) * 0.28));
 }
 
 .modal-overlay.is-grid-modal .auth-modal .auth-form .username-check {
-    font-size: 0.68rem;
-    padding-inline: 12px;
+    font-size: calc(0.64rem + (var(--modal-scale-unit) * 0.01));
+    padding-inline: calc(11px + (var(--modal-scale-unit) * 0.28));
 }
 
 .modal-overlay.is-grid-modal .auth-modal .auth-switch {
@@ -829,9 +933,9 @@
 }
 
 .modal-overlay.is-grid-modal .auth-modal-layout--login {
-    grid-template-columns: minmax(280px, 0.95fr) minmax(340px, 1.05fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
-    gap: clamp(12px, 1.4vw, 20px);
+    gap: calc(var(--modal-space-md) + (var(--modal-scale-unit) * 0.2));
 }
 
 
@@ -850,8 +954,8 @@
 .modal-overlay#loginModal.is-grid-modal .auth-modal-layout--login {
     height: 100%;
     min-height: 0;
-    grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 1fr);
-    gap: clamp(18px, 2vw, 30px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--modal-space-lg) + (var(--modal-scale-unit) * 0.25));
     align-items: stretch;
 }
 
@@ -862,8 +966,8 @@
     align-content: stretch;
     justify-items: stretch;
     text-align: left;
-    gap: clamp(10px, 1.2vw, 16px);
-    padding: clamp(18px, 2vw, 32px);
+    gap: var(--modal-space-sm);
+    padding: var(--modal-space-xl);
     overflow: hidden;
 }
 
@@ -885,8 +989,10 @@
 .modal-overlay#userModal.is-grid-modal .user-modal-layout {
     height: 100%;
     min-height: 0;
-    grid-template-columns: minmax(420px, 1.15fr) minmax(380px, 1fr);
-    gap: clamp(18px, 2vw, 30px);
+    width: min(100%, 1120px);
+    margin-inline: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--modal-space-lg) + (var(--modal-scale-unit) * 0.25));
     align-items: stretch;
 }
 
@@ -894,23 +1000,29 @@
 .modal-overlay#userModal.is-grid-modal .user-profile-stack {
     height: 100%;
     min-height: 0;
-    grid-template-rows: auto auto 1fr;
-    gap: var(--spacing-sm);
+    align-content: stretch;
+    overflow: hidden;
+}
+
+.modal-overlay#userModal.is-grid-modal .user-profile-panel {
+    height: 100%;
+    max-height: 100%;
     overflow: auto;
+    gap: calc(var(--modal-space-lg) + (var(--modal-scale-unit) * 0.08));
 }
 
 .modal-overlay#userModal.is-grid-modal .user-meta {
     justify-items: stretch;
     text-align: left;
-    gap: var(--spacing-sm);
+    gap: var(--modal-space-md);
     margin-bottom: 0;
-    padding: var(--spacing-md);
+    padding-bottom: calc(var(--modal-space-lg) - 2px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-meta p {
     text-align: left;
     margin: 0;
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-md) - 2px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-data-form {
@@ -918,10 +1030,9 @@
     align-content: start;
     justify-items: stretch;
     text-align: left;
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-md) + 2px);
     grid-template-rows: none;
-    padding: var(--spacing-md);
-    overflow: auto;
+    overflow: visible;
 }
 
 .modal-overlay#userModal.is-grid-modal .user-data-form label {
@@ -932,21 +1043,21 @@
 .modal-overlay#userModal.is-grid-modal .user-data-form input,
 .modal-overlay#userModal.is-grid-modal .user-data-form select,
 .modal-overlay#userModal.is-grid-modal .user-data-form textarea {
-    padding: clamp(14px, 1.4vw, 20px);
-    font-size: var(--font-size-md);
+    padding: var(--modal-control-padding-y) var(--modal-control-padding-x);
+    font-size: var(--modal-text-size);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-avatar-choices {
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-sm) + 4px);
 }
 
 .modal-overlay#userModal.is-grid-modal .avatar-choice {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-sm);
+    padding: var(--modal-space-sm) var(--modal-space-md);
+    font-size: calc(var(--modal-label-size) + 0.02rem);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-preferences-grid {
-    gap: var(--spacing-sm);
+    gap: calc(var(--modal-space-md) - 2px);
 }
 
 .modal-overlay#userModal.is-grid-modal .user-preference-group {
@@ -959,5 +1070,8 @@
 }
 
 .user-meta span {
+    font-size: calc(var(--modal-label-size) - 0.02rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--color-text-muted);
 }

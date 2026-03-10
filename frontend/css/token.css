@@ -11,8 +11,8 @@
     --color-primary-dark: #141311;
 
     /* Hintergrund & Oberflächen */
-    --color-background: #f3f2ed;
-    --color-background-alt: #e9e7df;
+    --color-background: rgb(241, 240, 235);
+    --color-background-alt: rgb(241, 240, 235);
     --color-card-bg: rgb(241, 240, 235);
     --color-surface: rgba(255, 255, 252, 0.66);
     --color-surface-hover: rgba(255, 255, 252, 0.84);
