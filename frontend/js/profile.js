@@ -1,5 +1,6 @@
 import {
     applyAlwaysOnBodyModes as applyBodyModeClasses,
+    getScopedStorageKey,
     isValidTimezone,
     readBoolean,
     readStorage,
@@ -7,6 +8,7 @@ import {
     removeStorage,
 } from './core/runtimeUtils.js';
 import { getEventElement } from './core/domUtils.js';
+import { hideAuthRequiredPopup, showAuthRequiredPopup } from './core/authGate.js';
 import {
     APP_STORAGE_KEYS,
     AVATAR_CHOICES,
@@ -70,6 +72,7 @@ import { createPreferencesService } from './profile/preferences.js';
         avatarChoices: AVATAR_CHOICES,
         avatarThemeColors: AVATAR_THEME_COLORS,
         storageKey: STORAGE_KEYS.profile,
+        resolveStorageKey: () => getScopedStorageKey(STORAGE_KEYS.profile, state.user?.username),
         readStorage,
         writeStorage,
         normalizeUsername,
@@ -110,6 +113,7 @@ import { createPreferencesService } from './profile/preferences.js';
         defaultPreferences: DEFAULT_PREFERENCES,
         state,
         elements,
+        getScopedStorageKey,
         isValidTimezone,
         readBoolean,
         readStorage,
@@ -123,6 +127,12 @@ import { createPreferencesService } from './profile/preferences.js';
         readUserPreferences,
         writeUserPreferences,
     } = preferencesService;
+
+    function applyActivePreferencesToWidgets() {
+        const preferences = readUserPreferences();
+        dispatchPreferencesUpdated(preferences);
+    }
+
     function setRegisterUsernameHint(text, type = '') {
         if (!elements.registerUsernameHint) return;
         elements.registerUsernameHint.textContent = text || '';
@@ -566,7 +576,13 @@ import { createPreferencesService } from './profile/preferences.js';
         const users = getLocalUsers();
         const currentUser = getSessionUser(users);
         state.user = toPublicUser(currentUser);
+        state.profile = loadProfile();
+        if (state.user) {
+            hideAuthRequiredPopup({ immediate: true });
+        }
+        syncProfileUsernameFromAuth();
         syncUi();
+        applyActivePreferencesToWidgets();
     }
 
     async function handleLogin(event) {
@@ -583,8 +599,11 @@ import { createPreferencesService } from './profile/preferences.js';
                 body: { username, password },
             });
             state.user = payload.user;
+            hideAuthRequiredPopup({ immediate: true });
+            state.profile = loadProfile();
             syncProfileUsernameFromAuth();
             syncUi();
+            applyActivePreferencesToWidgets();
             setStateMessage(elements.loginState, 'Login successful', 'success');
             triggerLoginCharacterReaction('success');
             await new Promise((resolve) => window.setTimeout(resolve, 220));
@@ -627,10 +646,13 @@ import { createPreferencesService } from './profile/preferences.js';
                 body: { username, password, data: {} },
             });
             state.user = payload.user;
+            hideAuthRequiredPopup({ immediate: true });
+            state.profile = loadProfile();
             syncProfileUsernameFromAuth();
             resetRegisterAvailabilityUi();
             setAuthMode('login');
             syncUi();
+            applyActivePreferencesToWidgets();
             setStateMessage(elements.registerState, 'Registration successful', 'success');
             await closeModal(elements.loginModal);
             form.reset();
@@ -646,7 +668,9 @@ import { createPreferencesService } from './profile/preferences.js';
         try {
             await apiRequest('/api/logout', { method: 'POST' });
             state.user = null;
+            state.profile = loadProfile();
             syncUi();
+            applyActivePreferencesToWidgets();
             setStateMessage(elements.loginState, 'Logout successful', 'success');
             closeModal(elements.loginModal);
             closeModal(elements.userModal);
@@ -758,6 +782,11 @@ import { createPreferencesService } from './profile/preferences.js';
     }
 
     async function openUserModal(origin = elements.profileImage) {
+        if (!isLoggedIn()) {
+            showAuthRequiredPopup();
+            return;
+        }
+
         const originRect = resolveOriginRect(origin);
         const switchingFromModal = isModalOpen(elements.loginModal);
         const switchingFromExpandedCard = switchExpandedCardToModalContext();
@@ -859,10 +888,21 @@ import { createPreferencesService } from './profile/preferences.js';
 
     window.ProfileModalController = {
         hasOpenModal: anyModalOpen,
+        isLoggedIn: () => isLoggedIn(),
+        openLogin(origin = elements.fingerprintImage) {
+            void openLoginModal(origin);
+            return true;
+        },
         closeAll: (options = {}) => closeAllModals(options),
         closeForCardSwitch: () => closeAllModals({ animate: false }),
         switchToCard(cardId) {
             if (!cardId || !anyModalOpen()) return false;
+            if (!isLoggedIn()) {
+                showAuthRequiredPopup();
+                void openLoginModal(elements.fingerprintImage);
+                return true;
+            }
+
             void closeAllModals({ animate: false, preserveExpandedState: true }).then(() => {
                 setGridModalState(false);
                 document.body.classList.remove('modal-open');

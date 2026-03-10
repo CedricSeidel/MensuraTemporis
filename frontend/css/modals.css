@@ -608,6 +608,61 @@
     color: var(--color-red);
 }
 
+.auth-required-popup {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 2300;
+    display: inline-grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 8px 12px;
+    min-width: min(380px, calc(100vw - 44px));
+    max-width: min(420px, calc(100vw - 44px));
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 76%, var(--color-border) 24%);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--color-background) 92%, var(--color-surface) 8%);
+    color: var(--color-text);
+    padding: 10px 12px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    box-shadow: none;
+}
+
+.auth-required-popup.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.auth-required-popup__icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-border-light) 70%, var(--color-border) 30%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.auth-required-popup__text {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    line-height: 1.35;
+}
+
+.auth-required-popup__link {
+    grid-column: 2;
+    justify-self: start;
+    color: color-mix(in srgb, var(--color-accent-blue) 80%, var(--color-text) 20%);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-decoration: underline;
+}
+
 .user-modal .user-meta,
 .user-modal .user-data-form {
     border: 1px solid color-mix(in srgb, var(--color-border-light) 84%, var(--color-border) 16%);

@@ -1,3 +1,5 @@
+const AUTH_SESSION_STORAGE_KEY = 'mensura-auth-session-v1';
+
 export function readStorage(key, fallback) {
     try {
         const raw = localStorage.getItem(key);
@@ -43,4 +45,24 @@ export function applyAlwaysOnBodyModes(targetDocument = document) {
     if (!body) return;
     body.classList.add('app-focus');
     body.classList.add('app-compact');
+}
+
+export function normalizeStorageScope(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+export function getScopedStorageKey(baseKey, scope) {
+    const normalizedScope = normalizeStorageScope(scope);
+    if (!normalizedScope) return baseKey;
+    return `${baseKey}::${normalizedScope}`;
+}
+
+export function readCurrentSessionUsername(sessionKey = AUTH_SESSION_STORAGE_KEY) {
+    const session = readStorage(sessionKey, null);
+    if (!session || typeof session.username !== 'string') return '';
+    return session.username.trim();
+}
+
+export function getCurrentUserScopedStorageKey(baseKey, sessionKey = AUTH_SESSION_STORAGE_KEY) {
+    return getScopedStorageKey(baseKey, readCurrentSessionUsername(sessionKey));
 }

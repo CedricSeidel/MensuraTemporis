@@ -1,6 +1,7 @@
 import { DEFAULT_TIMEZONE } from './config.js';
 import {
     applyAlwaysOnBodyModes,
+    getCurrentUserScopedStorageKey,
     isValidTimezone,
     readBoolean,
     readStorage,
@@ -8,6 +9,7 @@ import {
 
 export {
     applyAlwaysOnBodyModes,
+    getCurrentUserScopedStorageKey,
     isValidTimezone,
     readBoolean,
     readStorage,

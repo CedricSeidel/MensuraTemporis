@@ -1,5 +1,21 @@
 import { DEFAULT_CITY, DEFAULT_TIMEZONE, STORAGE_KEYS } from './config.js';
-import { readBoolean, readStorage, sanitizeTimezone } from './core.js';
+import { getCurrentUserScopedStorageKey, readBoolean, readStorage, sanitizeTimezone } from './core.js';
+
+const STORAGE_MISSING = Symbol('storage-missing');
+
+function readScopedStorage(baseKey, fallback) {
+    const scopedKey = getCurrentUserScopedStorageKey(baseKey);
+    if (scopedKey === baseKey) {
+        return readStorage(baseKey, fallback);
+    }
+
+    const scopedValue = readStorage(scopedKey, STORAGE_MISSING);
+    if (scopedValue === STORAGE_MISSING) {
+        return readStorage(baseKey, fallback);
+    }
+
+    return scopedValue;
+}
 
 function sanitizeCity(value, fallback = DEFAULT_CITY) {
     const normalized = String(value || '').trim();
@@ -28,7 +44,7 @@ export function createInitialState() {
 }
 
 export function restoreState(state) {
-    const savedSettings = readStorage(STORAGE_KEYS.settings, null);
+    const savedSettings = readScopedStorage(STORAGE_KEYS.settings, null);
     if (savedSettings) {
         state.settings.mode24h = readBoolean(savedSettings.mode24h, state.settings.mode24h);
         state.settings.timezone = sanitizeTimezone(savedSettings.timezone, state.settings.timezone);
@@ -36,7 +52,7 @@ export function restoreState(state) {
     state.settings.focus = true;
     state.settings.compact = true;
 
-    const savedWeather = readStorage(STORAGE_KEYS.weather, null);
+    const savedWeather = readScopedStorage(STORAGE_KEYS.weather, null);
     state.weather.city = DEFAULT_CITY;
     if (savedWeather) {
         state.weather.city = sanitizeCity(savedWeather.city, state.weather.city);
@@ -44,7 +60,7 @@ export function restoreState(state) {
         state.weather.unit = savedWeather.unit === 'f' ? 'f' : 'c';
     }
 
-    const savedClock = readStorage(STORAGE_KEYS.clock, null);
+    const savedClock = readScopedStorage(STORAGE_KEYS.clock, null);
     state.clock.city = state.weather.city;
     if (savedClock) {
         state.clock.city = sanitizeCity(savedClock.city, state.weather.city);
@@ -53,7 +69,7 @@ export function restoreState(state) {
         state.clock.timezone = state.settings.timezone;
     }
 
-    const savedPostits = readStorage(STORAGE_KEYS.postits, []);
+    const savedPostits = readScopedStorage(STORAGE_KEYS.postits, []);
     state.postits = Array.isArray(savedPostits)
         ? savedPostits.filter((entry) => entry && typeof entry.text === 'string')
         : [];

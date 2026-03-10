@@ -4,11 +4,14 @@ export function createPreferencesService(options) {
         defaultPreferences,
         state,
         elements,
+        getScopedStorageKey,
         isValidTimezone,
         readBoolean,
         readStorage,
         writeStorage,
     } = options;
+
+    const STORAGE_MISSING = Symbol('storage-missing');
 
     function sanitizeTimezoneInput(value, fallback = defaultPreferences.timezone) {
         return isValidTimezone(value) ? value : fallback;
@@ -18,10 +21,28 @@ export function createPreferencesService(options) {
         return value === 'f' ? 'f' : 'c';
     }
 
+    function getUserScopedStorageKey(baseKey) {
+        return getScopedStorageKey(baseKey, state.user?.username);
+    }
+
+    function readScopedStorage(baseKey, fallback = {}) {
+        const scopedKey = getUserScopedStorageKey(baseKey);
+        if (scopedKey === baseKey) {
+            return readStorage(baseKey, fallback);
+        }
+
+        const scopedValue = readStorage(scopedKey, STORAGE_MISSING);
+        if (scopedValue === STORAGE_MISSING) {
+            return readStorage(baseKey, fallback);
+        }
+
+        return scopedValue;
+    }
+
     function readUserPreferences() {
-        const savedSettings = readStorage(appStorageKeys.settings, {});
-        const savedWeather = readStorage(appStorageKeys.weather, {});
-        const savedClock = readStorage(appStorageKeys.clock, {});
+        const savedSettings = readScopedStorage(appStorageKeys.settings, {});
+        const savedWeather = readScopedStorage(appStorageKeys.weather, {});
+        const savedClock = readScopedStorage(appStorageKeys.clock, {});
         const profilePreferences = state.profile?.data && typeof state.profile.data === 'object'
             ? state.profile.data.preferences
             : null;
@@ -47,16 +68,20 @@ export function createPreferencesService(options) {
     }
 
     function writeUserPreferences(preferences) {
-        const savedSettings = readStorage(appStorageKeys.settings, {});
+        const settingsKey = getUserScopedStorageKey(appStorageKeys.settings);
+        const weatherKey = getUserScopedStorageKey(appStorageKeys.weather);
+        const clockKey = getUserScopedStorageKey(appStorageKeys.clock);
+
+        const savedSettings = readScopedStorage(appStorageKeys.settings, {});
         const settingsWithoutModeToggles = savedSettings && typeof savedSettings === 'object'
             ? Object.fromEntries(
                 Object.entries(savedSettings).filter(([key]) => key !== 'focus' && key !== 'compact')
             )
             : {};
-        const savedWeather = readStorage(appStorageKeys.weather, {});
-        const savedClock = readStorage(appStorageKeys.clock, {});
+        const savedWeather = readScopedStorage(appStorageKeys.weather, {});
+        const savedClock = readScopedStorage(appStorageKeys.clock, {});
 
-        writeStorage(appStorageKeys.settings, {
+        writeStorage(settingsKey, {
             ...settingsWithoutModeToggles,
             mode24h: Boolean(preferences.mode24h),
             focus: true,
@@ -64,14 +89,14 @@ export function createPreferencesService(options) {
             timezone: preferences.timezone,
         });
 
-        writeStorage(appStorageKeys.weather, {
+        writeStorage(weatherKey, {
             ...savedWeather,
             city: preferences.weatherCity,
             timezone: preferences.timezone,
             unit: sanitizeTemperatureUnit(preferences.temperatureUnit),
         });
 
-        writeStorage(appStorageKeys.clock, {
+        writeStorage(clockKey, {
             ...savedClock,
             city: preferences.weatherCity,
             timezone: preferences.timezone,

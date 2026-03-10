@@ -1,3 +1,5 @@
+import { isUserLoggedIn, showAuthRequiredPopup } from './core/authGate.js';
+
 /**
  * Card Expansion System
  * Click on card: expand
@@ -16,6 +18,12 @@ export class CardExpansion {
         ease: 'cubic-bezier(0.2, 0.0, 0.2, 1)',
         easeOut: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
     };
+
+    static ensureAuthenticated() {
+        if (isUserLoggedIn()) return true;
+        showAuthRequiredPopup();
+        return false;
+    }
 
     constructor(cardElement) {
         this.card = cardElement;
@@ -80,6 +88,8 @@ export class CardExpansion {
             return;
         }
 
+        if (!CardExpansion.ensureAuthenticated()) return;
+
         const grid = document.querySelector('.grid');
         if (!grid) return;
 
@@ -136,6 +146,7 @@ export class CardExpansion {
     static switchExpandedCard(nextInstance) {
         const current = CardExpansion.state.expandedInstance;
         if (!current || current === nextInstance || CardExpansion.state.isAnimating) return;
+        if (!CardExpansion.ensureAuthenticated()) return;
 
         const grid = document.querySelector('.grid');
         if (!grid) return;
@@ -219,6 +230,7 @@ export class CardExpansion {
 
     expandCard() {
         if (CardExpansion.state.isAnimating) return;
+        if (!CardExpansion.ensureAuthenticated()) return;
         const grid = document.querySelector('.grid');
         if (!grid) return;
 

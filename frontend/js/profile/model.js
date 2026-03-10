@@ -3,10 +3,17 @@ export function createProfileModel(options) {
         avatarChoices,
         avatarThemeColors,
         storageKey,
+        resolveStorageKey,
         readStorage,
         writeStorage,
         normalizeUsername,
     } = options;
+
+    function getStorageKey() {
+        if (typeof resolveStorageKey !== 'function') return storageKey;
+        const resolved = resolveStorageKey();
+        return typeof resolved === 'string' && resolved ? resolved : storageKey;
+    }
 
     function sanitizeAvatarChoice(value) {
         return avatarChoices.includes(value) ? value : avatarChoices[0];
@@ -45,14 +52,15 @@ export function createProfileModel(options) {
     }
 
     function loadProfile() {
-        const profile = sanitizeProfile(readStorage(storageKey, null));
-        writeStorage(storageKey, profile);
+        const key = getStorageKey();
+        const profile = sanitizeProfile(readStorage(key, null));
+        writeStorage(key, profile);
         return profile;
     }
 
     function saveProfile(profile) {
         if (!profile) return;
-        writeStorage(storageKey, profile);
+        writeStorage(getStorageKey(), profile);
     }
 
     function getAvatarThemeColors(avatar) {
